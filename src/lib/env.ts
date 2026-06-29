@@ -10,6 +10,10 @@ const envSchema = z.object({
   EVOLUTION_API_BASE_URL: z.string().url().optional(),
   EVOLUTION_API_KEY: z.string().min(1).optional(),
   EVOLUTION_INSTANCE_NAME: z.string().min(1).optional(),
+  GOOGLE_CALENDAR_ID: z.string().min(1).optional(),
+  GOOGLE_SERVICE_ACCOUNT_EMAIL: z.string().email().optional(),
+  GOOGLE_PRIVATE_KEY: z.string().min(1).optional(),
+  GOOGLE_TIME_ZONE: z.string().min(1).default("America/Sao_Paulo"),
   SYSTEM_USER_ID: z.string().uuid().default("00000000-0000-0000-0000-000000000000"),
 });
 

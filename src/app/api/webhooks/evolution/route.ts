@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { DrizzleCrmRepository } from "@/lib/crm/drizzle-crm-repository";
 import { FaustoConversationService } from "@/lib/crm/fausto-conversation-service";
-import { StaticCalendarGateway } from "@/lib/integrations/calendar";
+import { createCalendarGateway } from "@/lib/integrations/calendar";
 import { EvolutionWhatsAppGateway } from "@/lib/integrations/evolution";
 import { OpenAiMessagePlanner } from "@/lib/integrations/openai";
 import {
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
 
   const crm = new DrizzleCrmRepository();
   const ai = new OpenAiMessagePlanner();
-  const calendar = new StaticCalendarGateway();
+  const calendar = createCalendarGateway();
   const service = new FaustoConversationService(crm, ai, calendar);
 
   const result = await service.handleInbound({
