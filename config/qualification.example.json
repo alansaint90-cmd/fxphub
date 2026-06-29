@@ -1,0 +1,9 @@
+{
+  "minimumScoreToSchedule": 55,
+  "classification": {
+    "A": "score >= 75",
+    "B": "55 <= score < 75",
+    "C": "score < 55"
+  },
+  "defaultSlots": ["14h", "16h", "18h"]
+}
