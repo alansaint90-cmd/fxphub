@@ -19,7 +19,7 @@ export class EvolutionWhatsAppGateway implements WhatsAppGateway {
           apikey: env.EVOLUTION_API_KEY,
         },
         body: JSON.stringify({
-          number: input.phoneJid,
+          number: normalizeEvolutionRecipient(input.phoneJid),
           text: input.text,
           options: {
             delay: 1800,
@@ -34,4 +34,8 @@ export class EvolutionWhatsAppGateway implements WhatsAppGateway {
       throw new Error(`Falha ao enviar WhatsApp: ${response.status} ${body}`);
     }
   }
+}
+
+function normalizeEvolutionRecipient(phoneJid: string) {
+  return phoneJid.replace(/@s\.whatsapp\.net$/i, "").replace(/\D/g, "");
 }

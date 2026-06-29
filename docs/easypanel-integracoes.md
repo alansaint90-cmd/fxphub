@@ -22,6 +22,8 @@ PORT=3000
 
 DATABASE_URL=postgres://USUARIO:SENHA@HOST:5432/BANCO
 REDIS_URL=redis://HOST:6379
+MESSAGE_BUFFER_QUIET_MS=2500
+MESSAGE_BUFFER_TTL_SECONDS=60
 
 SYSTEM_USER_ID=00000000-0000-0000-0000-000000000000
 MINIMUM_SCORE_TO_SCHEDULE=55
@@ -32,6 +34,7 @@ OPENAI_MODEL=gpt-4.1-mini
 EVOLUTION_API_BASE_URL=https://sua-evolution-api.com
 EVOLUTION_API_KEY=sua_chave_evolution
 EVOLUTION_INSTANCE_NAME=fausto
+EVOLUTION_WEBHOOK_SECRET=um_segredo_opcional_para_o_webhook
 
 GOOGLE_CALENDAR_ID=primary
 GOOGLE_SERVICE_ACCOUNT_EMAIL=sua-service-account@projeto.iam.gserviceaccount.com
@@ -70,6 +73,28 @@ Configure a URL:
 ```text
 https://SEU_DOMINIO/api/webhooks/evolution
 ```
+
+Se configurar `EVOLUTION_WEBHOOK_SECRET`, envie esse valor no header:
+
+```text
+x-fausto-webhook-secret: seu_segredo
+```
+
+## Rotas de saude
+
+Webhook Evolution:
+
+```text
+GET https://SEU_DOMINIO/api/webhooks/evolution
+```
+
+Memoria Redis:
+
+```text
+GET https://SEU_DOMINIO/api/health/memory
+```
+
+Quando `REDIS_URL` estiver configurado e acessivel, a rota de memoria retorna `memory: "ok"`.
 
 ## Banco
 
