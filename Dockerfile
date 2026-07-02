@@ -22,7 +22,8 @@ ENV PORT=3000
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=builder /app/.next ./.next
-COPY package.json package-lock.json next.config.ts ./
+COPY --from=builder /app/src/lib/db ./src/lib/db
+COPY package.json package-lock.json next.config.ts drizzle.config.ts tsconfig.json ./
 
 EXPOSE 3000
 
