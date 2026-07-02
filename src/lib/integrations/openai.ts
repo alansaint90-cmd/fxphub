@@ -11,15 +11,19 @@ export class OpenAiMessagePlanner implements AiMessagePlanner {
   async polishResponse(input: { systemPrompt: string; userContext: string; draft: string }): Promise<string> {
     if (!this.client) return input.draft;
 
-    const completion = await this.client.chat.completions.create({
-      model: env.OPENAI_MODEL,
-      temperature: 0.2,
-      messages: [
-        { role: "system", content: input.systemPrompt },
-        { role: "user", content: `${input.userContext}\n\nResposta base:\n${input.draft}` },
-      ],
-    });
+    try {
+      const completion = await this.client.chat.completions.create({
+        model: env.OPENAI_MODEL,
+        temperature: 0.2,
+        messages: [
+          { role: "system", content: input.systemPrompt },
+          { role: "user", content: `${input.userContext}\n\nResposta base:\n${input.draft}` },
+        ],
+      });
 
-    return completion.choices[0]?.message.content?.trim() || input.draft;
+      return completion.choices[0]?.message.content?.trim() || input.draft;
+    } catch {
+      return input.draft;
+    }
   }
 }

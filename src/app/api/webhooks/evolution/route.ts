@@ -16,6 +16,7 @@ export async function GET() {
   return NextResponse.json({
     ok: true,
     route: "/api/webhooks/evolution",
+    databaseConfigured: Boolean(process.env.DATABASE_URL),
     evolutionConfigured: Boolean(env.EVOLUTION_API_BASE_URL && env.EVOLUTION_API_KEY && env.EVOLUTION_INSTANCE_NAME),
     redisConfigured: Boolean(env.REDIS_URL),
     openAiConfigured: Boolean(env.OPENAI_API_KEY),
@@ -24,7 +25,10 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  let stage = "start";
+
   try {
+    stage = "auth";
     if (env.EVOLUTION_WEBHOOK_SECRET) {
       const receivedSecret = request.headers.get("x-fausto-webhook-secret");
       if (receivedSecret !== env.EVOLUTION_WEBHOOK_SECRET) {
@@ -32,7 +36,9 @@ export async function POST(request: Request) {
       }
     }
 
+    stage = "parse_json";
     const json = await request.json();
+    stage = "validate_payload";
     const parsedPayload = evolutionWebhookSchema.safeParse({ body: json });
 
     if (!parsedPayload.success) {
@@ -45,15 +51,18 @@ export async function POST(request: Request) {
 
     const payload = parsedPayload.data;
 
+    stage = "ignore_from_me";
     if (payload.body.data.key.fromMe) {
       return NextResponse.json({ ok: true, ignored: "from_me" });
     }
 
+    stage = "extract_text";
     const text = normalizeEvolutionText(payload);
     if (!text.trim()) {
       return NextResponse.json({ ok: true, ignored: "empty_text" });
     }
 
+    stage = "buffer";
     const buffer = new ConversationBuffer();
     const buffered = await buffer.appendAndCollect(
       payload.body.data.key.remoteJid,
@@ -65,6 +74,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, ignored: "buffer_waiting_for_latest_message" });
     }
 
+    stage = "crm_and_ai";
     const crm = new DrizzleCrmRepository();
     const ai = new OpenAiMessagePlanner();
     const calendar = createCalendarGateway();
@@ -80,6 +90,7 @@ export async function POST(request: Request) {
     });
 
     if (result.shouldSend) {
+      stage = "send_whatsapp";
       const whatsapp = new EvolutionWhatsAppGateway();
       await whatsapp.sendText({
         phoneJid: payload.body.data.key.remoteJid,
@@ -90,6 +101,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Erro desconhecido no webhook Evolution.";
-    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+    console.error("[Evolution webhook]", { stage, message, error });
+    return NextResponse.json({ ok: false, stage, error: message }, { status: 500 });
   }
 }

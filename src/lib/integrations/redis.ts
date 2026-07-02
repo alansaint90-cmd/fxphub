@@ -19,30 +19,34 @@ export class ConversationBuffer {
       return { shouldProcess: true, text: message };
     }
 
-    const redisKey = `conversation-buffer:${key}`;
-    const bufferedMessage: BufferedMessage = {
-      id: messageId,
-      text: message,
-      createdAt: Date.now(),
-    };
+    try {
+      const redisKey = `conversation-buffer:${key}`;
+      const bufferedMessage: BufferedMessage = {
+        id: messageId,
+        text: message,
+        createdAt: Date.now(),
+      };
 
-    await this.redis.rpush(redisKey, JSON.stringify(bufferedMessage));
-    await this.redis.expire(redisKey, env.MESSAGE_BUFFER_TTL_SECONDS);
-    await sleep(env.MESSAGE_BUFFER_QUIET_MS);
+      await this.redis.rpush(redisKey, JSON.stringify(bufferedMessage));
+      await this.redis.expire(redisKey, env.MESSAGE_BUFFER_TTL_SECONDS);
+      await sleep(env.MESSAGE_BUFFER_QUIET_MS);
 
-    const rawMessages = await this.redis.lrange(redisKey, 0, -1);
-    const messages = rawMessages.map(parseBufferedMessage).filter((item): item is BufferedMessage => Boolean(item));
-    const latestMessage = messages.at(-1);
+      const rawMessages = await this.redis.lrange(redisKey, 0, -1);
+      const messages = rawMessages.map(parseBufferedMessage).filter((item): item is BufferedMessage => Boolean(item));
+      const latestMessage = messages.at(-1);
 
-    if (latestMessage?.id !== messageId) {
-      return { shouldProcess: false, text: "" };
+      if (latestMessage?.id !== messageId) {
+        return { shouldProcess: false, text: "" };
+      }
+
+      await this.redis.del(redisKey);
+      return {
+        shouldProcess: true,
+        text: messages.map((item) => item.text).join("\n"),
+      };
+    } catch {
+      return { shouldProcess: true, text: message };
     }
-
-    await this.redis.del(redisKey);
-    return {
-      shouldProcess: true,
-      text: messages.map((item) => item.text).join("\n"),
-    };
   }
 
   async clear(key: string): Promise<void> {
