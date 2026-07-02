@@ -1,5 +1,5 @@
 import { google } from "googleapis";
-import { env } from "@/lib/env";
+import { getRuntimeIntegrationSettings } from "@/lib/integrations/settings";
 
 export interface CalendarSlot {
   startsAt: Date;
@@ -12,12 +12,24 @@ export interface CalendarGateway {
   createEvent(input: { startsAt: Date; endsAt: Date; leadName: string; phone: string }): Promise<{ eventId: string }>;
 }
 
-function hasGoogleCalendarConfig() {
-  return Boolean(env.GOOGLE_CALENDAR_ID && env.GOOGLE_SERVICE_ACCOUNT_EMAIL && env.GOOGLE_PRIVATE_KEY);
+export function createCalendarGateway(): CalendarGateway {
+  return new RuntimeCalendarGateway();
 }
 
-export function createCalendarGateway(): CalendarGateway {
-  return hasGoogleCalendarConfig() ? new GoogleCalendarGateway() : new StaticCalendarGateway();
+class RuntimeCalendarGateway implements CalendarGateway {
+  private readonly staticCalendar = new StaticCalendarGateway();
+
+  async getAvailableSlots(): Promise<CalendarSlot[]> {
+    const settings = await getRuntimeIntegrationSettings();
+    if (!hasGoogleCalendarConfig(settings)) return this.staticCalendar.getAvailableSlots();
+    return new GoogleCalendarGateway(settings).getAvailableSlots();
+  }
+
+  async createEvent(input: { startsAt: Date; endsAt: Date; leadName: string; phone: string }) {
+    const settings = await getRuntimeIntegrationSettings();
+    if (!hasGoogleCalendarConfig(settings)) return this.staticCalendar.createEvent();
+    return new GoogleCalendarGateway(settings).createEvent(input);
+  }
 }
 
 export class StaticCalendarGateway implements CalendarGateway {
@@ -43,19 +55,31 @@ export class StaticCalendarGateway implements CalendarGateway {
 }
 
 export class GoogleCalendarGateway implements CalendarGateway {
-  private readonly calendar = google.calendar({
-    version: "v3",
-    auth: new google.auth.JWT({
-      email: env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-      key: env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-      scopes: ["https://www.googleapis.com/auth/calendar"],
-    }),
-  });
+  private readonly calendar;
+
+  constructor(
+    private readonly settings: {
+      GOOGLE_CALENDAR_ID?: string;
+      GOOGLE_SERVICE_ACCOUNT_EMAIL?: string;
+      GOOGLE_PRIVATE_KEY?: string;
+      GOOGLE_TIME_ZONE?: string;
+    },
+  ) {
+    this.calendar = google.calendar({
+      version: "v3",
+      auth: new google.auth.JWT({
+        email: settings.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+        key: settings.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+        scopes: ["https://www.googleapis.com/auth/calendar"],
+      }),
+    });
+  }
 
   async getAvailableSlots(): Promise<CalendarSlot[]> {
-    if (!env.GOOGLE_CALENDAR_ID) throw new Error("GOOGLE_CALENDAR_ID nao configurado.");
+    if (!this.settings.GOOGLE_CALENDAR_ID) throw new Error("GOOGLE_CALENDAR_ID nao configurado.");
 
-    const candidates = buildCandidateSlots();
+    const timeZone = this.settings.GOOGLE_TIME_ZONE ?? "America/Sao_Paulo";
+    const candidates = buildCandidateSlots(timeZone);
     const timeMin = candidates[0]?.startsAt;
     const timeMax = candidates.at(-1)?.endsAt;
     if (!timeMin || !timeMax) return [];
@@ -64,12 +88,12 @@ export class GoogleCalendarGateway implements CalendarGateway {
       requestBody: {
         timeMin: timeMin.toISOString(),
         timeMax: timeMax.toISOString(),
-        timeZone: env.GOOGLE_TIME_ZONE,
-        items: [{ id: env.GOOGLE_CALENDAR_ID }],
+        timeZone,
+        items: [{ id: this.settings.GOOGLE_CALENDAR_ID }],
       },
     });
 
-    const busyRanges = busy.data.calendars?.[env.GOOGLE_CALENDAR_ID]?.busy ?? [];
+    const busyRanges = busy.data.calendars?.[this.settings.GOOGLE_CALENDAR_ID]?.busy ?? [];
     return candidates.filter((slot) =>
       busyRanges.every((range) => {
         const busyStart = range.start ? new Date(range.start) : null;
@@ -86,20 +110,22 @@ export class GoogleCalendarGateway implements CalendarGateway {
     leadName: string;
     phone: string;
   }): Promise<{ eventId: string }> {
-    if (!env.GOOGLE_CALENDAR_ID) throw new Error("GOOGLE_CALENDAR_ID nao configurado.");
+    if (!this.settings.GOOGLE_CALENDAR_ID) throw new Error("GOOGLE_CALENDAR_ID nao configurado.");
+
+    const timeZone = this.settings.GOOGLE_TIME_ZONE ?? "America/Sao_Paulo";
 
     const event = await this.calendar.events.insert({
-      calendarId: env.GOOGLE_CALENDAR_ID,
+      calendarId: this.settings.GOOGLE_CALENDAR_ID,
       requestBody: {
         summary: `Reuniao fxphub - ${input.leadName}`,
         description: `Lead: ${input.leadName}\nTelefone: ${input.phone}\nOrigem: fxphub IA`,
         start: {
           dateTime: input.startsAt.toISOString(),
-          timeZone: env.GOOGLE_TIME_ZONE,
+          timeZone,
         },
         end: {
           dateTime: input.endsAt.toISOString(),
-          timeZone: env.GOOGLE_TIME_ZONE,
+          timeZone,
         },
       },
     });
@@ -108,7 +134,15 @@ export class GoogleCalendarGateway implements CalendarGateway {
   }
 }
 
-function buildCandidateSlots(): CalendarSlot[] {
+function hasGoogleCalendarConfig(settings: {
+  GOOGLE_CALENDAR_ID?: string;
+  GOOGLE_SERVICE_ACCOUNT_EMAIL?: string;
+  GOOGLE_PRIVATE_KEY?: string;
+}) {
+  return Boolean(settings.GOOGLE_CALENDAR_ID && settings.GOOGLE_SERVICE_ACCOUNT_EMAIL && settings.GOOGLE_PRIVATE_KEY);
+}
+
+function buildCandidateSlots(timeZone = "America/Sao_Paulo"): CalendarSlot[] {
   const now = new Date();
   const slots: CalendarSlot[] = [];
   const businessHoursByDay = new Map<number, number[]>([
@@ -135,7 +169,7 @@ function buildCandidateSlots(): CalendarSlot[] {
       slots.push({
         startsAt,
         endsAt,
-        label: `${formatDay(startsAt)} as ${String(hour).padStart(2, "0")}h`,
+        label: `${formatDay(startsAt, timeZone)} as ${String(hour).padStart(2, "0")}h`,
       });
     }
   }
@@ -143,12 +177,12 @@ function buildCandidateSlots(): CalendarSlot[] {
   return slots.slice(0, 8);
 }
 
-function formatDay(date: Date) {
+function formatDay(date: Date, timeZone: string) {
   return new Intl.DateTimeFormat("pt-BR", {
     weekday: "short",
     day: "2-digit",
     month: "2-digit",
-    timeZone: env.GOOGLE_TIME_ZONE,
+    timeZone,
   })
     .format(date)
     .replace(".", "");

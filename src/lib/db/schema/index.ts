@@ -123,3 +123,17 @@ export const auditLogs = pgTable("audit_logs", {
   after: jsonb("after").$type<Record<string, unknown> | null>(),
   ...auditColumns,
 });
+
+export const integrationSettings = pgTable(
+  "integration_settings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    key: text("key").notNull(),
+    value: text("value").notNull(),
+    isSecret: boolean("is_secret").notNull().default(false),
+    ...auditColumns,
+  },
+  (table) => ({
+    keyIdx: uniqueIndex("integration_settings_key_idx").on(table.key),
+  }),
+);

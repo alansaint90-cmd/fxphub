@@ -1,4 +1,4 @@
-import { env } from "@/lib/env";
+import { getRuntimeIntegrationSettings } from "@/lib/integrations/settings";
 
 export interface WhatsAppGateway {
   sendText(input: { phoneJid: string; text: string }): Promise<void>;
@@ -6,17 +6,19 @@ export interface WhatsAppGateway {
 
 export class EvolutionWhatsAppGateway implements WhatsAppGateway {
   async sendText(input: { phoneJid: string; text: string }): Promise<void> {
-    if (!env.EVOLUTION_API_BASE_URL || !env.EVOLUTION_API_KEY || !env.EVOLUTION_INSTANCE_NAME) {
+    const settings = await getRuntimeIntegrationSettings();
+
+    if (!settings.EVOLUTION_API_BASE_URL || !settings.EVOLUTION_API_KEY || !settings.EVOLUTION_INSTANCE_NAME) {
       throw new Error("Evolution API nao configurada.");
     }
 
     const response = await fetch(
-      `${env.EVOLUTION_API_BASE_URL}/message/sendText/${env.EVOLUTION_INSTANCE_NAME}`,
+      `${settings.EVOLUTION_API_BASE_URL}/message/sendText/${settings.EVOLUTION_INSTANCE_NAME}`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          apikey: env.EVOLUTION_API_KEY,
+          apikey: settings.EVOLUTION_API_KEY,
         },
         body: JSON.stringify({
           number: normalizeEvolutionRecipient(input.phoneJid),

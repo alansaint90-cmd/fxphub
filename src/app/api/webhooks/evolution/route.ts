@@ -5,7 +5,7 @@ import { createCalendarGateway } from "@/lib/integrations/calendar";
 import { EvolutionWhatsAppGateway } from "@/lib/integrations/evolution";
 import { OpenAiMessagePlanner } from "@/lib/integrations/openai";
 import { ConversationBuffer } from "@/lib/integrations/redis";
-import { env } from "@/lib/env";
+import { getRuntimeIntegrationSettings } from "@/lib/integrations/settings";
 import {
   evolutionWebhookSchema,
   normalizeEvolutionText,
@@ -13,14 +13,20 @@ import {
 } from "@/lib/validators/evolution";
 
 export async function GET() {
+  const settings = await getRuntimeIntegrationSettings();
+
   return NextResponse.json({
     ok: true,
     route: "/api/webhooks/evolution",
-    databaseConfigured: Boolean(process.env.DATABASE_URL),
-    evolutionConfigured: Boolean(env.EVOLUTION_API_BASE_URL && env.EVOLUTION_API_KEY && env.EVOLUTION_INSTANCE_NAME),
-    redisConfigured: Boolean(env.REDIS_URL),
-    openAiConfigured: Boolean(env.OPENAI_API_KEY),
-    calendarConfigured: Boolean(env.GOOGLE_CALENDAR_ID && env.GOOGLE_SERVICE_ACCOUNT_EMAIL && env.GOOGLE_PRIVATE_KEY),
+    databaseConfigured: Boolean(settings.DATABASE_URL),
+    evolutionConfigured: Boolean(
+      settings.EVOLUTION_API_BASE_URL && settings.EVOLUTION_API_KEY && settings.EVOLUTION_INSTANCE_NAME,
+    ),
+    redisConfigured: Boolean(settings.REDIS_URL),
+    openAiConfigured: Boolean(settings.OPENAI_API_KEY),
+    calendarConfigured: Boolean(
+      settings.GOOGLE_CALENDAR_ID && settings.GOOGLE_SERVICE_ACCOUNT_EMAIL && settings.GOOGLE_PRIVATE_KEY,
+    ),
   });
 }
 
@@ -29,9 +35,12 @@ export async function POST(request: Request) {
 
   try {
     stage = "auth";
-    if (env.EVOLUTION_WEBHOOK_SECRET) {
+    const settings = await getRuntimeIntegrationSettings();
+    const webhookSecret = settings.EVOLUTION_WEBHOOK_SECRET;
+
+    if (webhookSecret) {
       const receivedSecret = request.headers.get("x-fausto-webhook-secret");
-      if (receivedSecret !== env.EVOLUTION_WEBHOOK_SECRET) {
+      if (receivedSecret !== webhookSecret) {
         return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
       }
     }

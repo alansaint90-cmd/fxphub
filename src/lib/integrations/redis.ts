@@ -1,5 +1,5 @@
 import Redis from "ioredis";
-import { env } from "@/lib/env";
+import { getRuntimeIntegrationSettings } from "@/lib/integrations/settings";
 
 interface BufferedMessage {
   id: string;
@@ -8,14 +8,20 @@ interface BufferedMessage {
 }
 
 export class ConversationBuffer {
-  private readonly redis = env.REDIS_URL ? new Redis(env.REDIS_URL) : null;
+  private redis: Redis | null = null;
+  private redisUrl: string | undefined;
 
   async appendAndCollect(
     key: string,
     message: string,
     messageId = crypto.randomUUID(),
   ): Promise<{ shouldProcess: boolean; text: string }> {
-    if (!this.redis || env.MESSAGE_BUFFER_QUIET_MS === 0) {
+    const settings = await getRuntimeIntegrationSettings();
+    const quietMs = Number(settings.MESSAGE_BUFFER_QUIET_MS ?? 2500);
+    const ttlSeconds = Number(settings.MESSAGE_BUFFER_TTL_SECONDS ?? 60);
+    const redis = await this.getRedis(settings.REDIS_URL);
+
+    if (!redis || quietMs === 0) {
       return { shouldProcess: true, text: message };
     }
 
@@ -27,11 +33,11 @@ export class ConversationBuffer {
         createdAt: Date.now(),
       };
 
-      await this.redis.rpush(redisKey, JSON.stringify(bufferedMessage));
-      await this.redis.expire(redisKey, env.MESSAGE_BUFFER_TTL_SECONDS);
-      await sleep(env.MESSAGE_BUFFER_QUIET_MS);
+      await redis.rpush(redisKey, JSON.stringify(bufferedMessage));
+      await redis.expire(redisKey, ttlSeconds);
+      await sleep(quietMs);
 
-      const rawMessages = await this.redis.lrange(redisKey, 0, -1);
+      const rawMessages = await redis.lrange(redisKey, 0, -1);
       const messages = rawMessages.map(parseBufferedMessage).filter((item): item is BufferedMessage => Boolean(item));
       const latestMessage = messages.at(-1);
 
@@ -39,7 +45,7 @@ export class ConversationBuffer {
         return { shouldProcess: false, text: "" };
       }
 
-      await this.redis.del(redisKey);
+      await redis.del(redisKey);
       return {
         shouldProcess: true,
         text: messages.map((item) => item.text).join("\n"),
@@ -50,14 +56,28 @@ export class ConversationBuffer {
   }
 
   async clear(key: string): Promise<void> {
-    if (!this.redis) return;
-    await this.redis.del(`conversation-buffer:${key}`);
+    const settings = await getRuntimeIntegrationSettings();
+    const redis = await this.getRedis(settings.REDIS_URL);
+    if (!redis) return;
+    await redis.del(`conversation-buffer:${key}`);
   }
 
   async ping(): Promise<"disabled" | "ok"> {
-    if (!this.redis) return "disabled";
-    await this.redis.ping();
+    const settings = await getRuntimeIntegrationSettings();
+    const redis = await this.getRedis(settings.REDIS_URL);
+    if (!redis) return "disabled";
+    await redis.ping();
     return "ok";
+  }
+
+  private async getRedis(redisUrl: string | undefined): Promise<Redis | null> {
+    if (!redisUrl) return null;
+    if (!this.redis || this.redisUrl !== redisUrl) {
+      this.redis?.disconnect();
+      this.redis = new Redis(redisUrl);
+      this.redisUrl = redisUrl;
+    }
+    return this.redis;
   }
 }
 

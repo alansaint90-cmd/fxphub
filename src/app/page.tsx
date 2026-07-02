@@ -80,6 +80,13 @@ interface IntegrationGroup {
   fields: IntegrationField[];
 }
 
+interface SavedIntegrationSetting {
+  key: string;
+  value: string;
+  isSecret: boolean;
+  hasValue: boolean;
+}
+
 const initialKanbanLeads: KanbanLead[] = [
   {
     id: "lead-cfc-catuense",
@@ -411,6 +418,10 @@ const initialIntegrationValues = integrationGroups.reduce<Record<string, string>
   return values;
 }, {});
 
+const secretIntegrationKeys = new Set(
+  integrationGroups.flatMap((group) => group.fields.filter((field) => field.type === "password").map((field) => field.key)),
+);
+
 export default function HomePage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginError, setLoginError] = useState("");
@@ -422,6 +433,8 @@ export default function HomePage() {
   const [selectedSlotId, setSelectedSlotId] = useState("seg-09");
   const [integrationValues, setIntegrationValues] = useState(initialIntegrationValues);
   const [integrationSaved, setIntegrationSaved] = useState(false);
+  const [savedIntegrationSecrets, setSavedIntegrationSecrets] = useState<Record<string, boolean>>({});
+  const [integrationPersistenceStatus, setIntegrationPersistenceStatus] = useState("Carregando configuracoes...");
   const [envCopied, setEnvCopied] = useState(false);
   const [webhookUrl, setWebhookUrl] = useState("https://fxphub.space/api/webhooks/evolution");
   const [webhookCopied, setWebhookCopied] = useState(false);
@@ -443,6 +456,41 @@ export default function HomePage() {
     if (typeof window !== "undefined") {
       setWebhookUrl(`${window.location.origin}/api/webhooks/evolution`);
     }
+  }, []);
+
+  useEffect(() => {
+    async function loadIntegrationSettings() {
+      try {
+        const response = await fetch("/api/integrations/config", { cache: "no-store" });
+        const result = (await response.json()) as {
+          ok?: boolean;
+          settings?: SavedIntegrationSetting[];
+          error?: string;
+        };
+
+        if (!result.ok || !result.settings) {
+          setIntegrationPersistenceStatus(result.error ?? "Nao foi possivel carregar as integracoes salvas.");
+          return;
+        }
+
+        const nextValues = { ...initialIntegrationValues };
+        const nextSecrets: Record<string, boolean> = {};
+
+        result.settings.forEach((setting) => {
+          if (!setting.isSecret) nextValues[setting.key] = setting.value;
+          if (setting.isSecret && setting.hasValue) nextSecrets[setting.key] = true;
+        });
+
+        setIntegrationValues(nextValues);
+        setSavedIntegrationSecrets(nextSecrets);
+        setIntegrationSaved(result.settings.some((setting) => setting.hasValue));
+        setIntegrationPersistenceStatus("Configuracoes carregadas do servidor.");
+      } catch {
+        setIntegrationPersistenceStatus("Nao foi possivel consultar as integracoes salvas.");
+      }
+    }
+
+    loadIntegrationSettings();
   }, []);
 
   function handleLogin(event: FormEvent<HTMLFormElement>) {
@@ -515,13 +563,53 @@ export default function HomePage() {
 
   function handleIntegrationChange(key: string, value: string) {
     setIntegrationValues((currentValues) => ({ ...currentValues, [key]: value }));
+    if (secretIntegrationKeys.has(key)) {
+      setSavedIntegrationSecrets((currentSecrets) => ({ ...currentSecrets, [key]: false }));
+    }
     setIntegrationSaved(false);
     setEnvCopied(false);
   }
 
-  function handleSaveIntegrations(event: FormEvent<HTMLFormElement>) {
+  async function handleSaveIntegrations(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setIntegrationSaved(true);
+    setIntegrationPersistenceStatus("Salvando configuracoes...");
+
+    try {
+      const response = await fetch("/api/integrations/config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ values: integrationValues }),
+      });
+      const result = (await response.json()) as {
+        ok?: boolean;
+        settings?: SavedIntegrationSetting[];
+        error?: string;
+      };
+
+      if (!result.ok || !result.settings) {
+        setIntegrationPersistenceStatus(result.error ?? "Falha ao salvar integracoes.");
+        setIntegrationSaved(false);
+        return;
+      }
+
+      const nextSecrets: Record<string, boolean> = {};
+      const nextValues = { ...integrationValues };
+
+      result.settings.forEach((setting) => {
+        if (setting.isSecret && setting.hasValue) {
+          nextSecrets[setting.key] = true;
+          nextValues[setting.key] = "";
+        }
+      });
+
+      setSavedIntegrationSecrets(nextSecrets);
+      setIntegrationValues(nextValues);
+      setIntegrationSaved(true);
+      setIntegrationPersistenceStatus("Integracoes salvas no servidor.");
+    } catch {
+      setIntegrationPersistenceStatus("Nao foi possivel salvar no servidor.");
+      setIntegrationSaved(false);
+    }
   }
 
   async function handleCopyEnv() {
@@ -536,7 +624,9 @@ export default function HomePage() {
   }
 
   async function handleValidateIntegration(group: IntegrationGroup) {
-    const missingFields = group.fields.filter((field) => !integrationValues[field.key].trim());
+    const missingFields = group.fields.filter(
+      (field) => !integrationValues[field.key].trim() && !savedIntegrationSecrets[field.key],
+    );
     const localStatus = missingFields.length
       ? `Campos pendentes: ${missingFields.map((field) => field.key).join(", ")}`
       : "Campos preenchidos.";
@@ -592,7 +682,11 @@ export default function HomePage() {
     return integrationGroups
       .map((group) =>
         group.fields
-          .map((field) => `${field.key}=${integrationValues[field.key].trim() || field.placeholder}`)
+          .map((field) => {
+            const value = integrationValues[field.key].trim();
+            if (!value && savedIntegrationSecrets[field.key]) return `${field.key}=<salvo_no_servidor>`;
+            return `${field.key}=${value || field.placeholder}`;
+          })
           .join("\n"),
       )
       .join("\n\n");
@@ -606,7 +700,9 @@ export default function HomePage() {
   const activeConversationMessages =
     conversationThread[selectedConversation?.id ?? ""] ?? defaultConversationMessages;
   const integrationFields = integrationGroups.flatMap((group) => group.fields);
-  const filledIntegrationCount = integrationFields.filter((field) => integrationValues[field.key].trim()).length;
+  const filledIntegrationCount = integrationFields.filter(
+    (field) => integrationValues[field.key].trim() || savedIntegrationSecrets[field.key],
+  ).length;
   const envPreview = buildEnvPreview();
   const occupiedSlotIds = new Set(
     appointments
@@ -1029,9 +1125,10 @@ export default function HomePage() {
                 </div>
                 <div>
                   <strong>{integrationSaved ? "Pronto" : "Pendente"}</strong>
-                  <span>validacao local</span>
+                  <span>persistencia</span>
                 </div>
               </div>
+              <p className="integration-status">{integrationPersistenceStatus}</p>
 
               <div className="integration-groups">
                 {integrationGroups.map((group) => (
@@ -1043,7 +1140,12 @@ export default function HomePage() {
                       </div>
                       <div className="integration-group-actions">
                         <b>
-                          {group.fields.filter((field) => integrationValues[field.key].trim()).length}/
+                          {
+                            group.fields.filter(
+                              (field) => integrationValues[field.key].trim() || savedIntegrationSecrets[field.key],
+                            ).length
+                          }
+                          /
                           {group.fields.length}
                         </b>
                         <button type="button" onClick={() => handleValidateIntegration(group)}>
@@ -1059,10 +1161,11 @@ export default function HomePage() {
                           <input
                             name={field.key}
                             onChange={(event) => handleIntegrationChange(field.key, event.target.value)}
-                            placeholder={field.placeholder}
+                            placeholder={savedIntegrationSecrets[field.key] ? "Configurado no servidor" : field.placeholder}
                             type={field.type ?? "text"}
                             value={integrationValues[field.key]}
                           />
+                          {savedIntegrationSecrets[field.key] ? <small>Valor salvo sem exibir a chave.</small> : null}
                         </label>
                       ))}
                     </div>
