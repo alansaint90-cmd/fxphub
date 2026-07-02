@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+const fallbackSystemUserId = "00000000-0000-0000-0000-000000000000";
+const uuidSchema = z.string().trim().uuid();
+
 const envSchema = z.object({
   DATABASE_URL: z.string().url().default("postgres://dev:dev@localhost:5432/fausto_dev"),
   OPENAI_API_KEY: z.string().min(1).optional(),
@@ -17,7 +20,9 @@ const envSchema = z.object({
   GOOGLE_SERVICE_ACCOUNT_EMAIL: z.string().email().optional(),
   GOOGLE_PRIVATE_KEY: z.string().min(1).optional(),
   GOOGLE_TIME_ZONE: z.string().min(1).default("America/Sao_Paulo"),
-  SYSTEM_USER_ID: z.string().uuid().default("00000000-0000-0000-0000-000000000000"),
+  SYSTEM_USER_ID: z
+    .preprocess((value) => (typeof value === "string" ? value.trim() : value), uuidSchema)
+    .catch(fallbackSystemUserId),
 });
 
 export const env = envSchema.parse(process.env);
