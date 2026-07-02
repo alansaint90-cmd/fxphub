@@ -1372,41 +1372,115 @@ h2 {
 }
 
 .integrations-panel {
-  max-width: 760px;
+  grid-column: 1 / -1;
 }
 
-.integration-list {
+.integration-form,
+.integration-groups,
+.integration-group,
+.env-preview {
   display: grid;
-  gap: 10px;
+  gap: 14px;
 }
 
-.integration-row {
-  min-height: 70px;
+.integration-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.integration-summary > div,
+.integration-group,
+.env-preview {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fbfbfb;
+  padding: 14px;
+}
+
+.integration-summary strong {
+  display: block;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+}
+
+.integration-summary span,
+.integration-group header span,
+.env-preview span,
+.integration-field span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.integration-group header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: #f8fbfc;
-  padding: 14px;
 }
 
-.integration-row div {
+.integration-group header div {
   display: grid;
-  gap: 5px;
+  gap: 4px;
 }
 
-.integration-row span {
-  color: var(--muted);
-}
-
-.integration-row b {
+.integration-group header b {
+  min-width: 42px;
   border-radius: 999px;
-  background: rgba(0, 167, 200, 0.09);
-  color: var(--primary-strong);
+  background: #111111;
+  color: #ffffff;
   font-size: 12px;
   padding: 6px 9px;
+  text-align: center;
+}
+
+.integration-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.integration-field {
+  display: grid;
+  gap: 7px;
+}
+
+.integration-field input,
+.env-preview textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #ffffff;
+  color: var(--foreground);
+  outline: none;
+}
+
+.integration-field input {
+  min-height: 44px;
+  padding: 0 12px;
+}
+
+.integration-field input:focus,
+.env-preview textarea:focus {
+  border-color: rgba(79, 124, 255, 0.52);
+  box-shadow: 0 0 0 4px rgba(79, 124, 255, 0.1);
+}
+
+.env-preview textarea {
+  min-height: 260px;
+  resize: vertical;
+  padding: 12px;
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.integration-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
 }
 
 @media (max-width: 1120px) {
@@ -1524,8 +1598,16 @@ h2 {
   }
 
   .agenda-summary,
-  .slot-grid {
+  .slot-grid,
+  .integration-summary,
+  .integration-fields {
     grid-template-columns: 1fr;
+  }
+
+  .integration-group header,
+  .integration-actions {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .command-panel h2 {

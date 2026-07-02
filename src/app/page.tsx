@@ -66,6 +66,19 @@ interface ConversationMessage {
   time: string;
 }
 
+interface IntegrationField {
+  key: string;
+  label: string;
+  placeholder: string;
+  type?: "password" | "text";
+}
+
+interface IntegrationGroup {
+  title: string;
+  description: string;
+  fields: IntegrationField[];
+}
+
 const initialKanbanLeads: KanbanLead[] = [
   {
     id: "lead-cfc-catuense",
@@ -304,6 +317,94 @@ const scheduleSlots: ScheduleSlot[] = [
   { id: "sex-20", day: "Sexta", date: "03/07", time: "20:00" },
 ];
 
+const integrationGroups: IntegrationGroup[] = [
+  {
+    title: "Sistema",
+    description: "Ambiente de producao e usuario tecnico.",
+    fields: [
+      {
+        key: "SYSTEM_USER_ID",
+        label: "System user ID",
+        placeholder: "00000000-0000-0000-0000-000000000000",
+      },
+      { key: "MINIMUM_SCORE_TO_SCHEDULE", label: "Score minimo", placeholder: "55" },
+      { key: "NODE_ENV", label: "Ambiente", placeholder: "production" },
+      { key: "NEXT_TELEMETRY_DISABLED", label: "Telemetria Next", placeholder: "1" },
+    ],
+  },
+  {
+    title: "Banco e CRM",
+    description: "PostgreSQL/Supabase usados para leads, mensagens e agenda.",
+    fields: [
+      {
+        key: "DATABASE_URL",
+        label: "PostgreSQL URL",
+        placeholder: "postgres://USUARIO:SENHA@HOST:5432/BANCO",
+        type: "password",
+      },
+      { key: "SUPABASE_URL", label: "Supabase URL", placeholder: "https://seu-projeto.supabase.co" },
+      {
+        key: "SUPABASE_SERVICE_ROLE_KEY",
+        label: "Supabase service role",
+        placeholder: "sua_service_role_key",
+        type: "password",
+      },
+    ],
+  },
+  {
+    title: "WhatsApp",
+    description: "Evolution API para receber e responder mensagens.",
+    fields: [
+      { key: "EVOLUTION_API_BASE_URL", label: "Evolution URL", placeholder: "https://sua-evolution-api.com" },
+      { key: "EVOLUTION_API_KEY", label: "Evolution API key", placeholder: "sua_chave_evolution", type: "password" },
+      { key: "EVOLUTION_INSTANCE_NAME", label: "Nome da instancia", placeholder: "fxphub" },
+      {
+        key: "EVOLUTION_WEBHOOK_SECRET",
+        label: "Webhook secret",
+        placeholder: "seu_segredo_forte",
+        type: "password",
+      },
+    ],
+  },
+  {
+    title: "IA e memoria",
+    description: "OpenAI para resposta inteligente e Redis para buffer.",
+    fields: [
+      { key: "OPENAI_API_KEY", label: "OpenAI API key", placeholder: "sua_chave_openai", type: "password" },
+      { key: "OPENAI_MODEL", label: "Modelo OpenAI", placeholder: "gpt-4.1-mini" },
+      { key: "REDIS_URL", label: "Redis URL", placeholder: "redis://HOST:6379", type: "password" },
+      { key: "MESSAGE_BUFFER_QUIET_MS", label: "Buffer quiet ms", placeholder: "2500" },
+      { key: "MESSAGE_BUFFER_TTL_SECONDS", label: "Buffer TTL", placeholder: "60" },
+    ],
+  },
+  {
+    title: "Google Agenda",
+    description: "Agenda usada para disponibilidade e reunioes.",
+    fields: [
+      { key: "GOOGLE_CALENDAR_ID", label: "Calendar ID", placeholder: "primary" },
+      {
+        key: "GOOGLE_SERVICE_ACCOUNT_EMAIL",
+        label: "Service account",
+        placeholder: "sua-service-account@projeto.iam.gserviceaccount.com",
+      },
+      {
+        key: "GOOGLE_PRIVATE_KEY",
+        label: "Private key",
+        placeholder: "-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----\\n",
+        type: "password",
+      },
+      { key: "GOOGLE_TIME_ZONE", label: "Timezone", placeholder: "America/Sao_Paulo" },
+    ],
+  },
+];
+
+const initialIntegrationValues = integrationGroups.reduce<Record<string, string>>((values, group) => {
+  group.fields.forEach((field) => {
+    values[field.key] = "";
+  });
+  return values;
+}, {});
+
 export default function HomePage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginError, setLoginError] = useState("");
@@ -313,6 +414,9 @@ export default function HomePage() {
   const [selectedConversationId, setSelectedConversationId] = useState("soldado");
   const [selectedLeadId, setSelectedLeadId] = useState("lead-cfc-catuense");
   const [selectedSlotId, setSelectedSlotId] = useState("seg-09");
+  const [integrationValues, setIntegrationValues] = useState(initialIntegrationValues);
+  const [integrationSaved, setIntegrationSaved] = useState(false);
+  const [envCopied, setEnvCopied] = useState(false);
   const [appointments, setAppointments] = useState<Appointment[]>([
     {
       id: "appointment-cfc-catuense",
@@ -391,6 +495,33 @@ export default function HomePage() {
     );
   }
 
+  function handleIntegrationChange(key: string, value: string) {
+    setIntegrationValues((currentValues) => ({ ...currentValues, [key]: value }));
+    setIntegrationSaved(false);
+    setEnvCopied(false);
+  }
+
+  function handleSaveIntegrations(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIntegrationSaved(true);
+  }
+
+  async function handleCopyEnv() {
+    const envText = buildEnvPreview();
+    await navigator.clipboard?.writeText(envText);
+    setEnvCopied(true);
+  }
+
+  function buildEnvPreview() {
+    return integrationGroups
+      .map((group) =>
+        group.fields
+          .map((field) => `${field.key}=${integrationValues[field.key].trim() || field.placeholder}`)
+          .join("\n"),
+      )
+      .join("\n\n");
+  }
+
   const schedulableLeads = kanbanLeads.filter((lead) => lead.className === "A" || lead.className === "B");
   const selectedLead = schedulableLeads.find((lead) => lead.id === selectedLeadId) ?? schedulableLeads[0];
   const selectedSlot = scheduleSlots.find((slot) => slot.id === selectedSlotId) ?? scheduleSlots[0];
@@ -398,6 +529,9 @@ export default function HomePage() {
     conversationContacts.find((contact) => contact.id === selectedConversationId) ?? conversationContacts[0];
   const activeConversationMessages =
     conversationThread[selectedConversation?.id ?? ""] ?? defaultConversationMessages;
+  const integrationFields = integrationGroups.flatMap((group) => group.fields);
+  const filledIntegrationCount = integrationFields.filter((field) => integrationValues[field.key].trim()).length;
+  const envPreview = buildEnvPreview();
   const occupiedSlotIds = new Set(
     appointments
       .filter((appointment) => appointment.leadId !== selectedLead?.id)
@@ -808,25 +942,68 @@ export default function HomePage() {
           <article className={`panel integrations-panel ${activePage === "integracoes" ? "" : "page-hidden"}`}>
             <div className="section-title">
               <span className="eyebrow">Conexoes</span>
-              <h2>Integracoes do sistema</h2>
+              <h2>Chaves de API</h2>
             </div>
 
-            <div className="integration-list">
-              {[
-                ["WhatsApp", "Evolution API", "Ativo"],
-                ["IA", "OpenAI API", "Pronto"],
-                ["Memoria", "Redis", "Configurado"],
-                ["CRM", "PostgreSQL e Supabase", "Conectavel"],
-              ].map(([name, detail, status]) => (
-                <div className="integration-row" key={name}>
-                  <div>
-                    <strong>{name}</strong>
-                    <span>{detail}</span>
-                  </div>
-                  <b>{status}</b>
+            <form className="integration-form" onSubmit={handleSaveIntegrations}>
+              <div className="integration-summary">
+                <div>
+                  <strong>{filledIntegrationCount}/{integrationFields.length}</strong>
+                  <span>campos preenchidos</span>
                 </div>
-              ))}
-            </div>
+                <div>
+                  <strong>{integrationSaved ? "Pronto" : "Pendente"}</strong>
+                  <span>validacao local</span>
+                </div>
+              </div>
+
+              <div className="integration-groups">
+                {integrationGroups.map((group) => (
+                  <section className="integration-group" key={group.title}>
+                    <header>
+                      <div>
+                        <strong>{group.title}</strong>
+                        <span>{group.description}</span>
+                      </div>
+                      <b>
+                        {group.fields.filter((field) => integrationValues[field.key].trim()).length}/
+                        {group.fields.length}
+                      </b>
+                    </header>
+
+                    <div className="integration-fields">
+                      {group.fields.map((field) => (
+                        <label className="integration-field" key={field.key}>
+                          <span>{field.label}</span>
+                          <input
+                            name={field.key}
+                            onChange={(event) => handleIntegrationChange(field.key, event.target.value)}
+                            placeholder={field.placeholder}
+                            type={field.type ?? "text"}
+                            value={integrationValues[field.key]}
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  </section>
+                ))}
+              </div>
+
+              <section className="env-preview">
+                <div>
+                  <strong>Arquivo .env para EasyPanel</strong>
+                  <span>Use uma variavel por linha ou campo separado no painel.</span>
+                </div>
+                <textarea readOnly value={envPreview} />
+              </section>
+
+              <div className="integration-actions">
+                <button type="submit">Validar campos</button>
+                <button className="secondary" type="button" onClick={handleCopyEnv}>
+                  {envCopied ? "Copiado" : "Copiar .env"}
+                </button>
+              </div>
+            </form>
           </article>
         </section>
       </section>
