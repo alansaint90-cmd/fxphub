@@ -11,7 +11,6 @@ import {
   normalizeEvolutionText,
   normalizePhone,
 } from "@/lib/validators/evolution";
-import { ZodError } from "zod";
 
 export async function GET() {
   return NextResponse.json({
@@ -34,7 +33,17 @@ export async function POST(request: Request) {
     }
 
     const json = await request.json();
-    const payload = evolutionWebhookSchema.parse({ body: json });
+    const parsedPayload = evolutionWebhookSchema.safeParse({ body: json });
+
+    if (!parsedPayload.success) {
+      return NextResponse.json({
+        ok: true,
+        ignored: "unsupported_evolution_event",
+        event: typeof json?.event === "string" ? json.event : undefined,
+      });
+    }
+
+    const payload = parsedPayload.data;
 
     if (payload.body.data.key.fromMe) {
       return NextResponse.json({ ok: true, ignored: "from_me" });
@@ -80,10 +89,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    if (error instanceof ZodError) {
-      return NextResponse.json({ ok: false, error: "invalid_evolution_payload", issues: error.issues }, { status: 400 });
-    }
-
     const message = error instanceof Error ? error.message : "Erro desconhecido no webhook Evolution.";
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
