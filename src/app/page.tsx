@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties, DragEvent, FormEvent } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const kanbanStages = [
   { id: "novo", label: "Novo Lead", tone: "neutral" },
@@ -74,6 +74,7 @@ interface IntegrationField {
 }
 
 interface IntegrationGroup {
+  id: "system" | "database" | "evolution" | "aiMemory" | "calendar";
   title: string;
   description: string;
   fields: IntegrationField[];
@@ -319,6 +320,7 @@ const scheduleSlots: ScheduleSlot[] = [
 
 const integrationGroups: IntegrationGroup[] = [
   {
+    id: "system",
     title: "Sistema",
     description: "Ambiente de producao e usuario tecnico.",
     fields: [
@@ -333,6 +335,7 @@ const integrationGroups: IntegrationGroup[] = [
     ],
   },
   {
+    id: "database",
     title: "Banco e CRM",
     description: "PostgreSQL/Supabase usados para leads, mensagens e agenda.",
     fields: [
@@ -352,6 +355,7 @@ const integrationGroups: IntegrationGroup[] = [
     ],
   },
   {
+    id: "evolution",
     title: "WhatsApp",
     description: "Evolution API para receber e responder mensagens.",
     fields: [
@@ -367,6 +371,7 @@ const integrationGroups: IntegrationGroup[] = [
     ],
   },
   {
+    id: "aiMemory",
     title: "IA e memoria",
     description: "OpenAI para resposta inteligente e Redis para buffer.",
     fields: [
@@ -378,6 +383,7 @@ const integrationGroups: IntegrationGroup[] = [
     ],
   },
   {
+    id: "calendar",
     title: "Google Agenda",
     description: "Agenda usada para disponibilidade e reunioes.",
     fields: [
@@ -417,6 +423,12 @@ export default function HomePage() {
   const [integrationValues, setIntegrationValues] = useState(initialIntegrationValues);
   const [integrationSaved, setIntegrationSaved] = useState(false);
   const [envCopied, setEnvCopied] = useState(false);
+  const [webhookUrl, setWebhookUrl] = useState("https://fxphub.space/api/webhooks/evolution");
+  const [webhookCopied, setWebhookCopied] = useState(false);
+  const [integrationValidation, setIntegrationValidation] = useState<Record<string, string>>({});
+  const [evolutionTestPhone, setEvolutionTestPhone] = useState("");
+  const [evolutionTestMessage, setEvolutionTestMessage] = useState("Teste fxphub: Evolution API conectada.");
+  const [evolutionTestStatus, setEvolutionTestStatus] = useState("");
   const [appointments, setAppointments] = useState<Appointment[]>([
     {
       id: "appointment-cfc-catuense",
@@ -426,6 +438,12 @@ export default function HomePage() {
       time: "09:00",
     },
   ]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setWebhookUrl(`${window.location.origin}/api/webhooks/evolution`);
+    }
+  }, []);
 
   function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -510,6 +528,64 @@ export default function HomePage() {
     const envText = buildEnvPreview();
     await navigator.clipboard?.writeText(envText);
     setEnvCopied(true);
+  }
+
+  async function handleCopyWebhook() {
+    await navigator.clipboard?.writeText(webhookUrl);
+    setWebhookCopied(true);
+  }
+
+  async function handleValidateIntegration(group: IntegrationGroup) {
+    const missingFields = group.fields.filter((field) => !integrationValues[field.key].trim());
+    const localStatus = missingFields.length
+      ? `Campos pendentes: ${missingFields.map((field) => field.key).join(", ")}`
+      : "Campos preenchidos.";
+
+    try {
+      const response = await fetch("/api/integrations/status", { cache: "no-store" });
+      const status = (await response.json()) as Record<string, boolean>;
+      const statusByGroup: Record<IntegrationGroup["id"], string> = {
+        system: "Validacao local concluida.",
+        database: `Servidor: ${status.databaseConfigured ? "DATABASE_URL ok" : "DATABASE_URL pendente"} / ${
+          status.supabaseConfigured ? "Supabase ok" : "Supabase opcional pendente"
+        }.`,
+        evolution: `Servidor: ${status.evolutionConfigured ? "Evolution configurada" : "Evolution pendente"}.`,
+        aiMemory: `Servidor: ${status.openAiConfigured ? "OpenAI ok" : "OpenAI pendente"} / ${
+          status.redisConfigured ? "Redis ok" : "Redis pendente"
+        }.`,
+        calendar: `Servidor: ${status.calendarConfigured ? "Google Agenda ok" : "Google Agenda pendente"}.`,
+      };
+
+      setIntegrationValidation((current) => ({
+        ...current,
+        [group.id]: `${localStatus} ${statusByGroup[group.id]}`,
+      }));
+    } catch {
+      setIntegrationValidation((current) => ({
+        ...current,
+        [group.id]: `${localStatus} Nao foi possivel consultar o servidor.`,
+      }));
+    }
+  }
+
+  async function handleSendEvolutionTest() {
+    setEvolutionTestStatus("Enviando...");
+
+    try {
+      const response = await fetch("/api/integrations/evolution/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: evolutionTestPhone,
+          message: evolutionTestMessage,
+        }),
+      });
+      const result = (await response.json()) as { ok?: boolean; error?: string };
+
+      setEvolutionTestStatus(result.ok ? "Mensagem de teste enviada." : result.error ?? "Falha no envio.");
+    } catch {
+      setEvolutionTestStatus("Nao foi possivel chamar o teste da Evolution.");
+    }
   }
 
   function buildEnvPreview() {
@@ -965,10 +1041,15 @@ export default function HomePage() {
                         <strong>{group.title}</strong>
                         <span>{group.description}</span>
                       </div>
-                      <b>
-                        {group.fields.filter((field) => integrationValues[field.key].trim()).length}/
-                        {group.fields.length}
-                      </b>
+                      <div className="integration-group-actions">
+                        <b>
+                          {group.fields.filter((field) => integrationValues[field.key].trim()).length}/
+                          {group.fields.length}
+                        </b>
+                        <button type="button" onClick={() => handleValidateIntegration(group)}>
+                          Validar
+                        </button>
+                      </div>
                     </header>
 
                     <div className="integration-fields">
@@ -985,6 +1066,46 @@ export default function HomePage() {
                         </label>
                       ))}
                     </div>
+
+                    {group.id === "evolution" ? (
+                      <div className="evolution-tools">
+                        <label className="integration-field">
+                          <span>Webhook para colocar na Evolution</span>
+                          <input readOnly value={webhookUrl} />
+                        </label>
+                        <button className="secondary" type="button" onClick={handleCopyWebhook}>
+                          {webhookCopied ? "Webhook copiado" : "Copiar webhook"}
+                        </button>
+
+                        <div className="evolution-test">
+                          <label className="integration-field">
+                            <span>Numero para teste</span>
+                            <input
+                              onChange={(event) => setEvolutionTestPhone(event.target.value)}
+                              placeholder="5571999999999"
+                              value={evolutionTestPhone}
+                            />
+                          </label>
+                          <label className="integration-field">
+                            <span>Mensagem de teste</span>
+                            <input
+                              onChange={(event) => setEvolutionTestMessage(event.target.value)}
+                              placeholder="Mensagem de teste"
+                              value={evolutionTestMessage}
+                            />
+                          </label>
+                          <button type="button" onClick={handleSendEvolutionTest}>
+                            Enviar teste
+                          </button>
+                        </div>
+
+                        {evolutionTestStatus ? <p className="integration-status">{evolutionTestStatus}</p> : null}
+                      </div>
+                    ) : null}
+
+                    {integrationValidation[group.id] ? (
+                      <p className="integration-status">{integrationValidation[group.id]}</p>
+                    ) : null}
                   </section>
                 ))}
               </div>

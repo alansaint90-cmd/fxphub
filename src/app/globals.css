@@ -1425,7 +1425,13 @@ h2 {
   gap: 4px;
 }
 
-.integration-group header b {
+.integration-group-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.integration-group-actions b {
   min-width: 42px;
   border-radius: 999px;
   background: #111111;
@@ -1433,6 +1439,12 @@ h2 {
   font-size: 12px;
   padding: 6px 9px;
   text-align: center;
+}
+
+.integration-group-actions button {
+  min-height: 34px;
+  padding: 0 12px;
+  box-shadow: none;
 }
 
 .integration-fields {
@@ -1454,6 +1466,35 @@ h2 {
   background: #ffffff;
   color: var(--foreground);
   outline: none;
+}
+
+.evolution-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+.evolution-test {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(180px, 0.7fr) minmax(220px, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.integration-status {
+  margin: 0;
+  border: 1px solid rgba(79, 124, 255, 0.16);
+  border-radius: var(--radius);
+  background: rgba(79, 124, 255, 0.08);
+  color: var(--muted-strong);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.45;
+  padding: 10px 12px;
 }
 
 .integration-field input {
@@ -1605,9 +1646,15 @@ h2 {
   }
 
   .integration-group header,
-  .integration-actions {
+  .integration-actions,
+  .integration-group-actions {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .evolution-tools,
+  .evolution-test {
+    grid-template-columns: 1fr;
   }
 
   .command-panel h2 {
