@@ -3,8 +3,8 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Fausto IA",
-  description: "Pre-qualificacao automatica de leads para autoescolas.",
+  title: "fxphub",
+  description: "Hub comercial com IA para pre-qualificacao de leads.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

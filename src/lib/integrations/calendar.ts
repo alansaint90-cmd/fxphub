@@ -91,8 +91,8 @@ export class GoogleCalendarGateway implements CalendarGateway {
     const event = await this.calendar.events.insert({
       calendarId: env.GOOGLE_CALENDAR_ID,
       requestBody: {
-        summary: `Reuniao Auto Pro IA CRM - ${input.leadName}`,
-        description: `Lead: ${input.leadName}\nTelefone: ${input.phone}\nOrigem: Fausto IA`,
+        summary: `Reuniao fxphub - ${input.leadName}`,
+        description: `Lead: ${input.leadName}\nTelefone: ${input.phone}\nOrigem: fxphub IA`,
         start: {
           dateTime: input.startsAt.toISOString(),
           timeZone: env.GOOGLE_TIME_ZONE,

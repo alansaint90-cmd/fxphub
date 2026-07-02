@@ -160,7 +160,7 @@ export class FaustoConversationService {
     const event = await this.calendar.createEvent({
       startsAt: selectedSlot.startsAt,
       endsAt: selectedSlot.endsAt,
-      leadName: lead.drivingSchoolName ?? lead.pushName ?? "Lead Fausto",
+      leadName: lead.drivingSchoolName ?? lead.pushName ?? "Lead fxphub",
       phone: lead.phone,
     });
 
@@ -173,7 +173,7 @@ export class FaustoConversationService {
 
     return [
       "Reuniao confirmada com sucesso.",
-      "Nossa equipe apresentara como o Auto Pro IA CRM pode automatizar seu atendimento, organizar seus leads e aumentar suas matriculas.",
+      "Nossa equipe apresentara como o fxphub pode automatizar seu atendimento, organizar seus leads e aumentar suas matriculas.",
       "Nos vemos em breve.",
     ].join("\n");
   }

@@ -1,6 +1,6 @@
 "use client";
 
-import type { DragEvent, FormEvent } from "react";
+import type { CSSProperties, DragEvent, FormEvent } from "react";
 import { useState } from "react";
 
 const kanbanStages = [
@@ -17,7 +17,7 @@ type AppPage = "dashboard" | "funil" | "conversas" | "agenda" | "integracoes";
 const appPages: { id: AppPage; label: string; badge?: number }[] = [
   { id: "dashboard", label: "Dashboard" },
   { id: "funil", label: "Funil" },
-  { id: "conversas", label: "Conversas", badge: 8 },
+  { id: "conversas", label: "Conversas" },
   { id: "agenda", label: "Agenda" },
   { id: "integracoes", label: "Integracoes" },
 ];
@@ -48,6 +48,24 @@ interface Appointment {
   time: string;
 }
 
+interface ConversationContact {
+  id: string;
+  name: string;
+  initials: string;
+  preview: string;
+  time: string;
+  channel: string;
+  unread?: number;
+}
+
+interface ConversationMessage {
+  id: string;
+  author: "lead" | "operator";
+  sender?: string;
+  text: string;
+  time: string;
+}
+
 const initialKanbanLeads: KanbanLead[] = [
   {
     id: "lead-cfc-catuense",
@@ -56,7 +74,7 @@ const initialKanbanLeads: KanbanLead[] = [
     score: 91,
     className: "A",
     pain: "Sem CRM, trafego pago ativo",
-    owner: "Fausto",
+    owner: "fxphub",
     stage: "agendamento",
   },
   {
@@ -86,7 +104,7 @@ const initialKanbanLeads: KanbanLead[] = [
     score: 57,
     className: "B",
     pain: "Atendimento manual",
-    owner: "Fausto",
+    owner: "fxphub",
     stage: "ia",
   },
   {
@@ -138,22 +156,132 @@ const leads = [
   },
 ];
 
-const messages = [
+const conversationContacts: ConversationContact[] = [
   {
+    id: "marcio",
+    name: "Marcio",
+    initials: "M",
+    preview: "Fechando comigo, consigo um desconto espe...",
+    time: "5 h",
+    channel: "Facebook Ads",
+    unread: 2,
+  },
+  {
+    id: "roanderson",
+    name: "Roanderson Leite",
+    initials: "RL",
+    preview: "Gostaria de saber se ja conseguiu marcar a pro...",
+    time: "5 h",
+    channel: "Instagram Ads",
+  },
+  {
+    id: "xandy",
+    name: "Xandy",
+    initials: "X",
+    preview: "[imagem recebida]",
+    time: "5 h",
+    channel: "WhatsApp",
+    unread: 1,
+  },
+  {
+    id: "soldado",
+    name: "Soldado",
+    initials: "S",
+    preview: "Ta ok obrigado.",
+    time: "6 h",
+    channel: "WhatsApp",
+  },
+  {
+    id: "coracoes",
+    name: "Lead ativo",
+    initials: "LA",
+    preview: "Estou cobrando todos os dias e nada",
+    time: "6 h",
+    channel: "WhatsApp",
+  },
+  {
+    id: "bruno",
+    name: "Bruno",
+    initials: "B",
+    preview: "Aqui no br",
+    time: "6 h",
+    channel: "Google Ads",
+  },
+  {
+    id: "denilson",
+    name: "Denilson Rabelo",
+    initials: "DR",
+    preview: "Mas uns dias ?",
+    time: "6 h",
+    channel: "WhatsApp",
+  },
+];
+
+const conversationThread: Record<string, ConversationMessage[]> = {
+  soldado: [
+    {
+      id: "msg-1",
+      author: "lead",
+      text: "Ola, boa tarde !",
+      time: "9 h",
+    },
+    {
+      id: "msg-2",
+      author: "lead",
+      text: "Devo estar ai na escola que horas ?",
+      time: "9 h",
+    },
+    {
+      id: "msg-3",
+      author: "operator",
+      sender: "Superadmin - Super Admin",
+      text: "Ola, bom dia!",
+      time: "6 h",
+    },
+    {
+      id: "msg-4",
+      author: "operator",
+      sender: "Superadmin - Super Admin",
+      text: "o exame e no Detran, precisa estar la as 08:00 Caso queira ir na carona do veiculo, precisa esta aqui na auto escola as 07:00, o carro sai daqui nesse horario",
+      time: "6 h",
+    },
+    {
+      id: "msg-5",
+      author: "lead",
+      text: "Ta ok obrigado.",
+      time: "6 h",
+    },
+  ],
+  marcio: [
+    {
+      id: "msg-marcio-1",
+      author: "lead",
+      text: "Fechando comigo, consigo um desconto especial?",
+      time: "5 h",
+    },
+    {
+      id: "msg-marcio-2",
+      author: "operator",
+      sender: "fxphub IA",
+      text: "Consigo verificar as condicoes para sua autoescola. Quantas matriculas voces fazem por mes?",
+      time: "5 h",
+    },
+  ],
+};
+
+const defaultConversationMessages: ConversationMessage[] = [
+  {
+    id: "default-1",
     author: "lead",
-    text: "Tenho uma autoescola com 4 atendentes e uns 40 alunos por mes.",
+    text: "Tenho interesse em organizar melhor meu atendimento pelo WhatsApp.",
+    time: "6 h",
   },
   {
-    author: "ia",
-    text: "Perfeito. Voce usa algum CRM para acompanhar esses leads?",
-  },
-  {
-    author: "lead",
-    text: "Nao. Hoje fica tudo no WhatsApp e acaba perdendo conversa.",
-  },
-  {
-    author: "ia",
-    text: "Entendi. Isso ja mostra uma dor clara de acompanhamento e conversao.",
+    id: "default-2",
+    author: "operator",
+    sender: "fxphub IA",
+    text: "Perfeito. Vou registrar seu contexto e manter o historico completo para o comercial.",
+    time: "6 h",
   },
 ];
 
@@ -182,6 +310,7 @@ export default function HomePage() {
   const [kanbanLeads, setKanbanLeads] = useState(initialKanbanLeads);
   const [draggingLeadId, setDraggingLeadId] = useState<string | null>(null);
   const [activePage, setActivePage] = useState<AppPage>("dashboard");
+  const [selectedConversationId, setSelectedConversationId] = useState("soldado");
   const [selectedLeadId, setSelectedLeadId] = useState("lead-cfc-catuense");
   const [selectedSlotId, setSelectedSlotId] = useState("seg-09");
   const [appointments, setAppointments] = useState<Appointment[]>([
@@ -265,6 +394,10 @@ export default function HomePage() {
   const schedulableLeads = kanbanLeads.filter((lead) => lead.className === "A" || lead.className === "B");
   const selectedLead = schedulableLeads.find((lead) => lead.id === selectedLeadId) ?? schedulableLeads[0];
   const selectedSlot = scheduleSlots.find((slot) => slot.id === selectedSlotId) ?? scheduleSlots[0];
+  const selectedConversation =
+    conversationContacts.find((contact) => contact.id === selectedConversationId) ?? conversationContacts[0];
+  const activeConversationMessages =
+    conversationThread[selectedConversation?.id ?? ""] ?? defaultConversationMessages;
   const occupiedSlotIds = new Set(
     appointments
       .filter((appointment) => appointment.leadId !== selectedLead?.id)
@@ -280,25 +413,24 @@ export default function HomePage() {
   if (!isAuthenticated) {
     return (
       <main className="login-screen">
-        <section className="login-panel" aria-label="Acesso ao Fausto IA">
+        <section className="login-panel" aria-label="Acesso ao fxphub">
           <div className="brand login-brand">
-            <div className="brand-mark">F</div>
+            <div className="brand-mark">fx</div>
             <div>
-              <strong>Fausto IA</strong>
-              <span>Auto Pro IA CRM</span>
+              <strong>fxphub</strong>
+              <span>AI Commercial Hub</span>
             </div>
           </div>
 
           <div className="login-copy">
             <span className="eyebrow">Acesso comercial</span>
-            <h1>Entre na central de qualificacao</h1>
-            <p>Monitore leads, score, conversas e agenda comercial em um unico painel.</p>
+            <h1>Entre no hub comercial</h1>
           </div>
 
           <form className="login-form" onSubmit={handleLogin}>
             <label>
               <span>E-mail</span>
-              <input name="email" type="email" placeholder="operador@faustoia.com" autoComplete="email" />
+              <input name="email" type="email" placeholder="operador@fxphub.space" autoComplete="email" />
             </label>
 
             <label>
@@ -312,29 +444,6 @@ export default function HomePage() {
           </form>
         </section>
 
-        <aside className="login-preview" aria-label="Resumo operacional">
-          <div className="preview-top">
-            <span className="pulse" />
-            <strong>IA ativa</strong>
-          </div>
-
-          <div className="preview-score">
-            <span>Score A</span>
-            <strong>91</strong>
-            <small>CFC Catuense pronto para reuniao</small>
-          </div>
-
-          <div className="preview-stack">
-            <div>
-              <span>Qualificados hoje</span>
-              <strong>23</strong>
-            </div>
-            <div>
-              <span>Agenda protegida</span>
-              <strong>9h</strong>
-            </div>
-          </div>
-        </aside>
       </main>
     );
   }
@@ -343,10 +452,10 @@ export default function HomePage() {
     <main className="app-shell">
       <aside className="sidebar" aria-label="Navegacao principal">
         <div className="brand">
-          <div className="brand-mark">F</div>
+          <div className="brand-mark">fx</div>
           <div>
-            <strong>Fausto IA</strong>
-            <span>Pre-qualificacao</span>
+            <strong>fxphub</strong>
+            <span>AI Commercial Hub</span>
           </div>
         </div>
 
@@ -367,15 +476,14 @@ export default function HomePage() {
         <div className="ai-card">
           <span className="pulse" />
           <strong>IA ativa</strong>
-          <p>Evolution, OpenAI, Redis e Postgres prontos para conectar.</p>
         </div>
       </aside>
 
       <section className="workspace">
         <header className="topbar">
           <div>
-            <span className="eyebrow">Auto Pro IA CRM</span>
-            <h1>Central de qualificacao comercial</h1>
+            <span className="eyebrow">fxphub workspace</span>
+            <h1>Central comercial com IA</h1>
           </div>
           <div className="top-actions">
             <label className="search">
@@ -392,29 +500,42 @@ export default function HomePage() {
         <section id="dashboard" className={`hero-grid ${activePage === "dashboard" ? "" : "page-hidden"}`}>
           <article className="command-panel">
             <div className="panel-heading">
-              <span className="eyebrow">Operacao em tempo real</span>
-              <h2>Fausto filtra curiosos antes da agenda comercial</h2>
+              <span className="eyebrow">Operacao</span>
+              <h2>Visao geral</h2>
             </div>
-            <p>
-              A IA registra cada resposta, recalcula score, identifica dores e so libera reuniao
-              para leads classificados como A ou B.
-            </p>
 
             <div className="metric-grid">
               <div className="metric">
                 <span>Leads hoje</span>
                 <strong>77</strong>
-                <small>+18% vs. ontem</small>
               </div>
               <div className="metric">
                 <span>Qualificados</span>
                 <strong>23</strong>
-                <small>A/B prontos</small>
               </div>
               <div className="metric">
                 <span>Agenda salva</span>
                 <strong>9h</strong>
-                <small>Curiosos barrados</small>
+              </div>
+            </div>
+
+            <div className="growth-chart" aria-label="Evolucao mensal de qualificacao">
+              <div className="chart-toolbar">
+                <span>Performance anual</span>
+                <b>+24.8%</b>
+              </div>
+              <div className="chart-line">
+                {["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"].map(
+                  (month, index) => (
+                    <span
+                      className={index === 9 ? "active" : ""}
+                      key={month}
+                      style={{ "--point": `${34 + index * 4 + (index % 3) * 5}%` } as CSSProperties}
+                    >
+                      {month}
+                    </span>
+                  ),
+                )}
               </div>
             </div>
           </article>
@@ -425,7 +546,6 @@ export default function HomePage() {
               <small>Score A</small>
             </div>
             <h2>CFC Catuense</h2>
-            <p>4 atendentes, media de 40 matriculas por mes, sem CRM e com trafego pago ativo.</p>
             <div className="tag-row">
               <span>Cliente ideal</span>
               <span>Agendar</span>
@@ -439,7 +559,6 @@ export default function HomePage() {
               <span className="eyebrow">Funil operacional</span>
               <h2>Kanban de qualificacao</h2>
             </div>
-            <span>{kanbanLeads.length} leads em acompanhamento</span>
           </div>
 
           <div className="kanban-board" aria-label="Quadro Kanban do funil">
@@ -488,6 +607,105 @@ export default function HomePage() {
           </div>
         </section>
 
+        <section id="conversas" className={`support-console ${activePage === "conversas" ? "" : "page-hidden"}`}>
+          <header className="support-topbar">
+            <div>
+              <h2>Central de Atendimento</h2>
+            </div>
+
+            <div className="support-tools" aria-label="Ferramentas de atendimento">
+              <label className="support-search">
+                <span>Q</span>
+                <input placeholder="Buscar leads, conversas, clientes..." />
+              </label>
+              <button className="ai-status-button" type="button">
+                Status da IA <strong>Ativo</strong>
+              </button>
+              <button className="icon-button" type="button" aria-label="Notificacoes">
+                1
+              </button>
+              <div className="support-logo">fx</div>
+            </div>
+          </header>
+
+          <div className="support-body">
+            <aside className="inbox-panel" aria-label="Caixa de entrada">
+              <div className="inbox-heading">
+                <strong>Caixa de entrada</strong>
+              </div>
+
+              <label className="inbox-search">
+                <span>Q</span>
+                <input placeholder="Buscar conversa..." />
+              </label>
+
+              <div className="inbox-filters">
+                <button className="active" type="button">Tudo</button>
+                <button type="button">Leads anuncios</button>
+                <button type="button">Follow</button>
+                <button className="round-action" type="button" aria-label="Nova conversa">+</button>
+                <button className="round-action" type="button" aria-label="Mais filtros">v</button>
+              </div>
+
+              <div className="conversation-list">
+                {conversationContacts.map((contact) => (
+                  <button
+                    className={`conversation-contact ${selectedConversation.id === contact.id ? "active" : ""}`}
+                    key={contact.id}
+                    type="button"
+                    onClick={() => setSelectedConversationId(contact.id)}
+                  >
+                    <span className="contact-avatar">{contact.initials}</span>
+                    <span className="contact-copy">
+                      <strong>{contact.name}</strong>
+                      <small>{contact.preview}</small>
+                    </span>
+                    <span className="contact-meta">
+                      <small>{contact.time}</small>
+                      {contact.unread ? <b>{contact.unread}</b> : null}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </aside>
+
+            <article className="chat-panel" aria-label={`Conversa com ${selectedConversation.name}`}>
+              <header className="chat-header">
+                <div className="chat-person">
+                  <span className="contact-avatar large">{selectedConversation.initials}</span>
+                  <div>
+                    <strong>{selectedConversation.name}</strong>
+                    <small>{selectedConversation.channel}</small>
+                  </div>
+                </div>
+
+                <div className="chat-actions">
+                  <button className="pilot" type="button">Piloto: Superadmin</button>
+                  <button type="button">Devolver para IA</button>
+                  <button className="assumed" type="button">Assumido</button>
+                </div>
+              </header>
+
+              <div className="chat-messages">
+                {activeConversationMessages.map((message) => (
+                  <div className={`chat-bubble ${message.author}`} key={message.id}>
+                    {message.sender ? <strong>{message.sender}</strong> : null}
+                    <p>{message.text}</p>
+                    <span>{message.time}</span>
+                  </div>
+                ))}
+              </div>
+
+              <form className="message-composer">
+                <button type="button" aria-label="Abrir acoes">v</button>
+                <input placeholder="Digite sua mensagem..." />
+                <button type="button" aria-label="Anexar">+</button>
+                <button type="submit">Enviar</button>
+              </form>
+            </article>
+          </div>
+        </section>
+
         <section className="content-grid">
           <article className={`panel lead-table ${activePage === "dashboard" ? "" : "page-hidden"}`}>
             <div className="section-title">
@@ -511,24 +729,6 @@ export default function HomePage() {
             ))}
           </article>
 
-          <article id="conversas" className={`panel conversation ${activePage === "conversas" ? "" : "page-hidden"}`}>
-            <div className="section-title">
-              <span className="eyebrow">WhatsApp</span>
-              <h2>Conversa assistida</h2>
-            </div>
-            <div className="chat-window">
-              {messages.map((message) => (
-                <p className={`bubble ${message.author}`} key={message.text}>
-                  {message.text}
-                </p>
-              ))}
-            </div>
-            <div className="control-row">
-              <button type="button">Assumir</button>
-              <button className="secondary" type="button">Pausar IA</button>
-            </div>
-          </article>
-
           <article className={`panel diagnostic ${activePage === "dashboard" ? "" : "page-hidden"}`}>
             <div className="section-title">
               <span className="eyebrow">Diagnostico</span>
@@ -539,10 +739,6 @@ export default function HomePage() {
                 <span key={pain}>{pain}</span>
               ))}
             </div>
-            <p>
-              Resumo automatico salvo no CRM com contexto operacional, volume, equipe,
-              maturidade comercial e proximos passos.
-            </p>
           </article>
 
           <article id="agenda" className={`panel agenda-panel ${activePage === "agenda" ? "" : "page-hidden"}`}>
