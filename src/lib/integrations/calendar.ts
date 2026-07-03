@@ -36,7 +36,11 @@ export class InternalCalendarGateway implements CalendarGateway {
           gt(appointments.endsAt, new Date()),
           lt(appointments.startsAt, lastCandidate.endsAt),
         ),
-      );
+      )
+      .catch((error) => {
+        console.error("[Internal calendar] Failed to read busy appointments", error);
+        return [];
+      });
 
     return candidates
       .filter((slot) =>

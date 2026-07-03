@@ -453,6 +453,9 @@ export default function HomePage() {
   const [calendarAppointments, setCalendarAppointments] = useState<CalendarAppointment[]>([]);
   const [calendarSlots, setCalendarSlots] = useState<CalendarAvailableSlot[]>([]);
   const [calendarStatus, setCalendarStatus] = useState("Carregando agenda interna...");
+  const [agendaReferenceDate, setAgendaReferenceDate] = useState(new Date());
+  const [agendaTouched, setAgendaTouched] = useState(false);
+  const [selectedCalendarAppointmentId, setSelectedCalendarAppointmentId] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -466,6 +469,7 @@ export default function HomePage() {
         const response = await fetch("/api/appointments/calendar", { cache: "no-store" });
         const result = (await response.json()) as {
           ok?: boolean;
+          databaseAvailable?: boolean;
           appointments?: CalendarAppointment[];
           availableSlots?: CalendarAvailableSlot[];
         };
@@ -477,14 +481,25 @@ export default function HomePage() {
 
         setCalendarAppointments(result.appointments ?? []);
         setCalendarSlots(result.availableSlots ?? []);
-        setCalendarStatus("Agenda interna conectada ao banco.");
+        setCalendarStatus(
+          result.databaseAvailable === false
+            ? "Agenda interna ativa, mas o banco local nao esta conectado."
+            : "Agenda interna conectada ao banco. Atualiza automaticamente.",
+        );
+
+        if (!agendaTouched) {
+          const nextDate = result.appointments?.[0]?.startsAt ?? result.availableSlots?.[0]?.startsAt;
+          if (nextDate) setAgendaReferenceDate(new Date(nextDate));
+        }
       } catch {
         setCalendarStatus("Nao foi possivel consultar a agenda interna.");
       }
     }
 
     loadCalendar();
-  }, []);
+    const intervalId = window.setInterval(loadCalendar, 10000);
+    return () => window.clearInterval(intervalId);
+  }, [agendaTouched]);
 
   useEffect(() => {
     async function loadIntegrationSettings() {
@@ -679,6 +694,20 @@ export default function HomePage() {
     }
   }
 
+  function handleAgendaToday() {
+    setAgendaTouched(true);
+    setAgendaReferenceDate(new Date());
+  }
+
+  function handleAgendaWeekOffset(offset: number) {
+    setAgendaTouched(true);
+    setAgendaReferenceDate((currentDate) => {
+      const nextDate = new Date(currentDate);
+      nextDate.setDate(currentDate.getDate() + offset * 7);
+      return nextDate;
+    });
+  }
+
   function buildEnvPreview() {
     return integrationGroups
       .map((group) =>
@@ -702,13 +731,15 @@ export default function HomePage() {
     (field) => integrationValues[field.key].trim() || savedIntegrationSecrets[field.key],
   ).length;
   const envPreview = buildEnvPreview();
-  const agendaWeekDays = buildWeekDays();
+  const agendaWeekDays = buildWeekDays(agendaReferenceDate);
   const agendaMonthRange = formatAgendaMonthRange(agendaWeekDays);
   const nextCalendarSlots = calendarSlots.slice(0, 5);
   const calendarEventsByDay = agendaWeekDays.map((day) => ({
     day,
     events: calendarAppointments.filter((appointment) => isSameAgendaDay(new Date(appointment.startsAt), day)),
   }));
+  const selectedCalendarAppointment =
+    calendarAppointments.find((appointment) => appointment.id === selectedCalendarAppointmentId) ?? null;
 
   if (!isAuthenticated) {
     return (
@@ -783,7 +814,6 @@ export default function HomePage() {
         <header className="topbar">
           <div>
             <span className="eyebrow">fxphub workspace</span>
-            <h1>Central comercial com IA</h1>
           </div>
           <div className="top-actions">
             <label className="search">
@@ -1072,8 +1102,14 @@ export default function HomePage() {
 
               <div className="agenda-calendar">
                 <header className="agenda-calendar-toolbar">
-                  <button type="button">Hoje</button>
+                  <button type="button" onClick={handleAgendaToday}>Hoje</button>
+                  <button type="button" aria-label="Semana anterior" onClick={() => handleAgendaWeekOffset(-1)}>
+                    ‹
+                  </button>
                   <h2>{agendaMonthRange}</h2>
+                  <button type="button" aria-label="Proxima semana" onClick={() => handleAgendaWeekOffset(1)}>
+                    ›
+                  </button>
                   <span>Semana</span>
                 </header>
 
@@ -1105,12 +1141,20 @@ export default function HomePage() {
                         const top = Math.max(0, (start.getHours() - 8) * 52 + start.getMinutes() * 0.86);
 
                         return (
-                          <article className="agenda-event" key={event.id} style={{ top }}>
+                          <button
+                            className={`agenda-event ${
+                              selectedCalendarAppointmentId === event.id ? "selected" : ""
+                            }`}
+                            key={event.id}
+                            style={{ top }}
+                            type="button"
+                            onClick={() => setSelectedCalendarAppointmentId(event.id)}
+                          >
                             <strong>{event.leadName}</strong>
                             <span>
                               {formatAgendaTime(event.startsAt)} - {formatAgendaTime(event.endsAt)}
                             </span>
-                          </article>
+                          </button>
                         );
                       })}
                     </div>
@@ -1118,6 +1162,63 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
+
+            {selectedCalendarAppointment ? (
+              <div
+                className="appointment-modal-backdrop"
+                role="presentation"
+                onClick={() => setSelectedCalendarAppointmentId(null)}
+              >
+                <section
+                  className="appointment-detail-modal"
+                  aria-label="Detalhes do agendamento"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <header>
+                    <div>
+                      <span className="eyebrow">Agendamento confirmado</span>
+                      <h2>{selectedCalendarAppointment.leadName}</h2>
+                    </div>
+                    <button
+                      type="button"
+                      aria-label="Fechar detalhes"
+                      onClick={() => setSelectedCalendarAppointmentId(null)}
+                    >
+                      x
+                    </button>
+                  </header>
+
+                  <div className="appointment-detail-grid">
+                    <div>
+                      <span>Data</span>
+                      <strong>
+                        {new Intl.DateTimeFormat("pt-BR", {
+                          weekday: "long",
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                        }).format(new Date(selectedCalendarAppointment.startsAt))}
+                      </strong>
+                    </div>
+                    <div>
+                      <span>Horario</span>
+                      <strong>
+                        {formatAgendaTime(selectedCalendarAppointment.startsAt)} -{" "}
+                        {formatAgendaTime(selectedCalendarAppointment.endsAt)}
+                      </strong>
+                    </div>
+                    <div>
+                      <span>Telefone</span>
+                      <strong>{selectedCalendarAppointment.phone}</strong>
+                    </div>
+                    <div>
+                      <span>Status</span>
+                      <strong>{selectedCalendarAppointment.status}</strong>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            ) : null}
           </article>
 
           <article className={`panel integrations-panel ${activePage === "integracoes" ? "" : "page-hidden"}`}>

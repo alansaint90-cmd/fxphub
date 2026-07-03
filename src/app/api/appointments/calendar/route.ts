@@ -9,6 +9,7 @@ export async function GET() {
   const calendar = createCalendarGateway();
   const availableSlots = await calendar.getAvailableSlots();
 
+  let databaseAvailable = true;
   const scheduledAppointments = await db
     .select({
       id: appointments.id,
@@ -30,11 +31,17 @@ export async function GET() {
       ),
     )
     .orderBy(asc(appointments.startsAt))
-    .limit(30);
+    .limit(30)
+    .catch((error) => {
+      databaseAvailable = false;
+      console.error("[Appointments calendar] Failed to load appointments", error);
+      return [];
+    });
 
   return NextResponse.json({
     ok: true,
     mode: "internal",
+    databaseAvailable,
     appointments: scheduledAppointments.map((appointment) => ({
       id: appointment.id,
       leadId: appointment.leadId,
