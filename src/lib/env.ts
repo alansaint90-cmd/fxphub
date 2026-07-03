@@ -16,10 +16,6 @@ const envSchema = z.object({
   EVOLUTION_API_KEY: z.string().min(1).optional(),
   EVOLUTION_INSTANCE_NAME: z.string().min(1).optional(),
   EVOLUTION_WEBHOOK_SECRET: z.string().min(1).optional(),
-  GOOGLE_CALENDAR_ID: z.string().min(1).optional(),
-  GOOGLE_SERVICE_ACCOUNT_EMAIL: z.string().email().optional(),
-  GOOGLE_PRIVATE_KEY: z.string().min(1).optional(),
-  GOOGLE_TIME_ZONE: z.string().min(1).default("America/Sao_Paulo"),
   SYSTEM_USER_ID: z
     .preprocess((value) => (typeof value === "string" ? value.trim() : value), uuidSchema)
     .catch(fallbackSystemUserId),

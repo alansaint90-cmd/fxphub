@@ -13,9 +13,8 @@ export async function GET() {
     ),
     openAiConfigured: Boolean(settings.OPENAI_API_KEY),
     redisConfigured: Boolean(settings.REDIS_URL),
-    calendarConfigured: Boolean(
-      settings.GOOGLE_CALENDAR_ID && settings.GOOGLE_SERVICE_ACCOUNT_EMAIL && settings.GOOGLE_PRIVATE_KEY,
-    ),
+    calendarConfigured: true,
+    calendarMode: "internal",
     webhookUrl: "/api/webhooks/evolution",
   });
 }

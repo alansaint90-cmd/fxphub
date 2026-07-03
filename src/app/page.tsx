@@ -74,7 +74,7 @@ interface IntegrationField {
 }
 
 interface IntegrationGroup {
-  id: "system" | "database" | "evolution" | "aiMemory" | "calendar";
+  id: "system" | "database" | "evolution" | "aiMemory";
   title: string;
   description: string;
   fields: IntegrationField[];
@@ -389,26 +389,6 @@ const integrationGroups: IntegrationGroup[] = [
       { key: "MESSAGE_BUFFER_TTL_SECONDS", label: "Buffer TTL", placeholder: "60" },
     ],
   },
-  {
-    id: "calendar",
-    title: "Google Agenda",
-    description: "Agenda usada para disponibilidade e reunioes.",
-    fields: [
-      { key: "GOOGLE_CALENDAR_ID", label: "Calendar ID", placeholder: "primary" },
-      {
-        key: "GOOGLE_SERVICE_ACCOUNT_EMAIL",
-        label: "Service account",
-        placeholder: "sua-service-account@projeto.iam.gserviceaccount.com",
-      },
-      {
-        key: "GOOGLE_PRIVATE_KEY",
-        label: "Private key",
-        placeholder: "-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----\\n",
-        type: "password",
-      },
-      { key: "GOOGLE_TIME_ZONE", label: "Timezone", placeholder: "America/Sao_Paulo" },
-    ],
-  },
 ];
 
 const initialIntegrationValues = integrationGroups.reduce<Record<string, string>>((values, group) => {
@@ -643,7 +623,6 @@ export default function HomePage() {
         aiMemory: `Servidor: ${status.openAiConfigured ? "OpenAI ok" : "OpenAI pendente"} / ${
           status.redisConfigured ? "Redis ok" : "Redis pendente"
         }.`,
-        calendar: `Servidor: ${status.calendarConfigured ? "Google Agenda ok" : "Google Agenda pendente"}.`,
       };
 
       setIntegrationValidation((current) => ({

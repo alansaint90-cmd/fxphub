@@ -76,7 +76,7 @@ GET https://SEU_DOMINIO/api/health/memory
 4. Lead e mensagens sao salvos no PostgreSQL.
 5. IA gera/procura a proxima resposta.
 6. Score e diagnostico sao recalculados.
-7. Agenda Google e consultada quando o lead chega em agendamento.
+7. Agenda interna do fxphub e consultada quando o lead chega em agendamento.
 8. Resposta volta ao WhatsApp via Evolution API.
 
 ## Variaveis obrigatorias

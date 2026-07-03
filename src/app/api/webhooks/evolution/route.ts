@@ -24,9 +24,8 @@ export async function GET() {
     ),
     redisConfigured: Boolean(settings.REDIS_URL),
     openAiConfigured: Boolean(settings.OPENAI_API_KEY),
-    calendarConfigured: Boolean(
-      settings.GOOGLE_CALENDAR_ID && settings.GOOGLE_SERVICE_ACCOUNT_EMAIL && settings.GOOGLE_PRIVATE_KEY,
-    ),
+    calendarConfigured: true,
+    calendarMode: "internal",
   });
 }
 

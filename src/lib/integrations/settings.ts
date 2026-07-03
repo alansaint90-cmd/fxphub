@@ -20,10 +20,6 @@ export const integrationSettingKeys = [
   "REDIS_URL",
   "MESSAGE_BUFFER_QUIET_MS",
   "MESSAGE_BUFFER_TTL_SECONDS",
-  "GOOGLE_CALENDAR_ID",
-  "GOOGLE_SERVICE_ACCOUNT_EMAIL",
-  "GOOGLE_PRIVATE_KEY",
-  "GOOGLE_TIME_ZONE",
 ] as const;
 
 export type IntegrationSettingKey = (typeof integrationSettingKeys)[number];
@@ -35,7 +31,6 @@ const secretKeys = new Set<IntegrationSettingKey>([
   "EVOLUTION_WEBHOOK_SECRET",
   "OPENAI_API_KEY",
   "REDIS_URL",
-  "GOOGLE_PRIVATE_KEY",
 ]);
 
 const runtimeEnvValues: Partial<Record<IntegrationSettingKey, string | undefined>> = {
@@ -55,10 +50,6 @@ const runtimeEnvValues: Partial<Record<IntegrationSettingKey, string | undefined
   REDIS_URL: env.REDIS_URL,
   MESSAGE_BUFFER_QUIET_MS: String(env.MESSAGE_BUFFER_QUIET_MS),
   MESSAGE_BUFFER_TTL_SECONDS: String(env.MESSAGE_BUFFER_TTL_SECONDS),
-  GOOGLE_CALENDAR_ID: env.GOOGLE_CALENDAR_ID,
-  GOOGLE_SERVICE_ACCOUNT_EMAIL: env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-  GOOGLE_PRIVATE_KEY: env.GOOGLE_PRIVATE_KEY,
-  GOOGLE_TIME_ZONE: env.GOOGLE_TIME_ZONE,
 };
 
 export interface PublicIntegrationSetting {
