@@ -33,19 +33,20 @@ interface KanbanLead {
   stage: KanbanStageId;
 }
 
-interface ScheduleSlot {
-  id: string;
-  day: string;
-  date: string;
-  time: string;
-}
-
-interface Appointment {
+interface CalendarAppointment {
   id: string;
   leadId: string;
   leadName: string;
-  date: string;
-  time: string;
+  phone: string;
+  startsAt: string;
+  endsAt: string;
+  status: string;
+}
+
+interface CalendarAvailableSlot {
+  startsAt: string;
+  endsAt: string;
+  label: string;
 }
 
 interface ConversationContact {
@@ -314,17 +315,6 @@ const pains = [
   "Demora no atendimento",
 ];
 
-const scheduleSlots: ScheduleSlot[] = [
-  { id: "seg-09", day: "Segunda", date: "29/06", time: "09:00" },
-  { id: "seg-11", day: "Segunda", date: "29/06", time: "11:00" },
-  { id: "ter-14", day: "Terca", date: "30/06", time: "14:00" },
-  { id: "qua-15", day: "Quarta", date: "01/07", time: "15:00" },
-  { id: "qui-13", day: "Quinta", date: "02/07", time: "13:00" },
-  { id: "qui-18", day: "Quinta", date: "02/07", time: "18:00" },
-  { id: "sex-17", day: "Sexta", date: "03/07", time: "17:00" },
-  { id: "sex-20", day: "Sexta", date: "03/07", time: "20:00" },
-];
-
 const integrationGroups: IntegrationGroup[] = [
   {
     id: "system",
@@ -402,6 +392,46 @@ const secretIntegrationKeys = new Set(
   integrationGroups.flatMap((group) => group.fields.filter((field) => field.type === "password").map((field) => field.key)),
 );
 
+const calendarHours = Array.from({ length: 11 }, (_, index) => index + 8);
+
+function buildWeekDays(referenceDate = new Date()) {
+  const start = new Date(referenceDate);
+  start.setHours(0, 0, 0, 0);
+  start.setDate(start.getDate() - start.getDay());
+
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(start);
+    date.setDate(start.getDate() + index);
+    return date;
+  });
+}
+
+function formatAgendaDay(date: Date) {
+  return new Intl.DateTimeFormat("pt-BR", { weekday: "short" }).format(date).replace(".", "").toUpperCase();
+}
+
+function formatAgendaMonthRange(days: Date[]) {
+  const first = days[0] ?? new Date();
+  const last = days.at(-1) ?? first;
+  const firstMonth = new Intl.DateTimeFormat("pt-BR", { month: "short" }).format(first).replace(".", "");
+  const lastMonth = new Intl.DateTimeFormat("pt-BR", { month: "short" }).format(last).replace(".", "");
+  const year = last.getFullYear();
+
+  return firstMonth === lastMonth ? `${firstMonth}. ${year}` : `${firstMonth}. - ${lastMonth}. ${year}`;
+}
+
+function formatAgendaTime(value: string | Date) {
+  return new Intl.DateTimeFormat("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "America/Sao_Paulo",
+  }).format(new Date(value));
+}
+
+function isSameAgendaDay(left: Date, right: Date) {
+  return left.toDateString() === right.toDateString();
+}
+
 export default function HomePage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginError, setLoginError] = useState("");
@@ -409,8 +439,6 @@ export default function HomePage() {
   const [draggingLeadId, setDraggingLeadId] = useState<string | null>(null);
   const [activePage, setActivePage] = useState<AppPage>("dashboard");
   const [selectedConversationId, setSelectedConversationId] = useState("soldado");
-  const [selectedLeadId, setSelectedLeadId] = useState("lead-cfc-catuense");
-  const [selectedSlotId, setSelectedSlotId] = useState("seg-09");
   const [integrationValues, setIntegrationValues] = useState(initialIntegrationValues);
   const [integrationSaved, setIntegrationSaved] = useState(false);
   const [savedIntegrationSecrets, setSavedIntegrationSecrets] = useState<Record<string, boolean>>({});
@@ -422,20 +450,40 @@ export default function HomePage() {
   const [evolutionTestPhone, setEvolutionTestPhone] = useState("");
   const [evolutionTestMessage, setEvolutionTestMessage] = useState("Teste fxphub: Evolution API conectada.");
   const [evolutionTestStatus, setEvolutionTestStatus] = useState("");
-  const [appointments, setAppointments] = useState<Appointment[]>([
-    {
-      id: "appointment-cfc-catuense",
-      leadId: "lead-cfc-catuense",
-      leadName: "CFC Catuense",
-      date: "29/06",
-      time: "09:00",
-    },
-  ]);
+  const [calendarAppointments, setCalendarAppointments] = useState<CalendarAppointment[]>([]);
+  const [calendarSlots, setCalendarSlots] = useState<CalendarAvailableSlot[]>([]);
+  const [calendarStatus, setCalendarStatus] = useState("Carregando agenda interna...");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       setWebhookUrl(`${window.location.origin}/api/webhooks/evolution`);
     }
+  }, []);
+
+  useEffect(() => {
+    async function loadCalendar() {
+      try {
+        const response = await fetch("/api/appointments/calendar", { cache: "no-store" });
+        const result = (await response.json()) as {
+          ok?: boolean;
+          appointments?: CalendarAppointment[];
+          availableSlots?: CalendarAvailableSlot[];
+        };
+
+        if (!result.ok) {
+          setCalendarStatus("Nao foi possivel carregar a agenda.");
+          return;
+        }
+
+        setCalendarAppointments(result.appointments ?? []);
+        setCalendarSlots(result.availableSlots ?? []);
+        setCalendarStatus("Agenda interna conectada ao banco.");
+      } catch {
+        setCalendarStatus("Nao foi possivel consultar a agenda interna.");
+      }
+    }
+
+    loadCalendar();
   }, []);
 
   useEffect(() => {
@@ -513,32 +561,6 @@ export default function HomePage() {
       currentLeads.map((lead) => (lead.id === leadId ? { ...lead, stage: nextStage } : lead)),
     );
     setDraggingLeadId(null);
-  }
-
-  function handleConfirmAppointment() {
-    const lead = kanbanLeads.find((currentLead) => currentLead.id === selectedLeadId);
-    const slot = scheduleSlots.find((currentSlot) => currentSlot.id === selectedSlotId);
-    if (!lead || !slot || lead.className === "C") return;
-
-    setAppointments((currentAppointments) => {
-      const withoutSameLead = currentAppointments.filter((appointment) => appointment.leadId !== lead.id);
-      return [
-        ...withoutSameLead,
-        {
-          id: `appointment-${lead.id}-${slot.id}`,
-          leadId: lead.id,
-          leadName: lead.name,
-          date: slot.date,
-          time: slot.time,
-        },
-      ];
-    });
-
-    setKanbanLeads((currentLeads) =>
-      currentLeads.map((currentLead) =>
-        currentLead.id === lead.id ? { ...currentLead, stage: "agendamento" } : currentLead,
-      ),
-    );
   }
 
   function handleIntegrationChange(key: string, value: string) {
@@ -671,9 +693,6 @@ export default function HomePage() {
       .join("\n\n");
   }
 
-  const schedulableLeads = kanbanLeads.filter((lead) => lead.className === "A" || lead.className === "B");
-  const selectedLead = schedulableLeads.find((lead) => lead.id === selectedLeadId) ?? schedulableLeads[0];
-  const selectedSlot = scheduleSlots.find((slot) => slot.id === selectedSlotId) ?? scheduleSlots[0];
   const selectedConversation =
     conversationContacts.find((contact) => contact.id === selectedConversationId) ?? conversationContacts[0];
   const activeConversationMessages =
@@ -683,17 +702,13 @@ export default function HomePage() {
     (field) => integrationValues[field.key].trim() || savedIntegrationSecrets[field.key],
   ).length;
   const envPreview = buildEnvPreview();
-  const occupiedSlotIds = new Set(
-    appointments
-      .filter((appointment) => appointment.leadId !== selectedLead?.id)
-      .map((appointment) => {
-        const slot = scheduleSlots.find(
-          (currentSlot) => currentSlot.date === appointment.date && currentSlot.time === appointment.time,
-        );
-        return slot?.id;
-      })
-      .filter(Boolean),
-  );
+  const agendaWeekDays = buildWeekDays();
+  const agendaMonthRange = formatAgendaMonthRange(agendaWeekDays);
+  const nextCalendarSlots = calendarSlots.slice(0, 5);
+  const calendarEventsByDay = agendaWeekDays.map((day) => ({
+    day,
+    events: calendarAppointments.filter((appointment) => isSameAgendaDay(new Date(appointment.startsAt), day)),
+  }));
 
   if (!isAuthenticated) {
     return (
@@ -1027,66 +1042,81 @@ export default function HomePage() {
           </article>
 
           <article id="agenda" className={`panel agenda-panel ${activePage === "agenda" ? "" : "page-hidden"}`}>
-            <div className="section-title">
-              <span className="eyebrow">Agenda comercial</span>
-              <h2>Horarios disponiveis</h2>
-            </div>
-
-            <label className="agenda-select">
-              <span>Lead qualificado</span>
-              <select value={selectedLead?.id} onChange={(event) => setSelectedLeadId(event.target.value)}>
-                {schedulableLeads.map((lead) => (
-                  <option key={lead.id} value={lead.id}>
-                    {lead.name} - Score {lead.score}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <div className="slot-grid" aria-label="Horarios disponiveis para reuniao">
-              {scheduleSlots.map((slot) => {
-                const isSelected = selectedSlot?.id === slot.id;
-                const isOccupied = occupiedSlotIds.has(slot.id);
-
-                return (
-                  <button
-                    className={`slot-button ${isSelected ? "selected" : ""}`}
-                    disabled={isOccupied}
-                    key={slot.id}
-                    type="button"
-                    onClick={() => setSelectedSlotId(slot.id)}
-                  >
-                    <span>{slot.day}</span>
-                    <strong>{slot.time}</strong>
-                    <small>{isOccupied ? "Ocupado" : slot.date}</small>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="agenda-summary">
-              <div>
-                <span>Selecionado</span>
-                <strong>
-                  {selectedLead?.name} - {selectedSlot?.date} as {selectedSlot?.time}
-                </strong>
-              </div>
-              <button type="button" onClick={handleConfirmAppointment}>
-                Confirmar reuniao
-              </button>
-            </div>
-
-            <div className="appointment-list">
-              <span className="eyebrow">Reunioes marcadas</span>
-              {appointments.map((appointment) => (
-                <div className="appointment-row" key={appointment.id}>
-                  <div>
-                    <strong>{appointment.leadName}</strong>
-                    <span>{appointment.date} as {appointment.time}</span>
-                  </div>
-                  <b>Confirmada</b>
+            <div className="agenda-shell">
+              <aside className="agenda-side">
+                <div className="section-title">
+                  <span className="eyebrow">Agenda interna</span>
+                  <h2>Disponibilidade real</h2>
                 </div>
-              ))}
+                <p className="agenda-status">{calendarStatus}</p>
+
+                <div className="agenda-mini-card">
+                  <strong>Proximos horarios livres</strong>
+                  {nextCalendarSlots.length ? (
+                    nextCalendarSlots.map((slot) => (
+                      <div className="agenda-free-slot" key={`${slot.startsAt}-${slot.endsAt}`}>
+                        <span>{slot.label}</span>
+                        <b>{formatAgendaTime(slot.startsAt)}</b>
+                      </div>
+                    ))
+                  ) : (
+                    <span className="agenda-empty-state">Nenhum horario livre encontrado.</span>
+                  )}
+                </div>
+
+                <div className="agenda-mini-card">
+                  <strong>Como o agente usa</strong>
+                  <span>Consulta esta agenda, oferece os horarios livres mais proximos e grava a reuniao no banco.</span>
+                </div>
+              </aside>
+
+              <div className="agenda-calendar">
+                <header className="agenda-calendar-toolbar">
+                  <button type="button">Hoje</button>
+                  <h2>{agendaMonthRange}</h2>
+                  <span>Semana</span>
+                </header>
+
+                <div className="agenda-week-header">
+                  <span />
+                  {agendaWeekDays.map((day) => (
+                    <div className={isSameAgendaDay(day, new Date()) ? "today" : ""} key={day.toISOString()}>
+                      <small>{formatAgendaDay(day)}</small>
+                      <strong>{day.getDate()}</strong>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="agenda-week-grid">
+                  <div className="agenda-hour-column">
+                    {calendarHours.map((hour) => (
+                      <span key={hour}>{String(hour).padStart(2, "0")}:00</span>
+                    ))}
+                  </div>
+
+                  {calendarEventsByDay.map(({ day, events }) => (
+                    <div className="agenda-day-column" key={day.toISOString()}>
+                      {calendarHours.map((hour) => (
+                        <span className="agenda-hour-line" key={hour} />
+                      ))}
+
+                      {events.map((event) => {
+                        const start = new Date(event.startsAt);
+                        const top = Math.max(0, (start.getHours() - 8) * 52 + start.getMinutes() * 0.86);
+
+                        return (
+                          <article className="agenda-event" key={event.id} style={{ top }}>
+                            <strong>{event.leadName}</strong>
+                            <span>
+                              {formatAgendaTime(event.startsAt)} - {formatAgendaTime(event.endsAt)}
+                            </span>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </article>
 

@@ -151,7 +151,7 @@ export class FaustoConversationService {
 
   private async tryScheduleMeeting(lead: LeadRecord, text: string): Promise<string> {
     const slots = await this.calendar.getAvailableSlots();
-    const selectedSlot = slots.find((slot) => text.toLowerCase().includes(slot.label.replace("hoje as ", "")));
+    const selectedSlot = slots.find((slot) => matchesSlot(text, slot));
 
     if (!selectedSlot) {
       return `Tenho estes horarios disponiveis: ${slots.map((slot) => slot.label).join(", ")}. Qual prefere?`;
@@ -177,6 +177,34 @@ export class FaustoConversationService {
       "Nos vemos em breve.",
     ].join("\n");
   }
+}
+
+function matchesSlot(text: string, slot: { startsAt: Date; label: string }) {
+  const normalizedText = normalizeScheduleText(text);
+  const hour = `${String(slot.startsAt.getHours()).padStart(2, "0")}h`;
+  const hourWithMinutes = `${String(slot.startsAt.getHours()).padStart(2, "0")}:00`;
+  const date = new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    timeZone: "America/Sao_Paulo",
+  }).format(slot.startsAt);
+
+  return (
+    normalizedText.includes(normalizeScheduleText(slot.label)) ||
+    normalizedText.includes(normalizeScheduleText(`${date} ${hour}`)) ||
+    normalizedText.includes(normalizeScheduleText(`${date} ${hourWithMinutes}`)) ||
+    normalizedText.includes(normalizeScheduleText(hour)) ||
+    normalizedText.includes(normalizeScheduleText(hourWithMinutes))
+  );
+}
+
+function normalizeScheduleText(value: string) {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function getAnswerSet(lead: LeadRecord): QualificationAnswerSet {

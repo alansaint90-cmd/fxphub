@@ -1,3 +1,7 @@
+import { and, gt, inArray, lt, eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { appointments } from "@/lib/db/schema";
+
 export interface CalendarSlot {
   startsAt: Date;
   endsAt: Date;
@@ -15,7 +19,32 @@ export function createCalendarGateway(): CalendarGateway {
 
 export class InternalCalendarGateway implements CalendarGateway {
   async getAvailableSlots(): Promise<CalendarSlot[]> {
-    return buildCandidateSlots();
+    const candidates = buildCandidateSlots();
+    const lastCandidate = candidates.at(-1);
+    if (!lastCandidate) return [];
+
+    const busyAppointments = await db
+      .select({
+        startsAt: appointments.startsAt,
+        endsAt: appointments.endsAt,
+      })
+      .from(appointments)
+      .where(
+        and(
+          eq(appointments.isDeleted, false),
+          inArray(appointments.status, ["scheduled", "rescheduled"]),
+          gt(appointments.endsAt, new Date()),
+          lt(appointments.startsAt, lastCandidate.endsAt),
+        ),
+      );
+
+    return candidates
+      .filter((slot) =>
+        busyAppointments.every(
+          (appointment) => slot.endsAt <= appointment.startsAt || slot.startsAt >= appointment.endsAt,
+        ),
+      )
+      .slice(0, 5);
   }
 
   async createEvent(): Promise<{ eventId: string }> {
