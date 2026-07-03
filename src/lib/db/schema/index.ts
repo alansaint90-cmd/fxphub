@@ -59,6 +59,7 @@ export const leads = pgTable(
     commercialAttendants: integer("commercial_attendants"),
     usesCrm: boolean("uses_crm"),
     runsPaidTraffic: boolean("runs_paid_traffic"),
+    mainPain: text("main_pain"),
     score: integer("score").notNull().default(0),
     classification: leadClassificationEnum("classification"),
     painPoints: jsonb("pain_points").$type<string[]>().notNull().default([]),

@@ -72,7 +72,10 @@ export class FaustoConversationService {
         qualificationStarted: true,
       });
 
-      return firstQuestion.prompt;
+      return [
+        "Ola! Vou entender rapido se o fxphub faz sentido para sua autoescola.",
+        firstQuestion.prompt,
+      ].join("\n");
     }
 
     const currentQuestion =
@@ -134,18 +137,16 @@ export class FaustoConversationService {
 
     if (!result.canSchedule) {
       return [
-        "Obrigado pelas informacoes.",
-        "Neste momento vou deixar seu cadastro salvo para futuras acoes.",
-        "Quando fizer sentido avancar, nossa equipe retoma por aqui.",
+        "Obrigado. Vou deixar seu contato salvo para retomarmos quando fizer mais sentido.",
       ].join("\n");
     }
 
     const slots = await this.calendar.getAvailableSlots();
-    const options = slots.map((slot) => slot.label).join(", ");
+    const options = slots.slice(0, 3).map((slot) => slot.label).join(", ");
+    const pain = answers.mainPain ? `Pelo que voce comentou sobre ${answers.mainPain},` : "Pelo seu contexto,";
     return [
-      "Perfeito. Acredito que podemos ajudar sua autoescola.",
-      `Tenho disponibilidade ${options}.`,
-      "Qual horario prefere?",
+      `${pain} vale te mostrar isso de forma pratica.`,
+      `Tenho ${options}. Qual horario prefere para uma demonstracao rapida?`,
     ].join("\n");
   }
 
@@ -154,7 +155,7 @@ export class FaustoConversationService {
     const selectedSlot = slots.find((slot) => matchesSlot(text, slot));
 
     if (!selectedSlot) {
-      return `Tenho estes horarios disponiveis: ${slots.map((slot) => slot.label).join(", ")}. Qual prefere?`;
+      return `Tenho ${slots.slice(0, 3).map((slot) => slot.label).join(", ")}. Qual desses fica melhor?`;
     }
 
     const event = await this.calendar.createEvent({
@@ -172,9 +173,8 @@ export class FaustoConversationService {
     });
 
     return [
-      "Reuniao confirmada com sucesso.",
-      "Nossa equipe apresentara como o fxphub pode automatizar seu atendimento, organizar seus leads e aumentar suas matriculas.",
-      "Nos vemos em breve.",
+      "Reuniao confirmada.",
+      "Na demonstracao vamos mostrar como organizar os leads e acelerar o atendimento pelo WhatsApp.",
     ].join("\n");
   }
 }
@@ -215,6 +215,7 @@ function getAnswerSet(lead: LeadRecord): QualificationAnswerSet {
     usesCrm: lead.usesCrm,
     runsPaidTraffic: lead.runsPaidTraffic,
     city: lead.city,
+    mainPain: lead.mainPain,
   };
 }
 
@@ -225,4 +226,5 @@ export const qualificationFieldMap: Record<QualificationQuestionId, keyof Qualif
   usesCrm: "usesCrm",
   runsPaidTraffic: "runsPaidTraffic",
   city: "city",
+  mainPain: "mainPain",
 };

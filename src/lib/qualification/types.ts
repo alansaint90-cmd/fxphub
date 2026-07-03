@@ -4,7 +4,8 @@ export type QualificationQuestionId =
   | "commercialAttendants"
   | "usesCrm"
   | "runsPaidTraffic"
-  | "city";
+  | "city"
+  | "mainPain";
 
 export type LeadClassification = "A" | "B" | "C";
 
@@ -33,6 +34,7 @@ export interface QualificationAnswerSet {
   usesCrm?: boolean;
   runsPaidTraffic?: boolean;
   city?: string;
+  mainPain?: string;
 }
 
 export interface QualificationQuestion {

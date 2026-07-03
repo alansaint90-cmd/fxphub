@@ -10,8 +10,8 @@ export function calculateQualification(answers: QualificationAnswerSet): Qualifi
   if (answers.city) score += 5;
 
   const monthlyEnrollments = answers.monthlyEnrollments ?? 0;
-  if (monthlyEnrollments >= 40) score += 30;
-  else if (monthlyEnrollments >= 15) score += 20;
+  if (monthlyEnrollments >= 20) score += 30;
+  else if (monthlyEnrollments >= 5) score += 20;
   else if (monthlyEnrollments > 0) score += 10;
 
   const attendants = answers.commercialAttendants ?? 0;
@@ -47,6 +47,13 @@ export function calculateQualification(answers: QualificationAnswerSet): Qualifi
     score += 5;
   }
 
+  if (answers.mainPain) {
+    score += 20;
+    for (const painPoint of inferPainPoints(answers.mainPain)) {
+      painPoints.add(painPoint);
+    }
+  }
+
   const classification = score >= 75 ? "A" : score >= minimumScoreToSchedule ? "B" : "C";
   const canSchedule = classification === "A" || classification === "B";
 
@@ -80,6 +87,7 @@ function buildSummary(answers: QualificationAnswerSet, painPoints: PainPoint[]):
         ? "investe em trafego pago"
         : "nao investe em trafego pago",
     answers.city ? `localizada em ${answers.city}` : "cidade nao informada",
+    answers.mainPain ? `dor principal: ${answers.mainPain}` : "dor principal nao informada",
   ];
 
   const painText =
@@ -92,4 +100,20 @@ function buildSummary(answers: QualificationAnswerSet, painPoints: PainPoint[]):
 
 function formatPainPoint(painPoint: PainPoint): string {
   return painPoint.replaceAll("_", " ");
+}
+
+function inferPainPoints(mainPain: string): PainPoint[] {
+  const text = mainPain
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  const painPoints = new Set<PainPoint>();
+
+  if (/(demora|lento|tempo|responder|atendimento)/.test(text)) painPoints.add("demora_no_atendimento");
+  if (/(perd|sum|nao retorna|sem retorno|lead)/.test(text)) painPoints.add("leads_perdidos");
+  if (/(crm|organiza|bagunca|controle|acompanha)/.test(text)) painPoints.add("falta_de_crm");
+  if (/(manual|whatsapp|atendente)/.test(text)) painPoints.add("atendimento_manual");
+  if (/(vender|venda|conversao|matricula)/.test(text)) painPoints.add("baixa_conversao");
+
+  return [...painPoints];
 }

@@ -6,24 +6,20 @@ export const qualificationQuestions: QualificationQuestion[] = [
     prompt: "Qual o nome da sua autoescola?",
   },
   {
-    id: "monthlyEnrollments",
-    prompt: "Em media, quantas matriculas sua autoescola realiza por mes?",
+    id: "city",
+    prompt: "Em qual cidade ela fica?",
   },
   {
-    id: "commercialAttendants",
-    prompt: "Quantos atendentes trabalham hoje no atendimento comercial?",
+    id: "monthlyEnrollments",
+    prompt: "Hoje chegam em media quantos leads ou atendimentos pelo WhatsApp por dia ou semana?",
   },
   {
     id: "usesCrm",
-    prompt: "Voce utiliza algum CRM atualmente?",
+    prompt: "Voce ja usa CRM ou algum atendimento automatico?",
   },
   {
-    id: "runsPaidTraffic",
-    prompt: "Voce investe em trafego pago, como Facebook Ads, Instagram Ads ou Google Ads?",
-  },
-  {
-    id: "city",
-    prompt: "Em qual cidade sua autoescola esta localizada?",
+    id: "mainPain",
+    prompt: "Qual e a maior dificuldade hoje: demora no atendimento, perder leads, falta de organizacao ou baixa conversao?",
   },
 ];
 

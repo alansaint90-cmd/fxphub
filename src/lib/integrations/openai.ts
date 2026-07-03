@@ -21,7 +21,9 @@ export class OpenAiMessagePlanner implements AiMessagePlanner {
         ],
       });
 
-      return completion.choices[0]?.message.content?.trim() || input.draft;
+      const response = completion.choices[0]?.message.content?.trim() || input.draft;
+      if (response.length > 360 || response.split("\n").length > 4) return input.draft;
+      return response;
     } catch {
       return input.draft;
     }
