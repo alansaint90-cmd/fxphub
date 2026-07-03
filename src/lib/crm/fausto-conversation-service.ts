@@ -5,6 +5,7 @@ import { parseAnswer } from "@/lib/qualification/parser";
 import { getNextQuestion, qualificationQuestions } from "@/lib/qualification/questions";
 import { calculateQualification } from "@/lib/qualification/scoring";
 import type { QualificationAnswerSet, QualificationQuestionId } from "@/lib/qualification/types";
+import { matchesSlot } from "./scheduling";
 import type { CrmRepository, LeadRecord } from "./types";
 
 interface HandleInboundInput {
@@ -41,12 +42,15 @@ export class FaustoConversationService {
       return { response: "", shouldSend: false };
     }
 
+    const shouldUseStrictDraft = lead.funnelStage === "agendamento_em_andamento";
     const draft = await this.buildDraftResponse(lead, input.text);
-    const response = await this.ai.polishResponse({
-      systemPrompt: faustoSystemPrompt,
-      userContext: JSON.stringify({ lead, latestMessage: input.text }),
-      draft,
-    });
+    const response = shouldUseStrictDraft
+      ? draft
+      : await this.ai.polishResponse({
+          systemPrompt: faustoSystemPrompt,
+          userContext: JSON.stringify({ lead, latestMessage: input.text }),
+          draft,
+        });
 
     await this.crm.saveOutboundMessage({ leadId: lead.id, body: response });
     return { response, shouldSend: true };
@@ -177,34 +181,6 @@ export class FaustoConversationService {
       "Na demonstracao vamos mostrar como organizar os leads e acelerar o atendimento pelo WhatsApp.",
     ].join("\n");
   }
-}
-
-function matchesSlot(text: string, slot: { startsAt: Date; label: string }) {
-  const normalizedText = normalizeScheduleText(text);
-  const hour = `${String(slot.startsAt.getHours()).padStart(2, "0")}h`;
-  const hourWithMinutes = `${String(slot.startsAt.getHours()).padStart(2, "0")}:00`;
-  const date = new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    timeZone: "America/Sao_Paulo",
-  }).format(slot.startsAt);
-
-  return (
-    normalizedText.includes(normalizeScheduleText(slot.label)) ||
-    normalizedText.includes(normalizeScheduleText(`${date} ${hour}`)) ||
-    normalizedText.includes(normalizeScheduleText(`${date} ${hourWithMinutes}`)) ||
-    normalizedText.includes(normalizeScheduleText(hour)) ||
-    normalizedText.includes(normalizeScheduleText(hourWithMinutes))
-  );
-}
-
-function normalizeScheduleText(value: string) {
-  return value
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
 }
 
 function getAnswerSet(lead: LeadRecord): QualificationAnswerSet {
