@@ -79,6 +79,7 @@ export class DrizzleCrmRepository implements CrmRepository {
     const [lead] = await db
       .update(leads)
       .set({
+        responsibleName: input.answers.responsibleName,
         drivingSchoolName: input.answers.drivingSchoolName,
         monthlyEnrollments: input.answers.monthlyEnrollments,
         commercialAttendants: input.answers.commercialAttendants,
@@ -150,6 +151,7 @@ function toLeadRecord(row: typeof leads.$inferSelect): LeadRecord {
     whatsappJid: row.whatsappJid,
     phone: row.phone,
     pushName: row.pushName,
+    responsibleName: row.responsibleName ?? undefined,
     drivingSchoolName: row.drivingSchoolName ?? undefined,
     monthlyEnrollments: row.monthlyEnrollments ?? undefined,
     commercialAttendants: row.commercialAttendants ?? undefined,

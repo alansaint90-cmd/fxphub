@@ -53,6 +53,7 @@ export const leads = pgTable(
     whatsappJid: text("whatsapp_jid").notNull(),
     phone: text("phone").notNull(),
     pushName: text("push_name"),
+    responsibleName: text("responsible_name"),
     drivingSchoolName: text("driving_school_name"),
     city: text("city"),
     monthlyEnrollments: integer("monthly_enrollments"),

@@ -37,7 +37,11 @@ interface CalendarAppointment {
   id: string;
   leadId: string;
   leadName: string;
+  responsibleName: string;
   phone: string;
+  city: string | null;
+  runsPaidTraffic: boolean | null;
+  mainPain: string | null;
   startsAt: string;
   endsAt: string;
   status: string;
@@ -428,6 +432,19 @@ function formatAgendaTime(value: string | Date) {
   }).format(new Date(value));
 }
 
+function formatDateInputValue(value: string | Date) {
+  const date = new Date(value);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function formatTimeInputValue(value: string | Date) {
+  const date = new Date(value);
+  return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+}
+
 function isSameAgendaDay(left: Date, right: Date) {
   return left.toDateString() === right.toDateString();
 }
@@ -456,6 +473,10 @@ export default function HomePage() {
   const [agendaReferenceDate, setAgendaReferenceDate] = useState(new Date());
   const [agendaTouched, setAgendaTouched] = useState(false);
   const [selectedCalendarAppointmentId, setSelectedCalendarAppointmentId] = useState<string | null>(null);
+  const [isEditingAppointment, setIsEditingAppointment] = useState(false);
+  const [appointmentEditDate, setAppointmentEditDate] = useState("");
+  const [appointmentEditTime, setAppointmentEditTime] = useState("");
+  const [appointmentActionStatus, setAppointmentActionStatus] = useState("");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -706,6 +727,95 @@ export default function HomePage() {
       nextDate.setDate(currentDate.getDate() + offset * 7);
       return nextDate;
     });
+  }
+
+  function handleStartAppointmentEdit(appointment: CalendarAppointment) {
+    setAppointmentEditDate(formatDateInputValue(appointment.startsAt));
+    setAppointmentEditTime(formatTimeInputValue(appointment.startsAt));
+    setAppointmentActionStatus("");
+    setIsEditingAppointment(true);
+  }
+
+  async function handleSaveAppointmentEdit(appointment: CalendarAppointment) {
+    if (!appointmentEditDate || !appointmentEditTime) {
+      setAppointmentActionStatus("Informe data e horario.");
+      return;
+    }
+
+    setAppointmentActionStatus("Salvando alteracao...");
+
+    const previousStart = new Date(appointment.startsAt);
+    const previousEnd = new Date(appointment.endsAt);
+    const durationMs = Math.max(30 * 60 * 1000, previousEnd.getTime() - previousStart.getTime());
+    const nextStart = new Date(`${appointmentEditDate}T${appointmentEditTime}:00`);
+    const nextEnd = new Date(nextStart.getTime() + durationMs);
+
+    try {
+      const response = await fetch("/api/appointments/calendar", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: appointment.id,
+          startsAt: nextStart.toISOString(),
+          endsAt: nextEnd.toISOString(),
+        }),
+      });
+      const result = (await response.json()) as {
+        ok?: boolean;
+        error?: string;
+        appointment?: { id: string; startsAt: string; endsAt: string; status: string };
+      };
+
+      if (!result.ok || !result.appointment) {
+        setAppointmentActionStatus(result.error ?? "Nao foi possivel atualizar.");
+        return;
+      }
+
+      setCalendarAppointments((currentAppointments) =>
+        currentAppointments.map((currentAppointment) =>
+          currentAppointment.id === appointment.id
+            ? {
+                ...currentAppointment,
+                startsAt: result.appointment!.startsAt,
+                endsAt: result.appointment!.endsAt,
+                status: result.appointment!.status,
+              }
+            : currentAppointment,
+        ),
+      );
+      setAgendaReferenceDate(nextStart);
+      setIsEditingAppointment(false);
+      setAppointmentActionStatus("Agendamento atualizado.");
+    } catch {
+      setAppointmentActionStatus("Erro ao atualizar agendamento.");
+    }
+  }
+
+  async function handleDeleteAppointment(appointment: CalendarAppointment) {
+    setAppointmentActionStatus("Apagando agendamento...");
+
+    try {
+      const response = await fetch("/api/appointments/calendar", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: appointment.id }),
+      });
+      const result = (await response.json()) as { ok?: boolean; error?: string };
+
+      if (!result.ok) {
+        setAppointmentActionStatus(result.error ?? "Nao foi possivel apagar.");
+        return;
+      }
+
+      setCalendarAppointments((currentAppointments) =>
+        currentAppointments.filter((currentAppointment) => currentAppointment.id !== appointment.id),
+      );
+      setSelectedCalendarAppointmentId(null);
+      setIsEditingAppointment(false);
+      setAppointmentActionStatus("");
+    } catch {
+      setAppointmentActionStatus("Erro ao apagar agendamento.");
+    }
   }
 
   function buildEnvPreview() {
@@ -1148,9 +1258,14 @@ export default function HomePage() {
                             key={event.id}
                             style={{ top }}
                             type="button"
-                            onClick={() => setSelectedCalendarAppointmentId(event.id)}
+                            onClick={() => {
+                              setSelectedCalendarAppointmentId(event.id);
+                              setIsEditingAppointment(false);
+                              setAppointmentActionStatus("");
+                            }}
                           >
                             <strong>{event.leadName}</strong>
+                            <small>{event.responsibleName}</small>
                             <span>
                               {formatAgendaTime(event.startsAt)} - {formatAgendaTime(event.endsAt)}
                             </span>
@@ -1178,17 +1293,77 @@ export default function HomePage() {
                     <div>
                       <span className="eyebrow">Agendamento confirmado</span>
                       <h2>{selectedCalendarAppointment.leadName}</h2>
+                      <p>{selectedCalendarAppointment.responsibleName}</p>
                     </div>
-                    <button
-                      type="button"
-                      aria-label="Fechar detalhes"
-                      onClick={() => setSelectedCalendarAppointmentId(null)}
-                    >
-                      x
-                    </button>
+                    <div className="appointment-modal-actions">
+                      <button
+                        className="appointment-icon-button"
+                        type="button"
+                        aria-label="Editar data e horario"
+                        title="Editar data e horario"
+                        onClick={() => handleStartAppointmentEdit(selectedCalendarAppointment)}
+                      >
+                        ✎
+                      </button>
+                      <button
+                        className="appointment-icon-button danger"
+                        type="button"
+                        aria-label="Apagar agendamento"
+                        title="Apagar agendamento"
+                        onClick={() => handleDeleteAppointment(selectedCalendarAppointment)}
+                      >
+                        🗑
+                      </button>
+                      <button
+                        className="appointment-icon-button"
+                        type="button"
+                        aria-label="Fechar detalhes"
+                        title="Fechar"
+                        onClick={() => setSelectedCalendarAppointmentId(null)}
+                      >
+                        x
+                      </button>
+                    </div>
                   </header>
 
+                  {isEditingAppointment ? (
+                    <div className="appointment-edit-panel">
+                      <label>
+                        <span>Nova data</span>
+                        <input
+                          type="date"
+                          value={appointmentEditDate}
+                          onChange={(event) => setAppointmentEditDate(event.target.value)}
+                        />
+                      </label>
+                      <label>
+                        <span>Novo horario</span>
+                        <input
+                          type="time"
+                          value={appointmentEditTime}
+                          onChange={(event) => setAppointmentEditTime(event.target.value)}
+                        />
+                      </label>
+                      <div className="appointment-edit-actions">
+                        <button type="button" onClick={() => handleSaveAppointmentEdit(selectedCalendarAppointment)}>
+                          Salvar
+                        </button>
+                        <button className="secondary" type="button" onClick={() => setIsEditingAppointment(false)}>
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+
                   <div className="appointment-detail-grid">
+                    <div>
+                      <span>Responsavel</span>
+                      <strong>{selectedCalendarAppointment.responsibleName}</strong>
+                    </div>
+                    <div>
+                      <span>Autoescola</span>
+                      <strong>{selectedCalendarAppointment.leadName}</strong>
+                    </div>
                     <div>
                       <span>Data</span>
                       <strong>
@@ -1212,10 +1387,29 @@ export default function HomePage() {
                       <strong>{selectedCalendarAppointment.phone}</strong>
                     </div>
                     <div>
+                      <span>Trafego pago</span>
+                      <strong>
+                        {selectedCalendarAppointment.runsPaidTraffic === null
+                          ? "Nao informado"
+                          : selectedCalendarAppointment.runsPaidTraffic
+                            ? "Sim"
+                            : "Nao"}
+                      </strong>
+                    </div>
+                    <div>
+                      <span>Dor / desejo principal</span>
+                      <strong>{selectedCalendarAppointment.mainPain ?? "Nao informado"}</strong>
+                    </div>
+                    <div>
+                      <span>Cidade</span>
+                      <strong>{selectedCalendarAppointment.city ?? "Nao informado"}</strong>
+                    </div>
+                    <div>
                       <span>Status</span>
                       <strong>{selectedCalendarAppointment.status}</strong>
                     </div>
                   </div>
+                  {appointmentActionStatus ? <p className="appointment-action-status">{appointmentActionStatus}</p> : null}
                 </section>
               </div>
             ) : null}

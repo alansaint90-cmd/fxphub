@@ -2,6 +2,10 @@ import type { QualificationQuestion } from "./types";
 
 export const qualificationQuestions: QualificationQuestion[] = [
   {
+    id: "responsibleName",
+    prompt: "Com quem eu falo?",
+  },
+  {
     id: "drivingSchoolName",
     prompt: "Qual o nome da sua autoescola?",
   },
@@ -16,6 +20,10 @@ export const qualificationQuestions: QualificationQuestion[] = [
   {
     id: "usesCrm",
     prompt: "Voce ja usa CRM ou algum atendimento automatico?",
+  },
+  {
+    id: "runsPaidTraffic",
+    prompt: "Hoje voces ja fazem trafego pago para captar interessados?",
   },
   {
     id: "mainPain",

@@ -1,4 +1,5 @@
 export type QualificationQuestionId =
+  | "responsibleName"
   | "drivingSchoolName"
   | "monthlyEnrollments"
   | "commercialAttendants"
@@ -28,6 +29,7 @@ export type FunnelStage =
   | "reuniao_agendada";
 
 export interface QualificationAnswerSet {
+  responsibleName?: string;
   drivingSchoolName?: string;
   monthlyEnrollments?: number;
   commercialAttendants?: number;

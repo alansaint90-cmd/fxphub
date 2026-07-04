@@ -6,6 +6,7 @@ export function calculateQualification(answers: QualificationAnswerSet): Qualifi
   let score = 0;
   const painPoints = new Set<PainPoint>();
 
+  if (answers.responsibleName) score += 5;
   if (answers.drivingSchoolName) score += 10;
   if (answers.city) score += 5;
 
@@ -70,6 +71,7 @@ export function calculateQualification(answers: QualificationAnswerSet): Qualifi
 function buildSummary(answers: QualificationAnswerSet, painPoints: PainPoint[]): string {
   const parts = [
     answers.drivingSchoolName ? `Autoescola ${answers.drivingSchoolName}` : "Autoescola sem nome informado",
+    answers.responsibleName ? `responsavel ${answers.responsibleName}` : "responsavel nao informado",
     answers.commercialAttendants !== undefined
       ? `com ${answers.commercialAttendants} atendente(s)`
       : "com equipe comercial nao informada",

@@ -185,6 +185,7 @@ export class FaustoConversationService {
 
 function getAnswerSet(lead: LeadRecord): QualificationAnswerSet {
   return {
+    responsibleName: lead.responsibleName,
     drivingSchoolName: lead.drivingSchoolName,
     monthlyEnrollments: lead.monthlyEnrollments,
     commercialAttendants: lead.commercialAttendants,
@@ -196,6 +197,7 @@ function getAnswerSet(lead: LeadRecord): QualificationAnswerSet {
 }
 
 export const qualificationFieldMap: Record<QualificationQuestionId, keyof QualificationAnswerSet> = {
+  responsibleName: "responsibleName",
   drivingSchoolName: "drivingSchoolName",
   monthlyEnrollments: "monthlyEnrollments",
   commercialAttendants: "commercialAttendants",

@@ -1444,14 +1444,21 @@ h2 {
 }
 
 .agenda-event strong,
-.agenda-event span {
+.agenda-event span,
+.agenda-event small {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.agenda-event span {
+.agenda-event span,
+.agenda-event small {
   font-size: 11px;
+}
+
+.agenda-event small {
+  color: #3b6fb6;
+  font-weight: 700;
 }
 
 .appointment-modal-backdrop {
@@ -1487,12 +1494,71 @@ h2 {
   margin-top: 4px;
 }
 
+.appointment-detail-modal header p {
+  color: var(--muted);
+  font-weight: 800;
+  margin-top: 4px;
+}
+
+.appointment-modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.appointment-icon-button,
 .appointment-detail-modal header button {
   min-width: 36px;
   min-height: 36px;
   border-radius: 999px;
   box-shadow: none;
   padding: 0;
+}
+
+.appointment-icon-button.danger {
+  border-color: rgba(220, 38, 38, 0.22);
+  color: #b42318;
+}
+
+.appointment-edit-panel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  border: 1px solid rgba(11, 87, 208, 0.18);
+  border-radius: var(--radius);
+  background: #f8fbff;
+  padding: 12px;
+}
+
+.appointment-edit-panel label {
+  display: grid;
+  gap: 7px;
+}
+
+.appointment-edit-panel label span,
+.appointment-action-status {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.appointment-edit-panel input {
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #ffffff;
+  color: var(--foreground);
+  padding: 0 10px;
+}
+
+.appointment-edit-actions {
+  display: flex;
+  align-items: end;
+  gap: 8px;
+}
+
+.appointment-edit-actions button {
+  min-height: 40px;
 }
 
 .appointment-detail-grid {
