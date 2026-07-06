@@ -99,69 +99,6 @@ interface SavedIntegrationSetting {
   hasValue: boolean;
 }
 
-const initialKanbanLeads: KanbanLead[] = [
-  {
-    id: "lead-cfc-catuense",
-    name: "CFC Catuense",
-    city: "Catu",
-    score: 91,
-    className: "A",
-    pain: "Sem CRM, trafego pago ativo",
-    owner: "fxphub",
-    stage: "agendamento",
-  },
-  {
-    id: "lead-liberdade",
-    name: "Autoescola Liberdade",
-    city: "Salvador",
-    score: 68,
-    className: "B",
-    pain: "Equipe pequena, leads perdidos",
-    owner: "IA",
-    stage: "qualificado",
-  },
-  {
-    id: "lead-direcao-norte",
-    name: "Direcao Norte",
-    city: "Feira de Santana",
-    score: 42,
-    className: "C",
-    pain: "Baixo volume mensal",
-    owner: "Marketing",
-    stage: "nao_qualificado",
-  },
-  {
-    id: "lead-cfc-vitoria",
-    name: "CFC Vitoria",
-    city: "Lauro de Freitas",
-    score: 57,
-    className: "B",
-    pain: "Atendimento manual",
-    owner: "fxphub",
-    stage: "ia",
-  },
-  {
-    id: "lead-auto-guia",
-    name: "Auto Guia",
-    city: "Alagoinhas",
-    score: 22,
-    className: "C",
-    pain: "Ainda sem volume claro",
-    owner: "IA",
-    stage: "novo",
-  },
-  {
-    id: "lead-cfc-atlantico",
-    name: "CFC Atlantico",
-    city: "Aracaju",
-    score: 76,
-    className: "A",
-    pain: "Baixa conversao",
-    owner: "Comercial",
-    stage: "qualificado",
-  },
-];
-
 const leads = [
   {
     name: "CFC Catuense",
@@ -459,7 +396,8 @@ function isSameAgendaDay(left: Date, right: Date) {
 export default function HomePage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginError, setLoginError] = useState("");
-  const [kanbanLeads, setKanbanLeads] = useState(initialKanbanLeads);
+  const [kanbanLeads, setKanbanLeads] = useState<KanbanLead[]>([]);
+  const [kanbanStatus, setKanbanStatus] = useState("Carregando funil operacional...");
   const [draggingLeadId, setDraggingLeadId] = useState<string | null>(null);
   const [activePage, setActivePage] = useState<AppPage>("dashboard");
   const [selectedConversationId, setSelectedConversationId] = useState("soldado");
@@ -490,6 +428,33 @@ export default function HomePage() {
       setWebhookUrl(`${window.location.origin}/api/webhooks/evolution`);
     }
   }, []);
+
+  useEffect(() => {
+    loadKanbanLeads();
+    const intervalId = window.setInterval(loadKanbanLeads, 7000);
+    return () => window.clearInterval(intervalId);
+  }, []);
+
+  async function loadKanbanLeads() {
+    try {
+      const response = await fetch("/api/funnel/leads", { cache: "no-store" });
+      const result = (await response.json()) as {
+        ok?: boolean;
+        leads?: KanbanLead[];
+        error?: string;
+      };
+
+      if (!result.ok || !result.leads) {
+        setKanbanStatus(result.error ?? "Nao foi possivel carregar o funil.");
+        return;
+      }
+
+      setKanbanLeads(result.leads);
+      setKanbanStatus("Funil conectado ao banco. Atualiza conforme o Fausto muda as etapas.");
+    } catch {
+      setKanbanStatus("Nao foi possivel consultar o funil operacional.");
+    }
+  }
 
   useEffect(() => {
     async function loadCalendar() {
@@ -595,15 +560,38 @@ export default function HomePage() {
     event.dataTransfer.dropEffect = "move";
   }
 
-  function handleDrop(event: DragEvent<HTMLElement>, nextStage: KanbanStageId) {
+  async function handleDrop(event: DragEvent<HTMLElement>, nextStage: KanbanStageId) {
     event.preventDefault();
     const leadId = event.dataTransfer.getData("text/plain") || draggingLeadId;
     if (!leadId) return;
 
+    const previousLeads = kanbanLeads;
     setKanbanLeads((currentLeads) =>
       currentLeads.map((lead) => (lead.id === leadId ? { ...lead, stage: nextStage } : lead)),
     );
     setDraggingLeadId(null);
+    setKanbanStatus("Atualizando etapa do lead...");
+
+    try {
+      const response = await fetch("/api/funnel/leads", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ leadId, stage: nextStage }),
+      });
+      const result = (await response.json()) as { ok?: boolean; error?: string };
+
+      if (!result.ok) {
+        setKanbanLeads(previousLeads);
+        setKanbanStatus(result.error ?? "Nao foi possivel atualizar o lead.");
+        return;
+      }
+
+      setKanbanStatus("Etapa atualizada no CRM.");
+      void loadKanbanLeads();
+    } catch {
+      setKanbanLeads(previousLeads);
+      setKanbanStatus("Nao foi possivel salvar a movimentacao.");
+    }
   }
 
   function handleIntegrationChange(key: string, value: string) {
@@ -1006,6 +994,12 @@ export default function HomePage() {
               <span className="eyebrow">Funil operacional</span>
               <h2>Kanban de qualificacao</h2>
             </div>
+            <div className="kanban-sync">
+              <span>{kanbanStatus}</span>
+              <button type="button" onClick={loadKanbanLeads}>
+                Atualizar
+              </button>
+            </div>
           </div>
 
           <div className="kanban-board" aria-label="Quadro Kanban do funil">
@@ -1046,7 +1040,7 @@ export default function HomePage() {
                       </article>
                     ))}
 
-                    {stageLeads.length === 0 ? <div className="kanban-empty">Solte um lead aqui</div> : null}
+                    {stageLeads.length === 0 ? <div className="kanban-empty">Sem leads nesta etapa</div> : null}
                   </div>
                 </article>
               );
