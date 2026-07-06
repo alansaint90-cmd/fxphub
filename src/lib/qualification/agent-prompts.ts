@@ -36,6 +36,8 @@ const sdrPrompt = [
   "- Quando precisar oferecer, confirmar ou remarcar horarios, solicite ao Analisador de Agenda os horarios livres.",
   "- O Analisador de Agenda le a agenda real, evita conflitos e retorna as opcoes livres.",
   "- Depois que o Analisador retornar a informacao, voce continua a conversa no WhatsApp com o lead.",
+  "- Se o lead pedir outro horario, consulte a agenda de novo considerando o horario ou periodo pedido.",
+  "- Se o lead disser que nao consegue os horarios sugeridos, pergunte qual dia e horario prefere antes de oferecer nova lista.",
   "- Se o lead escolher um horario oferecido, confirme a reuniao sem repetir a lista de horarios.",
   "- Toda reuniao confirmada precisa ter responsavel, autoescola, data, horario e dor principal registrados.",
 ].join("\n");
@@ -66,6 +68,8 @@ export const commercialAgentPrompts: CommercialAgentPrompt[] = [
       "Regras:",
       "- Consulte appointments antes de sugerir horarios.",
       "- Ofereca no maximo tres horarios livres, sempre os mais proximos.",
+      "- Se o lead pedir um horario especifico, procure esse horario primeiro e depois alternativas proximas.",
+      "- Se o lead rejeitar as opcoes, aguarde ou solicite a preferencia de dia/horario antes de repetir horarios.",
       "- Nunca ofereca horario ocupado, cancelado, deletado ou fora da janela comercial.",
       "- Evite conflito considerando inicio e fim de cada appointment.",
       "- Quando houver escolha de horario, valide se ainda esta livre antes de confirmar.",

@@ -8,8 +8,12 @@ export interface CalendarSlot {
   label: string;
 }
 
+export interface CalendarSlotQuery {
+  preferredHours?: number[];
+}
+
 export interface CalendarGateway {
-  getAvailableSlots(): Promise<CalendarSlot[]>;
+  getAvailableSlots(query?: CalendarSlotQuery): Promise<CalendarSlot[]>;
   createEvent(input: { startsAt: Date; endsAt: Date; leadName: string; phone: string }): Promise<{ eventId: string }>;
 }
 
@@ -18,7 +22,7 @@ export function createCalendarGateway(): CalendarGateway {
 }
 
 export class InternalCalendarGateway implements CalendarGateway {
-  async getAvailableSlots(): Promise<CalendarSlot[]> {
+  async getAvailableSlots(query: CalendarSlotQuery = {}): Promise<CalendarSlot[]> {
     const candidates = buildCandidateSlots();
     const lastCandidate = candidates.at(-1);
     if (!lastCandidate) return [];
@@ -42,13 +46,19 @@ export class InternalCalendarGateway implements CalendarGateway {
         return [];
       });
 
-    return candidates
+    const availableSlots = candidates
       .filter((slot) =>
         busyAppointments.every(
           (appointment) => slot.endsAt <= appointment.startsAt || slot.startsAt >= appointment.endsAt,
         ),
-      )
-      .slice(0, 5);
+      );
+
+    const preferredHours = new Set(query.preferredHours ?? []);
+    if (preferredHours.size === 0) return availableSlots.slice(0, 5);
+
+    const preferredSlots = availableSlots.filter((slot) => preferredHours.has(slot.startsAt.getHours()));
+    const fallbackSlots = availableSlots.filter((slot) => !preferredHours.has(slot.startsAt.getHours()));
+    return [...preferredSlots, ...fallbackSlots].slice(0, 5);
   }
 
   async createEvent(): Promise<{ eventId: string }> {
@@ -60,11 +70,11 @@ function buildCandidateSlots(): CalendarSlot[] {
   const now = new Date();
   const slots: CalendarSlot[] = [];
   const businessHoursByDay = new Map<number, number[]>([
-    [1, [9, 11, 14]],
-    [2, [9, 11, 14]],
-    [3, [9, 11, 15]],
-    [4, [13, 16, 18]],
-    [5, [13, 16, 17]],
+    [1, [9, 10, 11, 13, 14, 15, 16, 17]],
+    [2, [9, 10, 11, 13, 14, 15, 16, 17]],
+    [3, [9, 10, 11, 13, 14, 15, 16, 17]],
+    [4, [9, 10, 11, 13, 14, 15, 16, 17]],
+    [5, [9, 10, 11, 13, 14, 15, 16, 17]],
   ]);
 
   for (let offset = 0; offset < 10; offset += 1) {
@@ -89,7 +99,7 @@ function buildCandidateSlots(): CalendarSlot[] {
     }
   }
 
-  return slots.slice(0, 8);
+  return slots;
 }
 
 function formatDay(date: Date) {

@@ -5,7 +5,7 @@ import { parseAnswer } from "@/lib/qualification/parser";
 import { getNextQuestion, qualificationQuestions } from "@/lib/qualification/questions";
 import { calculateQualification } from "@/lib/qualification/scoring";
 import type { QualificationAnswerSet, QualificationQuestionId } from "@/lib/qualification/types";
-import { matchesSlot } from "./scheduling";
+import { extractRequestedHours, isAvailabilityRequest, isScheduleRejection, matchesSlot } from "./scheduling";
 import type { CrmRepository, LeadRecord } from "./types";
 
 interface HandleInboundInput {
@@ -155,11 +155,34 @@ export class FaustoConversationService {
   }
 
   private async tryScheduleMeeting(lead: LeadRecord, text: string): Promise<string> {
-    const slots = await this.calendar.getAvailableSlots();
+    const requestedHours = extractRequestedHours(text);
+    const slots = await this.calendar.getAvailableSlots({ preferredHours: requestedHours });
+    const availabilityRequest = isAvailabilityRequest(text);
+
+    if (availabilityRequest) {
+      const preferredSlots = requestedHours.length
+        ? slots.filter((slot) => requestedHours.includes(slot.startsAt.getHours()))
+        : [];
+
+      if (preferredSlots.length > 0) {
+        return `Consultei a agenda e tenho ${formatSlotOptions(preferredSlots)}. Qual desses prefere?`;
+      }
+
+      return `Nesse horario nao tenho vaga livre. Tenho ${formatSlotOptions(slots)}. Algum desses funciona?`;
+    }
+
     const selectedSlot = slots.find((slot) => matchesSlot(text, slot));
 
     if (!selectedSlot) {
-      return `Tenho ${slots.slice(0, 3).map((slot) => slot.label).join(", ")}. Qual desses fica melhor?`;
+      if (isScheduleRejection(text)) {
+        if (isConversationClosed(text)) {
+          return "Tudo bem. Vou deixar seu contato salvo para retomarmos em outro momento.";
+        }
+
+        return "Sem problema. Me diga qual dia e horario voce prefere que eu consulto a agenda.";
+      }
+
+      return `Consultei a agenda e tenho ${formatSlotOptions(slots)}. Qual desses fica melhor?`;
     }
 
     const event = await this.calendar.createEvent({
@@ -181,6 +204,21 @@ export class FaustoConversationService {
       "Na demonstracao vamos mostrar como organizar os leads e acelerar o atendimento pelo WhatsApp.",
     ].join("\n");
   }
+}
+
+function formatSlotOptions(slots: { label: string }[]) {
+  const options = slots.slice(0, 3).map((slot) => slot.label);
+  if (options.length === 0) return "nenhum horario livre no momento";
+  return options.join(", ");
+}
+
+function isConversationClosed(text: string) {
+  const normalizedText = text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  return /\b(nao quero mais|obrigado|obrigada)\b/.test(normalizedText);
 }
 
 function getAnswerSet(lead: LeadRecord): QualificationAnswerSet {

@@ -20,7 +20,26 @@ export function matchesSlot(text: string, slot: { startsAt: Date; label: string 
   );
 }
 
-function extractRequestedHours(normalizedText: string) {
+export function isAvailabilityRequest(text: string) {
+  const normalizedText = normalizeScheduleText(text);
+  const requestedHours = extractRequestedHours(normalizedText);
+  if (requestedHours.length === 0) return false;
+
+  return /\b(nao tem|tem|teria|consegue|conseguem|disponivel|livre|outro horario|outros horarios)\b/.test(
+    normalizedText,
+  );
+}
+
+export function isScheduleRejection(text: string) {
+  const normalizedText = normalizeScheduleText(text);
+
+  return /\b(nao consigo|nao posso|nao da|nao quero mais|nenhum|esses horarios nao|esses nao|obrigado|obrigada)\b/.test(
+    normalizedText,
+  );
+}
+
+export function extractRequestedHours(text: string) {
+  const normalizedText = normalizeScheduleText(text);
   const requestedHours = new Set<number>();
   const hourPatterns = [
     /\b(?:as|a|para|pode ser|pode|prefiro|quero|melhor)\s+([01]?\d|2[0-3])\b/g,
@@ -38,7 +57,7 @@ function extractRequestedHours(normalizedText: string) {
   return [...requestedHours];
 }
 
-function normalizeScheduleText(value: string) {
+export function normalizeScheduleText(value: string) {
   return value
     .toLowerCase()
     .normalize("NFD")
