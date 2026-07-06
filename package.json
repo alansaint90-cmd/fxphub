@@ -11,7 +11,8 @@
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "db:clear-conversations": "node scripts/clear-conversation-state.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",
