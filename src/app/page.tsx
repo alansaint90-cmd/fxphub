@@ -12,13 +12,14 @@ const kanbanStages = [
 ] as const;
 
 type KanbanStageId = (typeof kanbanStages)[number]["id"];
-type AppPage = "dashboard" | "funil" | "conversas" | "agenda" | "integracoes";
+type AppPage = "dashboard" | "funil" | "conversas" | "agenda" | "iaComercial" | "integracoes";
 
 const appPages: { id: AppPage; label: string; badge?: number }[] = [
   { id: "dashboard", label: "Dashboard" },
   { id: "funil", label: "Funil" },
   { id: "conversas", label: "Conversas" },
   { id: "agenda", label: "Agenda" },
+  { id: "iaComercial", label: "IA Comercial" },
   { id: "integracoes", label: "Integracoes" },
 ];
 
@@ -90,6 +91,17 @@ interface SavedIntegrationSetting {
   value: string;
   isSecret: boolean;
   hasValue: boolean;
+}
+
+interface CommercialAgentPrompt {
+  id: string;
+  label: string;
+  role: string;
+  title: string;
+  description: string;
+  badge: string;
+  tone: "blue" | "yellow" | "green" | "red";
+  prompt: string;
 }
 
 const initialKanbanLeads: KanbanLead[] = [
@@ -383,6 +395,105 @@ const integrationGroups: IntegrationGroup[] = [
       { key: "MESSAGE_BUFFER_TTL_SECONDS", label: "Buffer TTL", placeholder: "60" },
     ],
   },
+];
+
+const commercialAgentPrompts: CommercialAgentPrompt[] = [
+  {
+    id: "sdr",
+    label: "Prompt agente SDR",
+    role: "Agente SDR WhatsApp",
+    title: "Qualificacao e agendamento",
+    description: "Qualifica dono ou gestor de autoescola, identifica dor e conduz ate a demonstracao.",
+    badge: "SDR IA",
+    tone: "blue",
+    prompt: [
+      "Voce e o SDR comercial do fxphub para autoescolas.",
+      "Objetivo: qualificar rapidamente o lead, entender a dor principal e marcar uma demonstracao.",
+      "Pergunte somente o essencial: responsavel, autoescola, cidade, volume de leads, CRM/automacao, trafego pago e dor/desejo.",
+      "Se houver interesse, consulte a agenda e ofereca os horarios livres mais proximos.",
+      "Se o lead escolher um horario, confirme a reuniao e registre no calendario interno.",
+      "Nao explique todo o sistema no WhatsApp. Seja direto, profissional e comercial.",
+    ].join("\n"),
+  },
+  {
+    id: "agenda",
+    label: "Prompt analisador de agenda",
+    role: "Analisador de agenda",
+    title: "Disponibilidade e remarcacao",
+    description: "Le agenda interna, sugere horarios livres, evita conflito e remarca quando necessario.",
+    badge: "Agenda IA",
+    tone: "green",
+    prompt: [
+      "Voce e o analisador de agenda do fxphub.",
+      "Leia os compromissos em appointments antes de sugerir horarios.",
+      "Ofereca no maximo tres horarios livres, sempre os mais proximos.",
+      "Nunca ofereca horario ocupado, cancelado ou fora da janela comercial.",
+      "Quando o lead pedir remarcacao, proponha novos horarios livres e atualize data e horario no calendario interno.",
+      "Ao confirmar, retorne data, horario, responsavel e autoescola.",
+    ].join("\n"),
+  },
+  {
+    id: "orquestrador",
+    label: "Prompt agente orquestrador",
+    role: "Orquestrador",
+    title: "Decisao de fluxo",
+    description: "Define quando usar SDR, humano, follow-up ou acompanhamento.",
+    badge: "Orquestrador",
+    tone: "yellow",
+    prompt: [
+      "Voce e o orquestrador do fluxo comercial do fxphub.",
+      "Use o SDR quando o lead estiver em qualificacao ou demonstrar interesse.",
+      "Acione atendimento humano quando houver reclamacao, pedido sensivel, duvida fora do escopo ou lead quente pedindo contato direto.",
+      "Acione follow-up quando o lead sumir depois de demonstrar interesse ou apos receber horarios.",
+      "Use acompanhamento quando houver reuniao marcada, lembrete pendente ou necessidade de remarcacao.",
+      "Preserve historico, tags e etapa do funil antes de decidir.",
+    ].join("\n"),
+  },
+  {
+    id: "supervisor",
+    label: "Prompt supervisor",
+    role: "Supervisor",
+    title: "Qualidade, risco e seguranca",
+    description: "Revisa consistencia comercial, risco, seguranca e necessidade de intervencao humana.",
+    badge: "Supervisor",
+    tone: "red",
+    prompt: [
+      "Voce e o supervisor de qualidade do fxphub.",
+      "Revise se a resposta esta curta, comercial, objetiva e aderente ao objetivo de agendar demonstracao.",
+      "Bloqueie promessas irreais, exposicao de credenciais, informacoes sensiveis ou respostas fora do contexto.",
+      "Sinalize intervencao humana quando houver conflito, reclamacao, negociacao complexa ou risco comercial.",
+      "Garanta que leads classificados como curiosos nao consumam agenda sem interesse claro.",
+      "Garanta que toda reuniao confirmada tenha responsavel, autoescola, data, horario e dor principal registrados.",
+    ].join("\n"),
+  },
+];
+
+const qualificationTags = [
+  "dono_autoescola",
+  "gestor_comercial",
+  "usa_crm",
+  "sem_crm",
+  "faz_trafego_pago",
+  "nao_faz_trafego",
+  "lead_quente",
+  "lead_morno",
+  "lead_frio",
+  "dor_demora_atendimento",
+  "dor_leads_perdidos",
+  "dor_baixa_conversao",
+  "dor_atendimento_manual",
+  "reuniao_agendada",
+];
+
+const followUpTags = [
+  "aguardando_horario",
+  "horario_enviado",
+  "nao_respondeu",
+  "remarcar_reuniao",
+  "lembrete_24h",
+  "lembrete_1h",
+  "compareceu",
+  "nao_compareceu",
 ];
 
 const initialIntegrationValues = integrationGroups.reduce<Record<string, string>>((values, group) => {
@@ -1214,11 +1325,11 @@ export default function HomePage() {
                 <header className="agenda-calendar-toolbar">
                   <button type="button" onClick={handleAgendaToday}>Hoje</button>
                   <button type="button" aria-label="Semana anterior" onClick={() => handleAgendaWeekOffset(-1)}>
-                    ‹
+                    &lt;
                   </button>
                   <h2>{agendaMonthRange}</h2>
                   <button type="button" aria-label="Proxima semana" onClick={() => handleAgendaWeekOffset(1)}>
-                    ›
+                    &gt;
                   </button>
                   <span>Semana</span>
                 </header>
@@ -1303,7 +1414,7 @@ export default function HomePage() {
                         title="Editar data e horario"
                         onClick={() => handleStartAppointmentEdit(selectedCalendarAppointment)}
                       >
-                        ✎
+                        Editar
                       </button>
                       <button
                         className="appointment-icon-button danger"
@@ -1312,7 +1423,7 @@ export default function HomePage() {
                         title="Apagar agendamento"
                         onClick={() => handleDeleteAppointment(selectedCalendarAppointment)}
                       >
-                        🗑
+                        Apagar
                       </button>
                       <button
                         className="appointment-icon-button"
@@ -1413,6 +1524,90 @@ export default function HomePage() {
                 </section>
               </div>
             ) : null}
+          </article>
+
+          <article className={`commercial-ai-panel ${activePage === "iaComercial" ? "" : "page-hidden"}`}>
+            <section className="commercial-ai-hero">
+              <div>
+                <span className="eyebrow">IA comercial</span>
+                <h2>Prompts e operacao dos agentes</h2>
+                <p>
+                  Configure a direcao dos agentes que qualificam, consultam agenda, fazem follow-up e acionam humano.
+                </p>
+              </div>
+              <span>Ambiente operacional</span>
+            </section>
+
+            <section className="agent-prompt-grid" aria-label="Prompts dos agentes comerciais">
+              {commercialAgentPrompts.map((agent) => (
+                <article className={`agent-prompt-card ${agent.tone}`} key={agent.id}>
+                  <header>
+                    <div>
+                      <span>{agent.label}</span>
+                      <h3>{agent.title}</h3>
+                      <p>{agent.description}</p>
+                    </div>
+                    <b>{agent.badge}</b>
+                  </header>
+                  <label>
+                    <span>{agent.role}</span>
+                    <textarea readOnly value={agent.prompt} />
+                  </label>
+                </article>
+              ))}
+            </section>
+
+            <section className="commercial-ai-tags">
+              <article>
+                <header>
+                  <span className="eyebrow">Tags de qualificacao</span>
+                  <h3>Contexto para o SDR</h3>
+                </header>
+                <div className="ai-tag-list">
+                  {qualificationTags.map((tag) => (
+                    <span key={tag}>{tag}</span>
+                  ))}
+                </div>
+              </article>
+
+              <article>
+                <header>
+                  <span className="eyebrow">Tags de follow-up</span>
+                  <h3>Acompanhamento comercial</h3>
+                </header>
+                <div className="ai-tag-list follow">
+                  {followUpTags.map((tag) => (
+                    <span key={tag}>{tag}</span>
+                  ))}
+                </div>
+              </article>
+            </section>
+
+            <section className="commercial-ai-ops">
+              <article>
+                <span className="eyebrow">Controle WhatsApp</span>
+                <h3>IA ativa</h3>
+                <p>Pausa geral para impedir novas respostas automaticas no WhatsApp.</p>
+                <button type="button">Pausar IA no WhatsApp</button>
+              </article>
+
+              <article>
+                <span className="eyebrow">Teste interno</span>
+                <h3>Chat de teste da IA</h3>
+                <textarea readOnly value="Simule uma pergunta do lead para validar o prompt antes de testar no WhatsApp real." />
+                <div className="commercial-ai-testbar">
+                  <input placeholder="Digite uma mensagem de teste..." />
+                  <button type="button">Enviar</button>
+                </div>
+              </article>
+
+              <article>
+                <span className="eyebrow">Notificacoes</span>
+                <h3>Teste WhatsApp interno</h3>
+                <p>Escolha um numero cadastrado para testar individualmente.</p>
+                <button type="button">Escolher numero para teste</button>
+              </article>
+            </section>
           </article>
 
           <article className={`panel integrations-panel ${activePage === "integracoes" ? "" : "page-hidden"}`}>
