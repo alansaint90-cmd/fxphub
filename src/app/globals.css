@@ -827,6 +827,51 @@ h2 {
   align-items: start;
 }
 
+.clients-empty-state {
+  min-height: 360px;
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  background: #fafafa;
+}
+
+.clients-empty-state button,
+.clients-actions button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #ffffff;
+  padding: 0 18px;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.clients-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.client-form-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.client-form-heading .secondary {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--muted-strong);
+  padding: 0 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
 .active-client-form,
 .active-client-detail,
 .client-stage-column {

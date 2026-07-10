@@ -448,6 +448,7 @@ export default function HomePage() {
   const [activeClientsStatus, setActiveClientsStatus] = useState("Carregando clientes ativos...");
   const [selectedActiveClientId, setSelectedActiveClientId] = useState<string | null>(null);
   const [visibleCredentialClientId, setVisibleCredentialClientId] = useState<string | null>(null);
+  const [isAddingActiveClient, setIsAddingActiveClient] = useState(false);
   const [calendarAppointments, setCalendarAppointments] = useState<CalendarAppointment[]>([]);
   const [calendarSlots, setCalendarSlots] = useState<CalendarAvailableSlot[]>([]);
   const [calendarStatus, setCalendarStatus] = useState("Carregando agenda interna...");
@@ -749,6 +750,7 @@ export default function HomePage() {
 
       event.currentTarget.reset();
       setSelectedActiveClientId(result.id ?? null);
+      setIsAddingActiveClient(false);
       setActiveClientsStatus("Cliente ativo salvo.");
       await loadActiveClients();
     } catch {
@@ -1204,9 +1206,32 @@ export default function HomePage() {
             </div>
           </div>
 
+          {!isAddingActiveClient && activeClients.length === 0 ? (
+            <div className="clients-empty-state">
+              <button type="button" onClick={() => setIsAddingActiveClient(true)}>
+                Adicionar cliente
+              </button>
+            </div>
+          ) : null}
+
+          {!isAddingActiveClient && activeClients.length > 0 ? (
+            <div className="clients-actions">
+              <button type="button" onClick={() => setIsAddingActiveClient(true)}>
+                Adicionar cliente
+              </button>
+            </div>
+          ) : null}
+
+          {isAddingActiveClient || activeClients.length > 0 ? (
           <div className="clients-workspace">
+            {isAddingActiveClient ? (
             <form className="active-client-form" onSubmit={handleCreateActiveClient}>
-              <span className="eyebrow">Novo cliente</span>
+              <div className="client-form-heading">
+                <span className="eyebrow">Novo cliente</span>
+                <button className="secondary" type="button" onClick={() => setIsAddingActiveClient(false)}>
+                  Cancelar
+                </button>
+              </div>
               <div className="active-client-form-grid">
                 <label>
                   <span>Cliente / autoescola</span>
@@ -1266,7 +1291,9 @@ export default function HomePage() {
 
               <button type="submit">Salvar cliente ativo</button>
             </form>
+            ) : null}
 
+            {activeClients.length > 0 ? (
             <aside className="active-client-detail" aria-label="Detalhes do cliente ativo">
               {selectedActiveClient ? (
                 <>
@@ -1330,8 +1357,11 @@ export default function HomePage() {
                 <div className="kanban-empty">Cadastre ou selecione um cliente ativo</div>
               )}
             </aside>
+            ) : null}
           </div>
+          ) : null}
 
+          {!isAddingActiveClient && activeClients.length > 0 ? (
           <div className="client-stage-board">
             {clientStages.map((stage) => {
               const stageClients = activeClients.filter((client) => client.stage === stage.id);
@@ -1360,6 +1390,7 @@ export default function HomePage() {
               );
             })}
           </div>
+          ) : null}
         </section>
 
         <section id="conversas" className={`support-console ${activePage === "conversas" ? "" : "page-hidden"}`}>
