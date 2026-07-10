@@ -169,6 +169,41 @@ export const activeClientCredentials = pgTable("active_client_credentials", {
   url: text("url"),
   username: text("username"),
   password: text("password"),
+  apiKey: text("api_key"),
+  token: text("token"),
   notes: text("notes"),
+  ...auditColumns,
+});
+
+export const activeClientDocuments = pgTable("active_client_documents", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  clientId: uuid("client_id")
+    .notNull()
+    .references(() => activeClients.id, { onDelete: "restrict", onUpdate: "restrict" }),
+  name: text("name").notNull(),
+  type: text("type").notNull(),
+  description: text("description"),
+  fileUrl: text("file_url"),
+  ...auditColumns,
+});
+
+export const activeClientNotes = pgTable("active_client_notes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  clientId: uuid("client_id")
+    .notNull()
+    .references(() => activeClients.id, { onDelete: "restrict", onUpdate: "restrict" }),
+  body: text("body").notNull(),
+  authorName: text("author_name").notNull().default("Sistema"),
+  ...auditColumns,
+});
+
+export const activeClientHistory = pgTable("active_client_history", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  clientId: uuid("client_id")
+    .notNull()
+    .references(() => activeClients.id, { onDelete: "restrict", onUpdate: "restrict" }),
+  action: text("action").notNull(),
+  description: text("description").notNull(),
+  metadata: jsonb("metadata").$type<Record<string, unknown>>().notNull().default({}),
   ...auditColumns,
 });

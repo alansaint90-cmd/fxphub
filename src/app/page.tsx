@@ -2,6 +2,7 @@
 
 import type { CSSProperties, DragEvent, FormEvent } from "react";
 import { useEffect, useState } from "react";
+import { ActiveClientsWorkspace } from "@/components/active-clients-workspace";
 import {
   commercialAgentPrompts,
   followUpTags,
@@ -18,7 +19,6 @@ const kanbanStages = [
 ] as const;
 
 type KanbanStageId = (typeof kanbanStages)[number]["id"];
-type ClientStageId = (typeof clientStages)[number]["id"];
 type AppPage = "dashboard" | "funil" | "clientes" | "conversas" | "agenda" | "iaComercial" | "integracoes";
 
 const appPages: { id: AppPage; label: string; badge?: number }[] = [
@@ -30,15 +30,6 @@ const appPages: { id: AppPage; label: string; badge?: number }[] = [
   { id: "iaComercial", label: "IA Comercial" },
   { id: "integracoes", label: "Integracoes" },
 ];
-
-const clientStages = [
-  { id: "documentos", label: "Documentos" },
-  { id: "onboarding", label: "Onboarding" },
-  { id: "implantacao", label: "Implantacao" },
-  { id: "treinamento", label: "Treinamento" },
-  { id: "acompanhamento", label: "Acompanhamento" },
-  { id: "renovacao", label: "Renovacao" },
-] as const;
 
 interface KanbanLead {
   id: string;
@@ -108,27 +99,6 @@ interface SavedIntegrationSetting {
   value: string;
   isSecret: boolean;
   hasValue: boolean;
-}
-
-interface ActiveClientCredential {
-  id?: string;
-  label: string;
-  url?: string | null;
-  username?: string | null;
-  password?: string | null;
-  notes?: string | null;
-}
-
-interface ActiveClient {
-  id: string;
-  companyName: string;
-  responsibleName: string;
-  phone?: string | null;
-  email?: string | null;
-  city?: string | null;
-  stage: ClientStageId;
-  notes?: string | null;
-  credentials: ActiveClientCredential[];
 }
 
 const leads = [
@@ -444,11 +414,6 @@ export default function HomePage() {
   const [evolutionTestPhone, setEvolutionTestPhone] = useState("");
   const [evolutionTestMessage, setEvolutionTestMessage] = useState("Teste fxphub: Evolution API conectada.");
   const [evolutionTestStatus, setEvolutionTestStatus] = useState("");
-  const [activeClients, setActiveClients] = useState<ActiveClient[]>([]);
-  const [activeClientsStatus, setActiveClientsStatus] = useState("Carregando clientes ativos...");
-  const [selectedActiveClientId, setSelectedActiveClientId] = useState<string | null>(null);
-  const [visibleCredentialClientId, setVisibleCredentialClientId] = useState<string | null>(null);
-  const [isAddingActiveClient, setIsAddingActiveClient] = useState(false);
   const [calendarAppointments, setCalendarAppointments] = useState<CalendarAppointment[]>([]);
   const [calendarSlots, setCalendarSlots] = useState<CalendarAvailableSlot[]>([]);
   const [calendarStatus, setCalendarStatus] = useState("Carregando agenda interna...");
@@ -472,10 +437,6 @@ export default function HomePage() {
     return () => window.clearInterval(intervalId);
   }, []);
 
-  useEffect(() => {
-    loadActiveClients();
-  }, []);
-
   async function loadKanbanLeads() {
     try {
       const response = await fetch("/api/funnel/leads", { cache: "no-store" });
@@ -494,24 +455,6 @@ export default function HomePage() {
       setKanbanStatus("Funil conectado ao banco. Atualiza conforme o Fausto muda as etapas.");
     } catch {
       setKanbanStatus("Nao foi possivel consultar o funil operacional.");
-    }
-  }
-
-  async function loadActiveClients() {
-    try {
-      const response = await fetch("/api/active-clients", { cache: "no-store" });
-      const result = (await response.json()) as { ok?: boolean; clients?: ActiveClient[]; error?: string };
-
-      if (!result.ok || !result.clients) {
-        setActiveClientsStatus(result.error ?? "Nao foi possivel carregar os clientes.");
-        return;
-      }
-
-      setActiveClients(result.clients);
-      setSelectedActiveClientId((currentId) => currentId ?? result.clients?.[0]?.id ?? null);
-      setActiveClientsStatus("Clientes ativos conectados ao banco.");
-    } catch {
-      setActiveClientsStatus("Nao foi possivel consultar clientes ativos.");
     }
   }
 
@@ -701,89 +644,6 @@ export default function HomePage() {
     } catch {
       setIntegrationPersistenceStatus("Nao foi possivel salvar no servidor.");
       setIntegrationSaved(false);
-    }
-  }
-
-  async function handleCreateActiveClient(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    setActiveClientsStatus("Salvando cliente ativo...");
-
-    const credentialLabel = String(formData.get("credentialLabel") ?? "").trim();
-    const credentialUsername = String(formData.get("credentialUsername") ?? "").trim();
-    const credentialPassword = String(formData.get("credentialPassword") ?? "");
-    const credentialUrl = String(formData.get("credentialUrl") ?? "").trim();
-
-    const credentials =
-      credentialLabel || credentialUsername || credentialPassword || credentialUrl
-        ? [
-            {
-              label: credentialLabel || "Acesso principal",
-              url: credentialUrl,
-              username: credentialUsername,
-              password: credentialPassword,
-            },
-          ]
-        : [];
-
-    try {
-      const response = await fetch("/api/active-clients", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          companyName: String(formData.get("companyName") ?? "").trim(),
-          responsibleName: String(formData.get("responsibleName") ?? "").trim(),
-          phone: String(formData.get("phone") ?? "").trim(),
-          email: String(formData.get("email") ?? "").trim(),
-          city: String(formData.get("city") ?? "").trim(),
-          stage: String(formData.get("stage") ?? "documentos"),
-          notes: String(formData.get("notes") ?? "").trim(),
-          credentials,
-        }),
-      });
-      const result = (await response.json()) as { ok?: boolean; error?: string; id?: string };
-
-      if (!result.ok) {
-        setActiveClientsStatus(result.error ?? "Nao foi possivel salvar cliente ativo.");
-        return;
-      }
-
-      event.currentTarget.reset();
-      setSelectedActiveClientId(result.id ?? null);
-      setIsAddingActiveClient(false);
-      setActiveClientsStatus("Cliente ativo salvo.");
-      await loadActiveClients();
-    } catch {
-      setActiveClientsStatus("Nao foi possivel salvar cliente ativo.");
-    }
-  }
-
-  async function handleActiveClientStage(clientId: string, stage: ClientStageId) {
-    const previousClients = activeClients;
-    setActiveClients((currentClients) =>
-      currentClients.map((client) => (client.id === clientId ? { ...client, stage } : client)),
-    );
-    setActiveClientsStatus("Atualizando etapa do cliente...");
-
-    try {
-      const response = await fetch("/api/active-clients", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: clientId, stage }),
-      });
-      const result = (await response.json()) as { ok?: boolean; error?: string };
-
-      if (!result.ok) {
-        setActiveClients(previousClients);
-        setActiveClientsStatus(result.error ?? "Nao foi possivel atualizar etapa.");
-        return;
-      }
-
-      setActiveClientsStatus("Etapa atualizada.");
-      void loadActiveClients();
-    } catch {
-      setActiveClients(previousClients);
-      setActiveClientsStatus("Nao foi possivel atualizar etapa.");
     }
   }
 
@@ -987,8 +847,6 @@ export default function HomePage() {
   }));
   const selectedCalendarAppointment =
     calendarAppointments.find((appointment) => appointment.id === selectedCalendarAppointmentId) ?? null;
-  const selectedActiveClient =
-    activeClients.find((client) => client.id === selectedActiveClientId) ?? activeClients[0] ?? null;
 
   if (!isAuthenticated) {
     return (
@@ -1192,207 +1050,9 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="clientes" className={`clients-panel ${activePage === "clientes" ? "" : "page-hidden"}`}>
-          <div className="section-title clients-title">
-            <div>
-              <span className="eyebrow">Clientes ativos</span>
-              <h2>Operacao de implantacao e sucesso</h2>
-            </div>
-            <div className="kanban-sync">
-              <span>{activeClientsStatus}</span>
-              <button type="button" onClick={loadActiveClients}>
-                Atualizar
-              </button>
-            </div>
-          </div>
-
-          {!isAddingActiveClient && activeClients.length === 0 ? (
-            <div className="clients-empty-state">
-              <button type="button" onClick={() => setIsAddingActiveClient(true)}>
-                Adicionar cliente
-              </button>
-            </div>
-          ) : null}
-
-          {!isAddingActiveClient && activeClients.length > 0 ? (
-            <div className="clients-actions">
-              <button type="button" onClick={() => setIsAddingActiveClient(true)}>
-                Adicionar cliente
-              </button>
-            </div>
-          ) : null}
-
-          {isAddingActiveClient || activeClients.length > 0 ? (
-          <div className="clients-workspace">
-            {isAddingActiveClient ? (
-            <form className="active-client-form" onSubmit={handleCreateActiveClient}>
-              <div className="client-form-heading">
-                <span className="eyebrow">Novo cliente</span>
-                <button className="secondary" type="button" onClick={() => setIsAddingActiveClient(false)}>
-                  Cancelar
-                </button>
-              </div>
-              <div className="active-client-form-grid">
-                <label>
-                  <span>Cliente / autoescola</span>
-                  <input name="companyName" placeholder="Autoescola Modelo" required />
-                </label>
-                <label>
-                  <span>Responsavel</span>
-                  <input name="responsibleName" placeholder="Nome do responsavel" required />
-                </label>
-                <label>
-                  <span>Telefone</span>
-                  <input name="phone" placeholder="5571999999999" />
-                </label>
-                <label>
-                  <span>E-mail</span>
-                  <input name="email" placeholder="cliente@email.com" />
-                </label>
-                <label>
-                  <span>Cidade</span>
-                  <input name="city" placeholder="Cidade" />
-                </label>
-                <label>
-                  <span>Etapa</span>
-                  <select name="stage" defaultValue="documentos">
-                    {clientStages.map((stage) => (
-                      <option key={stage.id} value={stage.id}>
-                        {stage.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-
-              <div className="credential-fields">
-                <label>
-                  <span>Tipo de acesso</span>
-                  <input name="credentialLabel" placeholder="CRM, Evolution, Meta Ads..." />
-                </label>
-                <label>
-                  <span>URL</span>
-                  <input name="credentialUrl" placeholder="https://..." />
-                </label>
-                <label>
-                  <span>Usuario</span>
-                  <input name="credentialUsername" placeholder="login ou e-mail" />
-                </label>
-                <label>
-                  <span>Senha</span>
-                  <input name="credentialPassword" type="password" placeholder="senha do cliente" />
-                </label>
-              </div>
-
-              <label>
-                <span>Observacoes</span>
-                <textarea name="notes" placeholder="Pendencias, combinados e proximas acoes" rows={3} />
-              </label>
-
-              <button type="submit">Salvar cliente ativo</button>
-            </form>
-            ) : null}
-
-            {activeClients.length > 0 ? (
-            <aside className="active-client-detail" aria-label="Detalhes do cliente ativo">
-              {selectedActiveClient ? (
-                <>
-                  <span className="eyebrow">Cliente selecionado</span>
-                  <h3>{selectedActiveClient.companyName}</h3>
-                  <p>{selectedActiveClient.responsibleName}</p>
-                  <div className="client-meta-grid">
-                    <span>{selectedActiveClient.city ?? "Cidade nao informada"}</span>
-                    <span>{selectedActiveClient.phone ?? "Telefone nao informado"}</span>
-                    <span>{selectedActiveClient.email ?? "E-mail nao informado"}</span>
-                  </div>
-
-                  <div className="client-stage-actions">
-                    {clientStages.map((stage) => (
-                      <button
-                        className={selectedActiveClient.stage === stage.id ? "active" : ""}
-                        key={stage.id}
-                        type="button"
-                        onClick={() => handleActiveClientStage(selectedActiveClient.id, stage.id)}
-                      >
-                        {stage.label}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="credential-list">
-                    <div className="credential-list-head">
-                      <strong>Credenciais</strong>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setVisibleCredentialClientId((currentId) =>
-                            currentId === selectedActiveClient.id ? null : selectedActiveClient.id,
-                          )
-                        }
-                      >
-                        {visibleCredentialClientId === selectedActiveClient.id ? "Ocultar" : "Mostrar"}
-                      </button>
-                    </div>
-
-                    {selectedActiveClient.credentials.length > 0 ? (
-                      selectedActiveClient.credentials.map((credential) => (
-                        <div className="credential-item" key={credential.id ?? credential.label}>
-                          <strong>{credential.label}</strong>
-                          <span>{credential.url || "URL nao informada"}</span>
-                          <span>Usuario: {credential.username || "nao informado"}</span>
-                          <span>
-                            Senha:{" "}
-                            {visibleCredentialClientId === selectedActiveClient.id
-                              ? credential.password || "nao informada"
-                              : "••••••••"}
-                          </span>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="kanban-empty">Nenhuma credencial cadastrada</div>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <div className="kanban-empty">Cadastre ou selecione um cliente ativo</div>
-              )}
-            </aside>
-            ) : null}
-          </div>
-          ) : null}
-
-          {!isAddingActiveClient && activeClients.length > 0 ? (
-          <div className="client-stage-board">
-            {clientStages.map((stage) => {
-              const stageClients = activeClients.filter((client) => client.stage === stage.id);
-              return (
-                <article className="client-stage-column" key={stage.id}>
-                  <header>
-                    <span>{stage.label}</span>
-                    <b>{stageClients.length}</b>
-                  </header>
-                  <div className="client-stage-list">
-                    {stageClients.map((client) => (
-                      <button
-                        className={selectedActiveClientId === client.id ? "active" : ""}
-                        key={client.id}
-                        type="button"
-                        onClick={() => setSelectedActiveClientId(client.id)}
-                      >
-                        <strong>{client.companyName}</strong>
-                        <span>{client.responsibleName}</span>
-                        <small>{client.credentials.length} credenciais</small>
-                      </button>
-                    ))}
-                    {stageClients.length === 0 ? <div className="kanban-empty">Sem clientes</div> : null}
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-          ) : null}
-        </section>
-
+        <div className={activePage === "clientes" ? "" : "page-hidden"}>
+          <ActiveClientsWorkspace />
+        </div>
         <section id="conversas" className={`support-console ${activePage === "conversas" ? "" : "page-hidden"}`}>
           <header className="support-topbar">
             <div>
