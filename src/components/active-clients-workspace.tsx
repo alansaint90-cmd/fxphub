@@ -262,7 +262,7 @@ export function ActiveClientsWorkspace() {
           <div className="clients-toolbar">
             <label>
               <span>Buscar</span>
-              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nome, responsavel, telefone..." />
+              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nome da empresa ou responsavel..." />
             </label>
             <label>
               <span>Filtrar etapa</span>
@@ -285,23 +285,11 @@ export function ActiveClientsWorkspace() {
                 <article className="client-row" key={client.id}>
                   <button type="button" onClick={() => setSelectedClientId(client.id)}>
                     <strong>{client.companyName}</strong>
-                    <span>{client.responsibleName}</span>
+                    <span>Responsavel: {client.responsibleName}</span>
                   </button>
-                  <span>{client.phone}</span>
-                  <span>{client.email || "E-mail nao informado"}</span>
-                  <span>{client.city || "Cidade nao informada"}</span>
-                  <ClientStageBadge stage={client.stage} />
-                  <small>{formatDate(client.createdAt)}</small>
-                  <small>{formatDate(client.updatedAt)}</small>
                   <div className="client-row-actions">
                     <button type="button" onClick={() => setSelectedClientId(client.id)}>Detalhes</button>
-                    <select value={client.stage} onChange={(event) => handleStageChange(client.id, event.target.value as ClientStageId)}>
-                      {clientStages.map((stage) => (
-                        <option key={stage.id} value={stage.id}>{stage.label}</option>
-                      ))}
-                    </select>
                     <button type="button" onClick={() => { setSelectedClientId(client.id); setModalMode("edit"); }}>Editar</button>
-                    <button type="button" onClick={() => handleDeleteClient(client.id)}>Excluir</button>
                   </div>
                 </article>
               ))}
