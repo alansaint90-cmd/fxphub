@@ -2711,7 +2711,7 @@ h2 {
 
 .ops-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(300px, 0.6fr);
+  grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.55fr);
   gap: 16px;
   align-items: start;
 }
@@ -2723,7 +2723,7 @@ h2 {
 
 .cs-card-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -2738,8 +2738,11 @@ h2 {
   background: #ffffff;
   color: var(--foreground);
   box-shadow: none;
+  font-weight: 800;
+  line-height: 1.35;
   padding: 14px;
   text-align: left;
+  overflow: hidden;
 }
 
 .cs-card.active,
@@ -2760,13 +2763,30 @@ h2 {
 .cs-card-meta {
   display: grid;
   gap: 4px;
+  min-width: 0;
 }
 
 .cs-card strong,
 .implementation-card strong {
+  display: block;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.cs-card-head span,
+.cs-card-meta span {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cs-card-meta {
+  align-content: start;
 }
 
 .cs-card span,
@@ -2783,6 +2803,7 @@ h2 {
 .health-badge,
 .priority-badge,
 .finance-status {
+  flex: 0 0 auto;
   width: fit-content;
   border-radius: 999px;
   font-size: 12px;
@@ -3089,6 +3110,16 @@ h2 {
   display: grid;
   align-content: center;
   gap: 10px;
+}
+
+@media (max-width: 1280px) {
+  .ops-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .cs-card-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 1120px) {

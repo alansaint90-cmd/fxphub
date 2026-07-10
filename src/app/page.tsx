@@ -1807,7 +1807,6 @@ export default function HomePage() {
                       <div className="cs-card-meta">
                         <span>Plano: {client.plan}</span>
                         <span>Status: {client.implementationStatus}</span>
-                        <span>Implantacao: {client.implementationDate}</span>
                         <span>Proximo contato: {client.nextContact}</span>
                       </div>
                     </button>
