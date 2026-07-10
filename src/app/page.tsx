@@ -19,16 +19,50 @@ const kanbanStages = [
 ] as const;
 
 type KanbanStageId = (typeof kanbanStages)[number]["id"];
-type AppPage = "dashboard" | "funil" | "clientes" | "conversas" | "agenda" | "iaComercial" | "integracoes";
+type AppPage =
+  | "dashboard"
+  | "funil"
+  | "clientes"
+  | "conversas"
+  | "agenda"
+  | "iaComercial"
+  | "customerSuccess"
+  | "implantacoes"
+  | "tarefas"
+  | "financeiro"
+  | "integracoes"
+  | "usuarios"
+  | "empresa";
 
-const appPages: { id: AppPage; label: string; badge?: number }[] = [
-  { id: "dashboard", label: "Dashboard" },
-  { id: "funil", label: "Funil" },
-  { id: "clientes", label: "Clientes" },
-  { id: "conversas", label: "Conversas" },
-  { id: "agenda", label: "Agenda" },
-  { id: "iaComercial", label: "IA Comercial" },
-  { id: "integracoes", label: "Integracoes" },
+const navSections: { title: string; pages: { id: AppPage; label: string; badge?: number }[] }[] = [
+  {
+    title: "CRM Comercial",
+    pages: [
+      { id: "dashboard", label: "Dashboard" },
+      { id: "funil", label: "Funil" },
+      { id: "clientes", label: "Clientes" },
+      { id: "conversas", label: "Conversas" },
+      { id: "agenda", label: "Agenda" },
+      { id: "iaComercial", label: "IA Comercial" },
+    ],
+  },
+  {
+    title: "Gestao FXP",
+    pages: [
+      { id: "customerSuccess", label: "Customer Success" },
+      { id: "implantacoes", label: "Implantacoes" },
+      { id: "tarefas", label: "Tarefas", badge: 3 },
+      { id: "financeiro", label: "Financeiro" },
+    ],
+  },
+  {
+    title: "Configuracoes",
+    pages: [
+      { id: "integracoes", label: "Integracoes" },
+      { id: "usuarios", label: "Usuarios" },
+      { id: "empresa", label: "Empresa" },
+    ],
+  },
 ];
 
 interface KanbanLead {
@@ -126,6 +160,191 @@ const leads = [
     status: "Nutrir no CRM",
     pain: "Baixo volume mensal",
   },
+];
+
+const executiveMetrics = [
+  { label: "Receita recorrente", value: "R$ 28.400" },
+  { label: "Clientes ativos", value: "18" },
+  { label: "Implantacoes em andamento", value: "6" },
+  { label: "Reunioes hoje", value: "4" },
+  { label: "Follow-ups pendentes", value: "12" },
+  { label: "Sem contato +7 dias", value: "3" },
+  { label: "Chamados em aberto", value: "5" },
+  { label: "Clientes para renovacao", value: "2" },
+  { label: "Taxa de conversao", value: "31%" },
+  { label: "MRR", value: "R$ 28.400" },
+];
+
+const customerSuccessClients = [
+  {
+    id: "cfc-catuense",
+    company: "CFC Catuense",
+    responsible: "Alan Nascimento",
+    plan: "Growth IA",
+    implementationStatus: "Operando",
+    health: "Saudavel",
+    healthTone: "green",
+    implementationDate: "03/07/2026",
+    lastContact: "09/07/2026",
+    nextContact: "15/07/2026",
+    owner: "Customer Success FXP",
+    aiRunning: "Sim",
+    whatsappConnected: "Sim",
+    trainingDone: "Sim",
+    lastFeedback: "Atendimento automatizado gerando respostas no WhatsApp.",
+    nextRenewal: "03/08/2026",
+    nps: 9,
+    notes: "Cliente em acompanhamento de performance e ajustes finos do prompt.",
+  },
+  {
+    id: "auto-guia",
+    company: "Auto Guia",
+    responsible: "Marcio Santos",
+    plan: "Start",
+    implementationStatus: "Treinamento",
+    health: "Atencao",
+    healthTone: "yellow",
+    implementationDate: "08/07/2026",
+    lastContact: "08/07/2026",
+    nextContact: "11/07/2026",
+    owner: "Implantacao FXP",
+    aiRunning: "Sim",
+    whatsappConnected: "Sim",
+    trainingDone: "Nao",
+    lastFeedback: "Equipe pediu reforco no uso da central de atendimento.",
+    nextRenewal: "08/08/2026",
+    nps: 7,
+    notes: "Priorizar treinamento e validacao de rotina comercial.",
+  },
+  {
+    id: "direcao-norte",
+    company: "Direcao Norte",
+    responsible: "Renata Lima",
+    plan: "Performance",
+    implementationStatus: "Integracoes",
+    health: "Critico",
+    healthTone: "red",
+    implementationDate: "05/07/2026",
+    lastContact: "06/07/2026",
+    nextContact: "10/07/2026",
+    owner: "CS Senior",
+    aiRunning: "Nao",
+    whatsappConnected: "Nao",
+    trainingDone: "Nao",
+    lastFeedback: "Aguardando chave da Evolution e validacao do numero.",
+    nextRenewal: "05/08/2026",
+    nps: 5,
+    notes: "Risco por pendencia tecnica. Acionar suporte e responsavel comercial.",
+  },
+];
+
+const customerSuccessTimeline = [
+  { type: "Reuniao", title: "Alinhamento de implantacao", date: "09/07/2026 14:00", summary: "Revisao de metas, WhatsApp e rotina de atendimento." },
+  { type: "Treinamento", title: "Central de Atendimento", date: "08/07/2026 16:30", summary: "Equipe orientada sobre assumir conversa e devolver para IA." },
+  { type: "Feedback", title: "Primeira semana", date: "07/07/2026 10:15", summary: "Cliente pediu mensagens mais objetivas para agendamento." },
+  { type: "Chamado", title: "Validar Evolution", date: "06/07/2026 09:40", summary: "Checar webhook, instancia e envio de teste." },
+  { type: "Renovacao", title: "Proxima recorrencia", date: "03/08/2026", summary: "Conta ativa para renovacao mensal." },
+];
+
+const implementationStages = [
+  "Contrato Assinado",
+  "Pagamento Confirmado",
+  "Implantacao",
+  "Integracoes",
+  "Treinamento",
+  "Operando",
+  "Acompanhamento",
+  "Concluido",
+] as const;
+
+const implementationChecklist = [
+  "Criar conta",
+  "Configurar IA",
+  "Conectar WhatsApp",
+  "Configurar Prompt",
+  "Configurar CRM",
+  "Configurar usuarios",
+  "Testar integracao",
+  "Validar funcionamento",
+  "Treinamento realizado",
+  "Cliente aprovado",
+];
+
+const implementationCards = [
+  {
+    id: "impl-catuense",
+    stage: "Operando",
+    company: "CFC Catuense",
+    responsible: "Alan Nascimento",
+    plan: "Growth IA",
+    date: "03/07/2026",
+    owner: "Fausto Ops",
+    completed: 8,
+  },
+  {
+    id: "impl-auto-guia",
+    stage: "Treinamento",
+    company: "Auto Guia",
+    responsible: "Marcio Santos",
+    plan: "Start",
+    date: "08/07/2026",
+    owner: "CS FXP",
+    completed: 6,
+  },
+  {
+    id: "impl-direcao",
+    stage: "Integracoes",
+    company: "Direcao Norte",
+    responsible: "Renata Lima",
+    plan: "Performance",
+    date: "05/07/2026",
+    owner: "Suporte FXP",
+    completed: 4,
+  },
+  {
+    id: "impl-liberdade",
+    stage: "Pagamento Confirmado",
+    company: "Autoescola Liberdade",
+    responsible: "Lauro Freitas",
+    plan: "Growth IA",
+    date: "10/07/2026",
+    owner: "Implantacao FXP",
+    completed: 2,
+  },
+] satisfies {
+  id: string;
+  stage: (typeof implementationStages)[number];
+  company: string;
+  responsible: string;
+  plan: string;
+  date: string;
+  owner: string;
+  completed: number;
+}[];
+
+const operationalTasks = [
+  { title: "Validar WhatsApp CFC Catuense", description: "Confirmar instancia, webhook e resposta automatica.", responsible: "Suporte FXP", priority: "Alta", dueDate: "10/07/2026", category: "Implantacao", status: "Em andamento" },
+  { title: "Follow-up Auto Guia", description: "Agendar treinamento da equipe comercial.", responsible: "CS FXP", priority: "Media", dueDate: "11/07/2026", category: "Customer Success", status: "A Fazer" },
+  { title: "Conferir mensalidade Direcao Norte", description: "Validar vencimento e forma de pagamento.", responsible: "Financeiro", priority: "Alta", dueDate: "09/07/2026", category: "Financeiro", status: "Atrasado" },
+  { title: "Ajuste de prompt SDR", description: "Refinar abordagem para horarios alternativos.", responsible: "Desenvolvimento", priority: "Baixa", dueDate: "12/07/2026", category: "Desenvolvimento", status: "Concluido" },
+];
+
+const financeRows = [
+  { company: "CFC Catuense", plan: "Growth IA", amount: 1490, dueDate: "03/08/2026", status: "Pago", responsible: "Alan Nascimento", paymentMethod: "Pix recorrente" },
+  { company: "Auto Guia", plan: "Start", amount: 890, dueDate: "08/08/2026", status: "Pendente", responsible: "Marcio Santos", paymentMethod: "Boleto" },
+  { company: "Direcao Norte", plan: "Performance", amount: 1890, dueDate: "09/07/2026", status: "Atrasado", responsible: "Renata Lima", paymentMethod: "Cartao" },
+  { company: "Autoescola Liberdade", plan: "Growth IA", amount: 1490, dueDate: "10/08/2026", status: "Renovado", responsible: "Lauro Freitas", paymentMethod: "Pix" },
+];
+
+const financeMetrics = [
+  { label: "MRR", value: "R$ 28.400" },
+  { label: "Receita do mes", value: "R$ 34.180" },
+  { label: "Clientes ativos", value: "18" },
+  { label: "Mensalidades vencendo", value: "6" },
+  { label: "Mensalidades atrasadas", value: "2" },
+  { label: "Renovacoes do mes", value: "5" },
+  { label: "Ticket medio", value: "R$ 1.577" },
+  { label: "Novos clientes", value: "4" },
 ];
 
 const conversationContacts: ConversationContact[] = [
@@ -391,6 +610,10 @@ function formatTimeInputValue(value: string | Date) {
   return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
 }
 
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+}
+
 function isSameAgendaDay(left: Date, right: Date) {
   return left.toDateString() === right.toDateString();
 }
@@ -424,6 +647,14 @@ export default function HomePage() {
   const [appointmentEditDate, setAppointmentEditDate] = useState("");
   const [appointmentEditTime, setAppointmentEditTime] = useState("");
   const [appointmentActionStatus, setAppointmentActionStatus] = useState("");
+  const [selectedCustomerSuccessId, setSelectedCustomerSuccessId] = useState(customerSuccessClients[0]?.id ?? "");
+  const [isCustomerServiceModalOpen, setIsCustomerServiceModalOpen] = useState(false);
+  const [selectedImplementationId, setSelectedImplementationId] = useState<string | null>(null);
+  const [taskCategoryFilter, setTaskCategoryFilter] = useState("Todos");
+  const [taskStatusFilter, setTaskStatusFilter] = useState("Todos");
+  const [taskPriorityFilter, setTaskPriorityFilter] = useState("Todos");
+  const [taskResponsibleFilter, setTaskResponsibleFilter] = useState("Todos");
+  const [financeStatusFilter, setFinanceStatusFilter] = useState("Todos");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -847,6 +1078,31 @@ export default function HomePage() {
   }));
   const selectedCalendarAppointment =
     calendarAppointments.find((appointment) => appointment.id === selectedCalendarAppointmentId) ?? null;
+  const selectedCustomerSuccess =
+    customerSuccessClients.find((client) => client.id === selectedCustomerSuccessId) ?? customerSuccessClients[0];
+  const selectedImplementation =
+    implementationCards.find((implementation) => implementation.id === selectedImplementationId) ?? null;
+  const taskFilterOptions = {
+    responsible: ["Todos", ...Array.from(new Set(operationalTasks.map((task) => task.responsible)))],
+    category: ["Todos", "Comercial", "Customer Success", "Implantacao", "Desenvolvimento", "Financeiro", "Marketing"],
+    status: ["Todos", "A Fazer", "Em andamento", "Concluido", "Atrasado"],
+    priority: ["Todos", "Alta", "Media", "Baixa"],
+  };
+  const filteredTasks = operationalTasks.filter((task) => {
+    const matchesResponsible = taskResponsibleFilter === "Todos" || task.responsible === taskResponsibleFilter;
+    const matchesCategory = taskCategoryFilter === "Todos" || task.category === taskCategoryFilter;
+    const matchesStatus = taskStatusFilter === "Todos" || task.status === taskStatusFilter;
+    const matchesPriority = taskPriorityFilter === "Todos" || task.priority === taskPriorityFilter;
+    return matchesResponsible && matchesCategory && matchesStatus && matchesPriority;
+  });
+  const filteredFinanceRows =
+    financeStatusFilter === "Todos" ? financeRows : financeRows.filter((row) => row.status === financeStatusFilter);
+  const taskDashboard = [
+    { label: "Hoje", value: operationalTasks.filter((task) => task.dueDate === "10/07/2026").length },
+    { label: "Esta semana", value: operationalTasks.length },
+    { label: "Atrasadas", value: operationalTasks.filter((task) => task.status === "Atrasado").length },
+    { label: "Concluidas", value: operationalTasks.filter((task) => task.status === "Concluido").length },
+  ];
 
   if (!isAuthenticated) {
     return (
@@ -898,16 +1154,21 @@ export default function HomePage() {
         </div>
 
         <nav className="nav-list">
-          {appPages.map((page) => (
-            <button
-              className={`nav-item ${activePage === page.id ? "active" : ""}`}
-              key={page.id}
-              type="button"
-              onClick={() => setActivePage(page.id)}
-            >
-              <span>{page.label}</span>
-              {page.badge ? <b>{page.badge}</b> : null}
-            </button>
+          {navSections.map((section) => (
+            <div className="nav-section" key={section.title}>
+              <span>{section.title}</span>
+              {section.pages.map((page) => (
+                <button
+                  className={`nav-item ${activePage === page.id ? "active" : ""}`}
+                  key={page.id}
+                  type="button"
+                  onClick={() => setActivePage(page.id)}
+                >
+                  <span>{page.label}</span>
+                  {page.badge ? <b>{page.badge}</b> : null}
+                </button>
+              ))}
+            </div>
           ))}
         </nav>
 
@@ -1153,6 +1414,21 @@ export default function HomePage() {
         </section>
 
         <section className="content-grid">
+          <article className={`panel executive-panel ${activePage === "dashboard" ? "" : "page-hidden"}`}>
+            <div className="section-title">
+              <span className="eyebrow">Painel Executivo FXP</span>
+              <h2>Indicadores em tempo real</h2>
+            </div>
+            <div className="executive-grid">
+              {executiveMetrics.map((metric) => (
+                <div className="executive-metric" key={metric.label}>
+                  <span>{metric.label}</span>
+                  <strong>{metric.value}</strong>
+                </div>
+              ))}
+            </div>
+          </article>
+
           <article className={`panel lead-table ${activePage === "dashboard" ? "" : "page-hidden"}`}>
             <div className="section-title">
               <span className="eyebrow">CRM</span>
@@ -1503,6 +1779,272 @@ export default function HomePage() {
                 <button type="button">Escolher numero para teste</button>
               </article>
             </section>
+          </article>
+
+          <article className={`panel ops-panel ${activePage === "customerSuccess" ? "" : "page-hidden"}`}>
+            <div className="ops-layout">
+              <section className="ops-main">
+                <div className="section-title">
+                  <span className="eyebrow">Customer Success</span>
+                  <h2>Acompanhamento pos-venda</h2>
+                </div>
+
+                <div className="cs-card-grid">
+                  {customerSuccessClients.map((client) => (
+                    <button
+                      className={`cs-card ${selectedCustomerSuccess?.id === client.id ? "active" : ""}`}
+                      key={client.id}
+                      type="button"
+                      onClick={() => setSelectedCustomerSuccessId(client.id)}
+                    >
+                      <div className="cs-card-head">
+                        <div>
+                          <strong>{client.company}</strong>
+                          <span>{client.responsible}</span>
+                        </div>
+                        <b className={`health-badge ${client.healthTone}`}>{client.health}</b>
+                      </div>
+                      <div className="cs-card-meta">
+                        <span>Plano: {client.plan}</span>
+                        <span>Status: {client.implementationStatus}</span>
+                        <span>Implantacao: {client.implementationDate}</span>
+                        <span>Proximo contato: {client.nextContact}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                {selectedCustomerSuccess ? (
+                  <section className="ops-detail-card">
+                    <header>
+                      <div>
+                        <span className="eyebrow">Cliente selecionado</span>
+                        <h3>{selectedCustomerSuccess.company}</h3>
+                      </div>
+                      <button type="button" onClick={() => setIsCustomerServiceModalOpen(true)}>
+                        Registrar Atendimento
+                      </button>
+                    </header>
+                    <div className="ops-detail-grid">
+                      <span><b>Responsavel</b>{selectedCustomerSuccess.responsible}</span>
+                      <span><b>Plano contratado</b>{selectedCustomerSuccess.plan}</span>
+                      <span><b>Ultimo contato</b>{selectedCustomerSuccess.lastContact}</span>
+                      <span><b>Responsavel interno</b>{selectedCustomerSuccess.owner}</span>
+                      <span><b>IA funcionando</b>{selectedCustomerSuccess.aiRunning}</span>
+                      <span><b>WhatsApp conectado</b>{selectedCustomerSuccess.whatsappConnected}</span>
+                      <span><b>Treinamento realizado</b>{selectedCustomerSuccess.trainingDone}</span>
+                      <span><b>Proxima renovacao</b>{selectedCustomerSuccess.nextRenewal}</span>
+                      <span><b>NPS</b>{selectedCustomerSuccess.nps}</span>
+                      <span className="wide"><b>Ultimo feedback</b>{selectedCustomerSuccess.lastFeedback}</span>
+                      <span className="wide"><b>Observacoes</b>{selectedCustomerSuccess.notes}</span>
+                    </div>
+                  </section>
+                ) : null}
+              </section>
+
+              <aside className="ops-timeline">
+                <div className="section-title">
+                  <span className="eyebrow">Timeline</span>
+                  <h2>Historico do cliente</h2>
+                </div>
+                {customerSuccessTimeline.map((item) => (
+                  <article className="timeline-item" key={`${item.type}-${item.date}`}>
+                    <span>{item.type}</span>
+                    <strong>{item.title}</strong>
+                    <small>{item.date}</small>
+                    <p>{item.summary}</p>
+                  </article>
+                ))}
+              </aside>
+            </div>
+
+            {isCustomerServiceModalOpen ? (
+              <div className="ops-modal-overlay" role="presentation" onClick={() => setIsCustomerServiceModalOpen(false)}>
+                <form className="ops-modal" onClick={(event) => event.stopPropagation()}>
+                  <header>
+                    <h3>Registrar Atendimento</h3>
+                    <button type="button" onClick={() => setIsCustomerServiceModalOpen(false)}>x</button>
+                  </header>
+                  <label>
+                    <span>Tipo de atendimento</span>
+                    <select defaultValue="Reuniao">
+                      <option>Ligacao</option>
+                      <option>Reuniao</option>
+                      <option>Treinamento</option>
+                      <option>Feedback</option>
+                      <option>Chamado</option>
+                      <option>Observacao</option>
+                      <option>Renovacao</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>Resumo</span>
+                    <textarea placeholder="Resumo do atendimento" rows={4} />
+                  </label>
+                  <label>
+                    <span>Proxima acao</span>
+                    <input placeholder="Ex: acompanhar configuracao do WhatsApp" />
+                  </label>
+                  <label>
+                    <span>Proxima data de contato</span>
+                    <input type="date" />
+                  </label>
+                  <footer>
+                    <button type="button" onClick={() => setIsCustomerServiceModalOpen(false)}>Salvar atendimento</button>
+                  </footer>
+                </form>
+              </div>
+            ) : null}
+          </article>
+
+          <article className={`panel ops-panel ${activePage === "implantacoes" ? "" : "page-hidden"}`}>
+            <div className="section-title">
+              <span className="eyebrow">Pipeline de implantacao</span>
+              <h2>Implantacoes</h2>
+            </div>
+            <div className="implementation-board">
+              {implementationStages.map((stage) => {
+                const stageCards = implementationCards.filter((card) => card.stage === stage);
+
+                return (
+                  <section className="implementation-column" key={stage}>
+                    <header>
+                      <span>{stage}</span>
+                      <b>{stageCards.length}</b>
+                    </header>
+                    <div className="implementation-list">
+                      {stageCards.map((card) => {
+                        const progress = Math.round((card.completed / implementationChecklist.length) * 100);
+                        return (
+                          <button className="implementation-card" key={card.id} type="button" onClick={() => setSelectedImplementationId(card.id)}>
+                            <strong>{card.company}</strong>
+                            <span>{card.responsible}</span>
+                            <small>{card.plan} | {card.date}</small>
+                            <small>{card.owner}</small>
+                            <div className="progress-line">
+                              <i style={{ width: `${progress}%` }} />
+                            </div>
+                            <b>{progress}% concluido</b>
+                          </button>
+                        );
+                      })}
+                      {stageCards.length === 0 ? <div className="kanban-empty">Sem clientes</div> : null}
+                    </div>
+                  </section>
+                );
+              })}
+            </div>
+
+            {selectedImplementation ? (
+              <div className="ops-modal-overlay" role="presentation" onClick={() => setSelectedImplementationId(null)}>
+                <section className="ops-modal checklist-modal" onClick={(event) => event.stopPropagation()}>
+                  <header>
+                    <div>
+                      <h3>{selectedImplementation.company}</h3>
+                      <span>{selectedImplementation.responsible} | {selectedImplementation.plan}</span>
+                    </div>
+                    <button type="button" onClick={() => setSelectedImplementationId(null)}>x</button>
+                  </header>
+                  <div className="progress-line large">
+                    <i style={{ width: `${Math.round((selectedImplementation.completed / implementationChecklist.length) * 100)}%` }} />
+                  </div>
+                  <div className="checklist-grid">
+                    {implementationChecklist.map((item, index) => (
+                      <label key={item}>
+                        <input checked={index < selectedImplementation.completed} readOnly type="checkbox" />
+                        <span>{item}</span>
+                      </label>
+                    ))}
+                  </div>
+                </section>
+              </div>
+            ) : null}
+          </article>
+
+          <article className={`panel ops-panel ${activePage === "tarefas" ? "" : "page-hidden"}`}>
+            <div className="section-title">
+              <span className="eyebrow">Central de tarefas</span>
+              <h2>Tarefas</h2>
+            </div>
+            <div className="task-summary-grid">
+              {taskDashboard.map((item) => (
+                <div className="executive-metric" key={item.label}>
+                  <span>{item.label}</span>
+                  <strong>{item.value}</strong>
+                </div>
+              ))}
+            </div>
+            <div className="task-filters">
+              <label><span>Responsavel</span><select value={taskResponsibleFilter} onChange={(event) => setTaskResponsibleFilter(event.target.value)}>{taskFilterOptions.responsible.map((item) => <option key={item}>{item}</option>)}</select></label>
+              <label><span>Categoria</span><select value={taskCategoryFilter} onChange={(event) => setTaskCategoryFilter(event.target.value)}>{taskFilterOptions.category.map((item) => <option key={item}>{item}</option>)}</select></label>
+              <label><span>Status</span><select value={taskStatusFilter} onChange={(event) => setTaskStatusFilter(event.target.value)}>{taskFilterOptions.status.map((item) => <option key={item}>{item}</option>)}</select></label>
+              <label><span>Prioridade</span><select value={taskPriorityFilter} onChange={(event) => setTaskPriorityFilter(event.target.value)}>{taskFilterOptions.priority.map((item) => <option key={item}>{item}</option>)}</select></label>
+            </div>
+            <div className="ops-table">
+              <div className="ops-table-head">
+                <span>Titulo</span><span>Responsavel</span><span>Prioridade</span><span>Data limite</span><span>Categoria</span><span>Status</span>
+              </div>
+              {filteredTasks.map((task) => (
+                <article className="ops-table-row" key={task.title}>
+                  <div><strong>{task.title}</strong><small>{task.description}</small></div>
+                  <span>{task.responsible}</span>
+                  <b className={`priority-badge ${task.priority.toLowerCase()}`}>{task.priority}</b>
+                  <span>{task.dueDate}</span>
+                  <span>{task.category}</span>
+                  <span>{task.status}</span>
+                </article>
+              ))}
+            </div>
+          </article>
+
+          <article className={`panel ops-panel ${activePage === "financeiro" ? "" : "page-hidden"}`}>
+            <div className="section-title">
+              <span className="eyebrow">Financeiro</span>
+              <h2>Receita e mensalidades</h2>
+            </div>
+            <div className="finance-metric-grid">
+              {financeMetrics.map((metric) => (
+                <div className="executive-metric" key={metric.label}>
+                  <span>{metric.label}</span>
+                  <strong>{metric.value}</strong>
+                </div>
+              ))}
+            </div>
+            <div className="finance-filters">
+              {["Todos", "Pago", "Pendente", "Atrasado", "Renovado"].map((status) => (
+                <button className={financeStatusFilter === status ? "active" : ""} key={status} type="button" onClick={() => setFinanceStatusFilter(status)}>
+                  {status}
+                </button>
+              ))}
+            </div>
+            <div className="ops-table">
+              <div className="ops-table-head finance">
+                <span>Empresa</span><span>Plano</span><span>Valor</span><span>Vencimento</span><span>Status</span><span>Responsavel</span><span>Pagamento</span>
+              </div>
+              {filteredFinanceRows.map((row) => (
+                <article className="ops-table-row finance" key={`${row.company}-${row.dueDate}`}>
+                  <strong>{row.company}</strong>
+                  <span>{row.plan}</span>
+                  <span>{formatCurrency(row.amount)}</span>
+                  <span>{row.dueDate}</span>
+                  <b className={`finance-status ${row.status.toLowerCase()}`}>{row.status}</b>
+                  <span>{row.responsible}</span>
+                  <span>{row.paymentMethod}</span>
+                </article>
+              ))}
+            </div>
+          </article>
+
+          <article className={`panel ops-panel settings-placeholder ${activePage === "usuarios" ? "" : "page-hidden"}`}>
+            <span className="eyebrow">Configuracoes</span>
+            <h2>Usuarios</h2>
+            <p>Area preparada para perfis, permissoes e acessos da equipe FXP.</p>
+          </article>
+
+          <article className={`panel ops-panel settings-placeholder ${activePage === "empresa" ? "" : "page-hidden"}`}>
+            <span className="eyebrow">Configuracoes</span>
+            <h2>Empresa</h2>
+            <p>Area preparada para dados da FXP, padroes comerciais e parametros operacionais.</p>
           </article>
 
           <article className={`panel integrations-panel ${activePage === "integracoes" ? "" : "page-hidden"}`}>
