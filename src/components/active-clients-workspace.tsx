@@ -81,7 +81,7 @@ export function ActiveClientsWorkspace() {
     void loadClients();
   }, []);
 
-  const selectedClient = clients.find((client) => client.id === selectedClientId) ?? clients[0] ?? null;
+  const selectedClient = clients.find((client) => client.id === selectedClientId) ?? null;
   const filteredClients = useMemo(() => {
     const normalizedSearch = normalize(search);
     return clients.filter((client) => {
@@ -104,7 +104,9 @@ export function ActiveClientsWorkspace() {
       }
 
       setClients(result.clients);
-      setSelectedClientId((currentId) => currentId ?? result.clients?.[0]?.id ?? null);
+      setSelectedClientId((currentId) =>
+        currentId && result.clients?.some((client) => client.id === currentId) ? currentId : null,
+      );
     } catch {
       showToast("Erro ao carregar clientes.");
     } finally {
@@ -147,7 +149,7 @@ export function ActiveClientsWorkspace() {
     setModalMode(null);
     showToast(modalMode === "edit" ? "Cliente atualizado com sucesso." : "Cliente cadastrado com sucesso.");
     await loadClients();
-    if (result.id) setSelectedClientId(result.id);
+    setSelectedClientId(null);
   }
 
   async function handleStageChange(clientId: string, stage: ClientStageId) {
@@ -309,6 +311,7 @@ export function ActiveClientsWorkspace() {
           {selectedClient ? (
             <ClientDetails
               client={selectedClient}
+              onClose={() => setSelectedClientId(null)}
               onEdit={() => setModalMode("edit")}
               onStageChange={(stage) => handleStageChange(selectedClient.id, stage)}
               onAddChild={handleAddChild}
@@ -338,6 +341,7 @@ export function ActiveClientsWorkspace() {
 
 function ClientDetails({
   client,
+  onClose,
   onEdit,
   onStageChange,
   onAddChild,
@@ -347,6 +351,7 @@ function ClientDetails({
   onCopy,
 }: {
   client: ActiveClient;
+  onClose: () => void;
   onEdit: () => void;
   onStageChange: (stage: ClientStageId) => void;
   onAddChild: (event: FormEvent<HTMLFormElement>, action: "add_document" | "add_credential" | "add_note") => void;
@@ -356,6 +361,7 @@ function ClientDetails({
   onCopy: (value: string | null | undefined) => void;
 }) {
   return (
+    <div className="client-details-overlay">
     <div className="client-details">
       <header className="client-detail-hero">
         <div>
@@ -367,6 +373,7 @@ function ClientDetails({
         <select value={client.stage} onChange={(event) => onStageChange(event.target.value as ClientStageId)}>
           {clientStages.map((stage) => <option key={stage.id} value={stage.id}>{stage.label}</option>)}
         </select>
+        <button type="button" onClick={onClose}>Fechar</button>
       </header>
 
       <div className="client-detail-grid">
@@ -443,6 +450,7 @@ function ClientDetails({
           ))}
         </section>
       </div>
+    </div>
     </div>
   );
 }
