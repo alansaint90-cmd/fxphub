@@ -810,6 +810,239 @@ h2 {
   background: #f8fbff;
 }
 
+.clients-panel {
+  max-width: 1260px;
+  margin: 18px auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+
+.clients-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(340px, 0.65fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.active-client-form,
+.active-client-detail,
+.client-stage-column {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #ffffff;
+  padding: 16px;
+}
+
+.active-client-form {
+  display: grid;
+  gap: 14px;
+}
+
+.active-client-form-grid,
+.credential-fields,
+.client-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.active-client-form label,
+.credential-fields label {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.active-client-form input,
+.active-client-form select,
+.active-client-form textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #ffffff;
+  color: var(--ink);
+  padding: 11px 12px;
+  font: inherit;
+}
+
+.active-client-form textarea {
+  resize: vertical;
+}
+
+.active-client-form button[type="submit"] {
+  min-height: 42px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #ffffff;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.active-client-detail {
+  display: grid;
+  gap: 13px;
+}
+
+.active-client-detail h3 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.active-client-detail p {
+  margin: 0;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.client-meta-grid {
+  grid-template-columns: 1fr;
+}
+
+.client-meta-grid span {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fafafa;
+  padding: 10px;
+  color: var(--muted-strong);
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.client-stage-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.client-stage-actions button,
+.credential-list-head button {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--muted-strong);
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.client-stage-actions button.active,
+.client-stage-actions button:hover,
+.credential-list-head button:hover {
+  border-color: rgba(37, 99, 235, 0.32);
+  background: #edf4ff;
+  color: var(--info);
+}
+
+.credential-list {
+  display: grid;
+  gap: 10px;
+}
+
+.credential-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.credential-item {
+  display: grid;
+  gap: 5px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fafafa;
+  padding: 12px;
+}
+
+.credential-item strong {
+  color: var(--ink);
+}
+
+.credential-item span {
+  color: var(--muted);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.client-stage-board {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(180px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.client-stage-column {
+  min-height: 230px;
+  background: #fafafa;
+}
+
+.client-stage-column header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.client-stage-column header span {
+  color: var(--muted-strong);
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.client-stage-column header b {
+  min-width: 26px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #eeeeef;
+  color: var(--muted-strong);
+  font-size: 12px;
+}
+
+.client-stage-list {
+  display: grid;
+  gap: 10px;
+}
+
+.client-stage-list button {
+  display: grid;
+  gap: 5px;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.client-stage-list button.active,
+.client-stage-list button:hover {
+  border-color: rgba(37, 99, 235, 0.35);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.client-stage-list strong {
+  color: var(--ink);
+}
+
+.client-stage-list span,
+.client-stage-list small {
+  color: var(--muted);
+}
+
 .table-head,
 .lead-row {
   display: grid;
@@ -2093,9 +2326,16 @@ h2 {
   }
 
   .agenda-shell,
+  .clients-workspace,
+  .active-client-form-grid,
+  .credential-fields,
   .integration-summary,
   .integration-fields {
     grid-template-columns: 1fr;
+  }
+
+  .client-stage-board {
+    grid-template-columns: repeat(6, minmax(220px, 1fr));
   }
 
   .agenda-side {

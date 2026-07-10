@@ -29,6 +29,14 @@ export const appointmentStatusEnum = pgEnum("appointment_status", [
   "completed",
   "no_show",
 ]);
+export const activeClientStageEnum = pgEnum("active_client_stage", [
+  "documentos",
+  "onboarding",
+  "implantacao",
+  "treinamento",
+  "acompanhamento",
+  "renovacao",
+]);
 
 const auditColumns = {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -139,3 +147,28 @@ export const integrationSettings = pgTable(
     keyIdx: uniqueIndex("integration_settings_key_idx").on(table.key),
   }),
 );
+
+export const activeClients = pgTable("active_clients", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  companyName: text("company_name").notNull(),
+  responsibleName: text("responsible_name").notNull(),
+  phone: text("phone"),
+  email: text("email"),
+  city: text("city"),
+  stage: activeClientStageEnum("stage").notNull().default("documentos"),
+  notes: text("notes"),
+  ...auditColumns,
+});
+
+export const activeClientCredentials = pgTable("active_client_credentials", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  clientId: uuid("client_id")
+    .notNull()
+    .references(() => activeClients.id, { onDelete: "restrict", onUpdate: "restrict" }),
+  label: text("label").notNull(),
+  url: text("url"),
+  username: text("username"),
+  password: text("password"),
+  notes: text("notes"),
+  ...auditColumns,
+});
