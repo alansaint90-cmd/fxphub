@@ -1156,7 +1156,6 @@ export default function HomePage() {
         <nav className="nav-list">
           {navSections.map((section) => (
             <div className="nav-section" key={section.title}>
-              <span>{section.title}</span>
               {section.pages.map((page) => (
                 <button
                   className={`nav-item ${activePage === page.id ? "active" : ""}`}
