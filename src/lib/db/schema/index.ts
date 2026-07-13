@@ -1,6 +1,7 @@
 import {
   boolean,
   integer,
+  index,
   jsonb,
   pgEnum,
   pgTable,
@@ -207,3 +208,202 @@ export const activeClientHistory = pgTable("active_client_history", {
   metadata: jsonb("metadata").$type<Record<string, unknown>>().notNull().default({}),
   ...auditColumns,
 });
+
+export const clientOnboardings = pgTable(
+  "client_onboardings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    clientId: uuid("client_id")
+      .notNull()
+      .references(() => activeClients.id, { onDelete: "restrict", onUpdate: "restrict" }),
+    planName: text("plan_name"),
+    internalOwnerName: text("internal_owner_name"),
+    status: text("status").notNull().default("Aguardando inicio"),
+    health: text("health").notNull().default("Atencao"),
+    contractedAt: timestamp("contracted_at", { withTimezone: true }),
+    onboardingStartedAt: timestamp("onboarding_started_at", { withTimezone: true }),
+    configurationStartedAt: timestamp("configuration_started_at", { withTimezone: true }),
+    testsStartedAt: timestamp("tests_started_at", { withTimezone: true }),
+    trainingAt: timestamp("training_at", { withTimezone: true }),
+    plannedCompletionAt: timestamp("planned_completion_at", { withTimezone: true }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    progress: integer("progress").notNull().default(0),
+    nextRecommendedAction: text("next_recommended_action"),
+    metrics: jsonb("metrics").$type<Record<string, unknown>>().notNull().default({}),
+    ...auditColumns,
+  },
+  (table) => ({
+    clientIdx: index("client_onboardings_client_idx").on(table.clientId),
+    statusIdx: index("client_onboardings_status_idx").on(table.status),
+    ownerIdx: index("client_onboardings_owner_idx").on(table.internalOwnerName),
+  }),
+);
+
+export const onboardingChecklistItems = pgTable(
+  "onboarding_checklist_items",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    clientId: uuid("client_id")
+      .notNull()
+      .references(() => activeClients.id, { onDelete: "restrict", onUpdate: "restrict" }),
+    onboardingId: uuid("onboarding_id")
+      .notNull()
+      .references(() => clientOnboardings.id, { onDelete: "restrict", onUpdate: "restrict" }),
+    stageKey: text("stage_key").notNull(),
+    stageName: text("stage_name").notNull(),
+    itemKey: text("item_key").notNull(),
+    label: text("label").notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    isRequired: boolean("is_required").notNull().default(true),
+    isCompleted: boolean("is_completed").notNull().default(false),
+    isBlocked: boolean("is_blocked").notNull().default(false),
+    responsibleName: text("responsible_name"),
+    dueAt: timestamp("due_at", { withTimezone: true }),
+    notes: text("notes"),
+    documentUrl: text("document_url"),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    completedBy: text("completed_by"),
+    blockReason: text("block_reason"),
+    ...auditColumns,
+  },
+  (table) => ({
+    clientIdx: index("onboarding_checklist_client_idx").on(table.clientId),
+    statusIdx: index("onboarding_checklist_status_idx").on(table.isCompleted, table.isBlocked),
+    dueIdx: index("onboarding_checklist_due_idx").on(table.dueAt),
+  }),
+);
+
+export const clientForms = pgTable(
+  "client_forms",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    clientId: uuid("client_id")
+      .notNull()
+      .references(() => activeClients.id, { onDelete: "restrict", onUpdate: "restrict" }),
+    onboardingId: uuid("onboarding_id")
+      .notNull()
+      .references(() => clientOnboardings.id, { onDelete: "restrict", onUpdate: "restrict" }),
+    formType: text("form_type").notNull(),
+    data: jsonb("data").$type<Record<string, unknown>>().notNull().default({}),
+    completionPercent: integer("completion_percent").notNull().default(0),
+    lastEditedBy: text("last_edited_by"),
+    copiedToAiAt: timestamp("copied_to_ai_at", { withTimezone: true }),
+    ...auditColumns,
+  },
+  (table) => ({
+    clientTypeIdx: uniqueIndex("client_forms_client_type_idx").on(table.clientId, table.formType),
+  }),
+);
+
+export const clientTrainings = pgTable(
+  "client_trainings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    clientId: uuid("client_id")
+      .notNull()
+      .references(() => activeClients.id, { onDelete: "restrict", onUpdate: "restrict" }),
+    onboardingId: uuid("onboarding_id")
+      .notNull()
+      .references(() => clientOnboardings.id, { onDelete: "restrict", onUpdate: "restrict" }),
+    title: text("title").notNull(),
+    type: text("type").notNull(),
+    scheduledAt: timestamp("scheduled_at", { withTimezone: true }),
+    durationMinutes: integer("duration_minutes"),
+    fxpOwnerName: text("fxp_owner_name"),
+    participants: text("participants"),
+    meetingUrl: text("meeting_url"),
+    contentCovered: text("content_covered"),
+    questions: text("questions"),
+    status: text("status").notNull().default("Agendado"),
+    notes: text("notes"),
+    materialUrl: text("material_url"),
+    teamTrained: boolean("team_trained").notNull().default(false),
+    needsReinforcement: boolean("needs_reinforcement").notNull().default(false),
+    newTrainingNeeded: boolean("new_training_needed").notNull().default(false),
+    ...auditColumns,
+  },
+  (table) => ({
+    clientIdx: index("client_trainings_client_idx").on(table.clientId),
+    statusIdx: index("client_trainings_status_idx").on(table.status),
+  }),
+);
+
+export const clientPendingItems = pgTable(
+  "client_pending_items",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    clientId: uuid("client_id")
+      .notNull()
+      .references(() => activeClients.id, { onDelete: "restrict", onUpdate: "restrict" }),
+    onboardingId: uuid("onboarding_id")
+      .notNull()
+      .references(() => clientOnboardings.id, { onDelete: "restrict", onUpdate: "restrict" }),
+    title: text("title").notNull(),
+    description: text("description"),
+    category: text("category"),
+    responsibleName: text("responsible_name"),
+    origin: text("origin"),
+    priority: text("priority").notNull().default("Media"),
+    dueAt: timestamp("due_at", { withTimezone: true }),
+    status: text("status").notNull().default("Aberta"),
+    dependency: text("dependency"),
+    notes: text("notes"),
+    ...auditColumns,
+  },
+  (table) => ({
+    clientIdx: index("client_pending_items_client_idx").on(table.clientId),
+    statusIdx: index("client_pending_items_status_idx").on(table.status),
+    dueIdx: index("client_pending_items_due_idx").on(table.dueAt),
+  }),
+);
+
+export const clientQualityChecks = pgTable(
+  "client_quality_checks",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    clientId: uuid("client_id")
+      .notNull()
+      .references(() => activeClients.id, { onDelete: "restrict", onUpdate: "restrict" }),
+    onboardingId: uuid("onboarding_id")
+      .notNull()
+      .references(() => clientOnboardings.id, { onDelete: "restrict", onUpdate: "restrict" }),
+    itemKey: text("item_key").notNull(),
+    label: text("label").notNull(),
+    isRequired: boolean("is_required").notNull().default(true),
+    isCompleted: boolean("is_completed").notNull().default(false),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    completedBy: text("completed_by"),
+    exceptionJustification: text("exception_justification"),
+    ...auditColumns,
+  },
+  (table) => ({
+    clientIdx: index("client_quality_checks_client_idx").on(table.clientId),
+  }),
+);
+
+export const clientAcceptanceTerms = pgTable(
+  "client_acceptance_terms",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    clientId: uuid("client_id")
+      .notNull()
+      .references(() => activeClients.id, { onDelete: "restrict", onUpdate: "restrict" }),
+    onboardingId: uuid("onboarding_id")
+      .notNull()
+      .references(() => clientOnboardings.id, { onDelete: "restrict", onUpdate: "restrict" }),
+    clientName: text("client_name").notNull(),
+    responsibleName: text("responsible_name").notNull(),
+    acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+    deliveredItems: text("delivered_items"),
+    knownPendingItems: text("known_pending_items"),
+    notes: text("notes"),
+    fxpResponsibleName: text("fxp_responsible_name"),
+    clientConfirmation: boolean("client_confirmation").notNull().default(false),
+    signedTermUrl: text("signed_term_url"),
+    printableVersion: text("printable_version"),
+    ...auditColumns,
+  },
+  (table) => ({
+    clientIdx: index("client_acceptance_terms_client_idx").on(table.clientId),
+  }),
+);

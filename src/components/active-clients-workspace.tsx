@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
 const clientStages = [
@@ -67,6 +68,7 @@ interface ActiveClient {
 }
 
 export function ActiveClientsWorkspace() {
+  const router = useRouter();
   const [clients, setClients] = useState<ActiveClient[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [modalMode, setModalMode] = useState<ModalMode>(null);
@@ -283,12 +285,12 @@ export function ActiveClientsWorkspace() {
             <div className="clients-table">
               {filteredClients.map((client) => (
                 <article className="client-row" key={client.id}>
-                  <button type="button" onClick={() => setSelectedClientId(client.id)}>
+                  <button type="button" onClick={() => router.push(`/clientes/${client.id}`)}>
                     <strong>{client.companyName}</strong>
                     <span>Responsavel: {client.responsibleName}</span>
                   </button>
                   <div className="client-row-actions">
-                    <button type="button" onClick={() => setSelectedClientId(client.id)}>Detalhes</button>
+                    <button type="button" onClick={() => router.push(`/clientes/${client.id}`)}>Detalhes</button>
                     <button type="button" onClick={() => { setSelectedClientId(client.id); setModalMode("edit"); }}>Editar</button>
                   </div>
                 </article>

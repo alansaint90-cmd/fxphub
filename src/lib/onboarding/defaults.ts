@@ -1,0 +1,216 @@
+export const onboardingStatuses = [
+  "Aguardando inicio",
+  "Em coleta de informacoes",
+  "Em configuracao",
+  "Em testes",
+  "Aguardando cliente",
+  "Em treinamento",
+  "Em validacao",
+  "Concluida",
+  "Pausada",
+  "Cancelada",
+] as const;
+
+export const onboardingChecklistTemplate = [
+  {
+    key: "boas_vindas",
+    name: "Boas-vindas",
+    items: [
+      "Pagamento confirmado",
+      "Contrato confirmado",
+      "Mensagem de boas-vindas enviada",
+      "Responsavel do cliente identificado",
+      "Grupo de comunicacao criado",
+      "Cronograma apresentado",
+    ],
+  },
+  {
+    key: "coleta",
+    name: "Coleta de informacoes",
+    items: [
+      "Dados da empresa recebidos",
+      "Endereco validado",
+      "Horarios de funcionamento validados",
+      "Servicos cadastrados",
+      "Valores cadastrados",
+      "Formas de pagamento cadastradas",
+      "Promocoes cadastradas",
+      "Perguntas frequentes recebidas",
+      "Regras comerciais recebidas",
+      "Materiais e links recebidos",
+    ],
+  },
+  {
+    key: "tecnica",
+    name: "Configuracao tecnica",
+    items: [
+      "Conta criada",
+      "Usuarios cadastrados",
+      "Permissoes configuradas",
+      "WhatsApp conectado",
+      "Evolution API configurada",
+      "OpenAI configurada",
+      "Webhooks configurados",
+      "Funil do CRM configurado",
+      "Mensagens rapidas cadastradas",
+      "Tags configuradas",
+      "Agenda configurada",
+    ],
+  },
+  {
+    key: "ia",
+    name: "Configuracao da IA",
+    items: [
+      "Prompt principal criado",
+      "Base de conhecimento cadastrada",
+      "Tom de voz definido",
+      "Informacoes sensiveis revisadas",
+      "Servicos e precos revisados",
+      "Restricoes do atendimento cadastradas",
+      "Gatilhos de atendimento configurados",
+      "Encaminhamento humano configurado",
+      "Follow-up configurado",
+    ],
+  },
+  {
+    key: "testes",
+    name: "Testes",
+    items: [
+      "Teste de recebimento realizado",
+      "Teste de envio realizado",
+      "IA respondeu corretamente",
+      "Endereco validado na resposta",
+      "Valores validados na resposta",
+      "Horarios validados na resposta",
+      "Fluxo de atendimento testado",
+      "Assumir atendimento testado",
+      "Devolver atendimento para IA testado",
+      "Atualizacao no CRM validada",
+      "Dashboard validado",
+      "Correcoes concluidas",
+    ],
+  },
+  {
+    key: "treinamento",
+    name: "Treinamento",
+    items: [
+      "Treinamento do gestor realizado",
+      "Treinamento do comercial realizado",
+      "Treinamento do atendimento realizado",
+      "Duvidas respondidas",
+      "Material de apoio enviado",
+      "Presenca dos participantes registrada",
+    ],
+  },
+  {
+    key: "validacao",
+    name: "Validacao e entrega",
+    items: [
+      "Cliente realizou os testes",
+      "Cliente aprovou as informacoes",
+      "Cliente aprovou o funcionamento",
+      "Pendencias resolvidas",
+      "Termo de aceite registrado",
+      "Implantacao concluida",
+    ],
+  },
+] as const;
+
+export const clientFormTemplates = [
+  {
+    type: "cadastral",
+    label: "Formulario cadastral",
+    fields: [
+      "Razao social",
+      "Nome fantasia",
+      "CNPJ",
+      "Endereco",
+      "Cidade",
+      "Estado",
+      "CEP",
+      "Telefone",
+      "E-mail",
+      "Site",
+      "Instagram",
+      "Nome do responsavel",
+      "Cargo do responsavel",
+    ],
+  },
+  {
+    type: "comercial",
+    label: "Formulario comercial",
+    fields: [
+      "Servicos oferecidos",
+      "Valores",
+      "Condicoes de pagamento",
+      "Promocoes",
+      "Diferenciais",
+      "Restricoes de atendimento",
+      "Perguntas frequentes",
+      "Objecoes comuns",
+      "Politicas comerciais",
+      "Horarios de atendimento",
+    ],
+  },
+  {
+    type: "tecnico",
+    label: "Formulario tecnico",
+    fields: [
+      "Numero do WhatsApp",
+      "Provedor ou integracao utilizada",
+      "Chave da Evolution API",
+      "Instancia",
+      "Webhook",
+      "Dominio",
+      "Meta Business",
+      "Site",
+      "Landing page",
+      "Outras integracoes",
+    ],
+  },
+  {
+    type: "ia",
+    label: "Formulario de IA",
+    fields: [
+      "Nome do agente",
+      "Objetivo do agente",
+      "Tom de voz",
+      "Persona",
+      "Regras obrigatorias",
+      "Informacoes proibidas",
+      "Servicos",
+      "Precos",
+      "Respostas frequentes",
+      "Regras de transferencia para humano",
+      "Horarios de atendimento",
+      "Mensagem fora do horario",
+      "Fluxo de qualificacao",
+      "Fluxo de agendamento",
+      "Fluxo de follow-up",
+    ],
+  },
+] as const;
+
+export const qualityCheckTemplate = [
+  "Dados da empresa validados",
+  "Endereco validado",
+  "Servicos validados",
+  "Precos validados",
+  "Promocoes validadas",
+  "Restricoes validadas",
+  "Fluxos da IA validados",
+  "Integracoes validadas",
+  "Funil validado",
+  "Treinamento validado",
+  "Cliente realizou teste",
+  "Cliente aprovou a entrega",
+] as const;
+
+export function slugifyKey(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_|_$/g, "");
+}
