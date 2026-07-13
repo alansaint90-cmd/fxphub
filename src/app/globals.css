@@ -1683,11 +1683,14 @@ h2 {
 .support-body {
   min-height: calc(100vh - 206px);
   display: grid;
-  grid-template-columns: 300px minmax(0, 1fr);
+  grid-template-columns: minmax(340px, 360px) minmax(0, 1fr);
 }
 
 .inbox-panel {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
+  max-height: calc(100vh - 206px);
   overflow: hidden;
   border-right: 1px solid var(--line);
   background: #fbfbfb;
@@ -1750,9 +1753,11 @@ h2 {
 }
 
 .conversation-list {
-  max-height: calc(100vh - 382px);
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
-  padding-right: 4px;
+  overflow-x: hidden;
+  padding-right: 6px;
 }
 
 .conversation-contact {
@@ -1810,7 +1815,7 @@ h2 {
 .chat-person strong {
   overflow: hidden;
   color: var(--foreground);
-  font-size: 13px;
+  font-size: 14px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1825,6 +1830,7 @@ h2 {
 }
 
 .contact-meta {
+  min-width: 34px;
   display: grid;
   justify-items: end;
   gap: 4px;
@@ -2699,6 +2705,7 @@ h2 {
 }
 
 .ops-panel {
+  grid-column: 1 / -1;
   width: 100%;
   max-width: 1260px;
   margin: 18px auto;
@@ -3539,12 +3546,14 @@ button.danger {
   }
 
   .inbox-panel {
+    max-height: 420px;
     border-right: 0;
     border-bottom: 1px solid var(--line);
   }
 
   .conversation-list {
-    max-height: 260px;
+    min-height: 220px;
+    max-height: 320px;
   }
 
   .chat-panel {

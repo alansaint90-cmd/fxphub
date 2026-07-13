@@ -11,7 +11,6 @@ import {
 } from "@/lib/qualification/agent-prompts";
 
 const kanbanStages = [
-  { id: "novo", label: "Novo Lead", tone: "neutral" },
   { id: "ia", label: "IA Atendendo", tone: "info" },
   { id: "qualificado", label: "Qualificado", tone: "success" },
   { id: "agendamento", label: "Agendamento", tone: "warning" },
@@ -1211,8 +1210,8 @@ export default function HomePage() {
                 <strong>23</strong>
               </div>
               <div className="metric">
-                <span>Agenda salva</span>
-                <strong>9h</strong>
+                <span>Proxima agenda</span>
+                <strong>14h</strong>
               </div>
             </div>
 
