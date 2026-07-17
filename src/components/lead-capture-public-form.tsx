@@ -373,16 +373,13 @@ export function LeadCapturePublicForm({ slug }: { slug: string }) {
   );
 }
 
-function IntroScreen({ onStart, settings }: { onStart: () => void; settings: PublicFormSettings | null }) {
+function IntroScreen({ onStart }: { onStart: () => void; settings: PublicFormSettings | null }) {
   return (
     <section className="fxp-intro">
       <BrandMark />
-      <h1>{settings?.title || "DIAGNOSTICO DE CRESCIMENTO PARA AUTOESCOLAS"}</h1>
+      <h1>Atraia mais alunos para sua autoescola e transforme mais oportunidades em matriculas</h1>
       <p className="fxp-intro-subtitle">
-        Descubra como aumentar a entrada de novos interessados na sua autoescola e transformar mais oportunidades em matriculas utilizando trafego pago e Inteligencia Artificial.
-      </p>
-      <p>
-        A FXP combina geracao de demanda, estrategias de aquisicao e atendimento inteligente para ajudar autoescolas a atrair potenciais alunos e melhorar o aproveitamento das oportunidades que chegam pelo WhatsApp.
+        A FXP une trafego pago, geracao de demanda e Inteligencia Artificial para colocar mais potenciais alunos no seu WhatsApp e ajudar sua autoescola a vender mais todos os dias.
       </p>
       <div className="fxp-intro-media-grid">
         <figure>
