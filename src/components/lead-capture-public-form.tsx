@@ -384,11 +384,11 @@ function IntroScreen({ onStart }: { onStart: () => void; settings: PublicFormSet
       <div className="fxp-intro-media-grid">
         <figure>
           <img src={metaAdsImage.src} alt="Resultados de campanhas no gerenciador de anuncios" />
-          <figcaption>Campanhas gerando novas oportunidades de matricula</figcaption>
+          <figcaption>Campanhas gerando demanda e novas oportunidades de matricula.</figcaption>
         </figure>
         <figure>
           <img src={atendimentoIaImage.src} alt="Central de atendimento com IA no WhatsApp" />
-          <figcaption>IA qualificando e apoiando conversas no WhatsApp</figcaption>
+          <figcaption>Inteligencia Artificial qualificando e apoiando as conversas no WhatsApp, reduzindo o tempo de resposta e permitindo atender mais potenciais alunos.</figcaption>
         </figure>
       </div>
       <small>Responda com dados reais. Ao final, se o perfil for compativel, voce podera conversar com Fausto gratuitamente.</small>

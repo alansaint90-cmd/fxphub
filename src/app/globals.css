@@ -4129,12 +4129,13 @@ textarea.quiz-input {
 }
 
 .fxp-intro-media-grid figcaption {
-  min-height: 58px;
+  min-height: 74px;
   display: grid;
   align-items: center;
   color: #ffffff;
-  font-size: 15px;
+  font-size: clamp(13px, 2.5vw, 15px);
   font-weight: 900;
+  line-height: 1.35;
   padding: 14px 16px;
 }
 
