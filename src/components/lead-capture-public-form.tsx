@@ -334,7 +334,7 @@ export function LeadCapturePublicForm({ slug }: { slug: string }) {
     return (
       <main className="public-form-shell quiz-shell fxp-diagnostic-shell">
         {qualified ? (
-          <QualifiedResult answers={answers} result={result} onWhatsappClick={handleWhatsappClick} />
+          <QualifiedResult onWhatsappClick={handleWhatsappClick} />
         ) : (
           <UnqualifiedResult />
         )}
@@ -459,29 +459,18 @@ function ProcessingScreen({ message }: { message: string }) {
   );
 }
 
-function QualifiedResult({ answers, result, onWhatsappClick }: { answers: Record<QuizField, string>; result: SubmitResult | null; onWhatsappClick: () => void }) {
+function QualifiedResult({ onWhatsappClick }: { onWhatsappClick: () => void }) {
   return (
     <section className="public-form-card result quiz-result fxp-result-card">
       <BrandMark />
       <span className="fxp-kicker">Diagnostico concluido</span>
       <h1>SEU DIAGNOSTICO FOI CONCLUIDO!</h1>
-      <p>Com base nas suas respostas, identificamos oportunidades para melhorar a geracao e o aproveitamento de novos clientes na sua autoescola.</p>
-      <div className="fxp-personal-card">
-        <strong>Ola, {answers.name}.</strong>
-        <p>Com base nas informacoes fornecidas sobre a {answers.businessName}, identificamos oportunidades que podem ser exploradas na sua operacao.</p>
-        <span>Status: {result?.diagnosticStatus || "WARM"} | Score: {result?.score ?? 0}</span>
-      </div>
       <div className="fxp-scale-card">
         <span>Esse resultado faria diferenca para a sua autoescola?</span>
         <p>O diagnostico mostrou o potencial que sua empresa pode alcancar com uma estrategia focada em <b>atrair mais interessados, aproveitar melhor cada oportunidade e gerar mais matriculas.</b></p>
         <strong>Se voce quer transformar essa projecao em um plano de acao, fale agora com um de nossos consultores pelo WhatsApp e descubra <b>quais sao os proximos passos para comecar a buscar esses resultados.</b></strong>
         <small>Ao clicar, o nosso agente dara continuidade ao seu atendimento e fara o agendamento com um de nossos consultores. Leva no maximo 2 minutos.</small>
       </div>
-      <ul>
-        <li>Geracao de novos interessados atraves do trafego pago.</li>
-        <li>Atendimento rapido utilizando Inteligencia Artificial.</li>
-        <li>Estrategias para transformar mais oportunidades em matriculas.</li>
-      </ul>
       <button type="button" onClick={onWhatsappClick}>Quero dar o proximo passo →</button>
     </section>
   );
