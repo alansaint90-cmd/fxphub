@@ -3,6 +3,7 @@
 import type { CSSProperties, DragEvent, FormEvent } from "react";
 import { useEffect, useState } from "react";
 import { ActiveClientsWorkspace } from "@/components/active-clients-workspace";
+import { LeadCaptureWorkspace } from "@/components/lead-capture-workspace";
 import {
   commercialAgentPrompts,
   followUpTags,
@@ -25,6 +26,7 @@ type AppPage =
   | "conversas"
   | "agenda"
   | "iaComercial"
+  | "captacaoLeads"
   | "customerSuccess"
   | "implantacoes"
   | "tarefas"
@@ -43,6 +45,7 @@ const navSections: { title: string; pages: { id: AppPage; label: string; badge?:
       { id: "conversas", label: "Conversas" },
       { id: "agenda", label: "Agenda" },
       { id: "iaComercial", label: "IA Comercial" },
+      { id: "captacaoLeads", label: "Captacao de Leads" },
     ],
   },
   {
@@ -1778,6 +1781,10 @@ export default function HomePage() {
               </article>
             </section>
           </article>
+
+          <div className={activePage === "captacaoLeads" ? "" : "page-hidden"}>
+            <LeadCaptureWorkspace />
+          </div>
 
           <article className={`panel ops-panel ${activePage === "customerSuccess" ? "" : "page-hidden"}`}>
             <div className="ops-layout">

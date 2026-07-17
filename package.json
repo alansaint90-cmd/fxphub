@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "start": "npm run db:ensure-active-clients && next start",
+    "start": "npm run db:ensure-active-clients && npm run db:ensure-lead-capture && next start",
     "build": "next build",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -13,7 +13,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:clear-conversations": "node scripts/clear-conversation-state.mjs",
-    "db:ensure-active-clients": "node scripts/ensure-active-clients-schema.mjs"
+    "db:ensure-active-clients": "node scripts/ensure-active-clients-schema.mjs",
+    "db:ensure-lead-capture": "node scripts/ensure-lead-capture-schema.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",

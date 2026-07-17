@@ -1,0 +1,222 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+
+type CaptureTab = "overview" | "qualified" | "unqualified" | "all" | "form" | "rules" | "tracking";
+
+interface CaptureLead {
+  id: string;
+  name: string;
+  businessName: string;
+  phone: string;
+  email?: string | null;
+  city?: string | null;
+  state?: string | null;
+  monthlyEnrollments: number;
+  salesAttendants: number;
+  usesCrm?: string | null;
+  runsPaidAds?: string | null;
+  monthlyAdSpend?: number | null;
+  mainChallenge?: string | null;
+  meetingInterest: string;
+  qualificationScore: number;
+  qualificationStatus: "qualified" | "unqualified";
+  disqualificationReason?: string | null;
+  leadStatus: string;
+  whatsappClicked: boolean;
+  faustoContactStarted: boolean;
+  meetingScheduled: boolean;
+  meetingDate?: string | null;
+  source?: string | null;
+  utmCampaign?: string | null;
+  tags: string[];
+  notes?: string | null;
+  createdAt: string;
+}
+
+interface CaptureSettings {
+  slug: string;
+  formName: string;
+  title: string;
+  isActive: boolean;
+  whatsappNumber?: string | null;
+  qualifiedMinScore: number;
+  metaPixelId?: string | null;
+}
+
+export function LeadCaptureWorkspace() {
+  const [activeTab, setActiveTab] = useState<CaptureTab>("overview");
+  const [leads, setLeads] = useState<CaptureLead[]>([]);
+  const [settings, setSettings] = useState<CaptureSettings | null>(null);
+  const [status, setStatus] = useState("Carregando captacao...");
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    void loadLeads();
+  }, []);
+
+  async function loadLeads() {
+    try {
+      const response = await fetch("/api/lead-capture/leads", { cache: "no-store" });
+      const result = (await response.json()) as { ok?: boolean; leads?: CaptureLead[]; settings?: CaptureSettings | null; error?: string };
+      if (!result.ok) {
+        setStatus(result.error ?? "Nao foi possivel carregar.");
+        return;
+      }
+      setLeads(result.leads ?? []);
+      setSettings(result.settings ?? null);
+      setStatus("");
+    } catch {
+      setStatus("Erro ao carregar captacao.");
+    }
+  }
+
+  async function updateLead(id: string, action: string, qualificationStatus?: "qualified" | "unqualified") {
+    await fetch("/api/lead-capture/leads", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, action, qualificationStatus }),
+    });
+    await loadLeads();
+  }
+
+  const filtered = useMemo(() => {
+    const query = search.toLowerCase().trim();
+    return leads.filter((lead) => [lead.name, lead.businessName, lead.phone, lead.email, lead.city, lead.utmCampaign]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase()
+      .includes(query));
+  }, [leads, search]);
+  const qualified = filtered.filter((lead) => lead.qualificationStatus === "qualified");
+  const unqualified = filtered.filter((lead) => lead.qualificationStatus === "unqualified");
+  const publicUrl = settings ? `${typeof window !== "undefined" ? window.location.origin : ""}/formulario/${settings.slug}` : "";
+  const todayCount = leads.filter((lead) => new Date(lead.createdAt).toDateString() === new Date().toDateString()).length;
+  const qualificationRate = leads.length ? Math.round((leads.filter((lead) => lead.qualificationStatus === "qualified").length / leads.length) * 100) : 0;
+
+  return (
+    <article className="panel lead-capture-panel">
+      <header className="lead-capture-header">
+        <div>
+          <span className="eyebrow">Captacao de Leads</span>
+          <h2>Formularios de anuncios e pre-qualificacao</h2>
+        </div>
+        <label className="lead-capture-search">
+          <span>Buscar</span>
+          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nome, telefone, campanha..." />
+        </label>
+      </header>
+
+      <nav className="lead-capture-tabs">
+        {[
+          ["overview", "Visao Geral"],
+          ["qualified", "Leads Qualificados"],
+          ["unqualified", "Leads Nao Qualificados"],
+          ["all", "Todos os Leads"],
+          ["form", "Configuracao do Formulario"],
+          ["rules", "Configuracao da Qualificacao"],
+          ["tracking", "Integracoes e Rastreamento"],
+        ].map(([id, label]) => (
+          <button className={activeTab === id ? "active" : ""} key={id} type="button" onClick={() => setActiveTab(id as CaptureTab)}>
+            {label}
+          </button>
+        ))}
+      </nav>
+
+      {status ? <p className="integration-status">{status}</p> : null}
+
+      {activeTab === "overview" ? (
+        <section className="capture-overview">
+          {[
+            ["Total iniciados", leads.length],
+            ["Formularios concluidos", leads.length],
+            ["Qualificados", qualified.length],
+            ["Nao qualificados", unqualified.length],
+            ["Taxa qualificacao", `${qualificationRate}%`],
+            ["Clicaram WhatsApp", leads.filter((lead) => lead.whatsappClicked).length],
+            ["Nao clicaram WhatsApp", leads.filter((lead) => !lead.whatsappClicked).length],
+            ["Reuniao agendada", leads.filter((lead) => lead.meetingScheduled).length],
+            ["Captados hoje", todayCount],
+            ["Ultimos 7 dias", leads.filter((lead) => daysAgo(lead.createdAt) <= 7).length],
+            ["Ultimos 30 dias", leads.filter((lead) => daysAgo(lead.createdAt) <= 30).length],
+          ].map(([label, value]) => (
+            <div className="executive-metric" key={label}>
+              <span>{label}</span>
+              <strong>{value}</strong>
+            </div>
+          ))}
+        </section>
+      ) : null}
+
+      {activeTab === "qualified" ? <LeadTable leads={qualified} onAction={updateLead} /> : null}
+      {activeTab === "unqualified" ? <LeadTable leads={unqualified} onAction={updateLead} /> : null}
+      {activeTab === "all" ? <LeadTable leads={filtered} onAction={updateLead} /> : null}
+
+      {activeTab === "form" ? (
+        <section className="capture-config-grid">
+          <div className="capture-config-card">
+            <h3>Link publico</h3>
+            <input readOnly value={publicUrl || "Configuracao sera criada ao primeiro acesso"} />
+            <div className="capture-actions">
+              <button type="button" onClick={() => navigator.clipboard?.writeText(publicUrl)}>Copiar link</button>
+              <a href={publicUrl || "/formulario/diagnostico-autoescola"} target="_blank">Abrir formulario</a>
+            </div>
+          </div>
+          <div className="capture-config-card">
+            <h3>Status</h3>
+            <span>{settings?.isActive ? "Formulario ativo" : "Formulario aguardando configuracao"}</span>
+            <span>Score minimo: {settings?.qualifiedMinScore ?? 50}</span>
+            <span>WhatsApp: {settings?.whatsappNumber || "Nao configurado"}</span>
+          </div>
+        </section>
+      ) : null}
+
+      {activeTab === "rules" ? (
+        <section className="capture-config-card">
+          <h3>Regra atual de qualificacao</h3>
+          <p>Lead qualificado exige score minimo de {settings?.qualifiedMinScore ?? 50}, telefone valido, autoescola ativa e interesse real em reuniao.</p>
+          <p>Os pesos iniciais consideram matriculas, atendentes, CRM, trafego pago, dor comercial e interesse em reuniao.</p>
+        </section>
+      ) : null}
+
+      {activeTab === "tracking" ? (
+        <section className="capture-config-card">
+          <h3>Meta Pixel e rastreamento</h3>
+          <p>Pixel ID: {settings?.metaPixelId || "Nao configurado"}</p>
+          <p>Eventos preparados: PageView, Lead, QualifiedLead, UnqualifiedLead e Contact.</p>
+        </section>
+      ) : null}
+    </article>
+  );
+}
+
+function LeadTable({ leads, onAction }: { leads: CaptureLead[]; onAction: (id: string, action: string, qualificationStatus?: "qualified" | "unqualified") => void }) {
+  return (
+    <div className="capture-table">
+      <div className="capture-table-head">
+        <span>Lead</span><span>Autoescola</span><span>WhatsApp</span><span>Cidade</span><span>Score</span><span>Status</span><span>Campanha</span><span>Acoes</span>
+      </div>
+      {leads.map((lead) => (
+        <article className="capture-row" key={lead.id}>
+          <div><strong>{lead.name}</strong><small>{lead.email || "Sem e-mail"}</small></div>
+          <span>{lead.businessName}</span>
+          <span>{lead.phone}</span>
+          <span>{lead.city}/{lead.state}</span>
+          <b>{lead.qualificationScore}</b>
+          <span>{lead.leadStatus}</span>
+          <span>{lead.utmCampaign || lead.source || "Formulario"}</span>
+          <div className="capture-row-actions">
+            <button type="button" onClick={() => onAction(lead.id, "mark_scheduled")}>Agendado</button>
+            <button type="button" onClick={() => onAction(lead.id, "mark_closed")}>Fechado</button>
+            <button type="button" onClick={() => onAction(lead.id, "reclassify", lead.qualificationStatus === "qualified" ? "unqualified" : "qualified")}>Reclassificar</button>
+          </div>
+        </article>
+      ))}
+      {leads.length === 0 ? <div className="clients-empty-state">Nenhum lead encontrado</div> : null}
+    </div>
+  );
+}
+
+function daysAgo(value: string) {
+  return Math.floor((Date.now() - new Date(value).getTime()) / 86400000);
+}
