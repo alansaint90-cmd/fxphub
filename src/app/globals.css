@@ -4035,6 +4035,8 @@ textarea.quiz-input {
   --fx-glow-cyan: 0 24px 80px rgba(0, 200, 255, 0.18);
   --fx-glow-green: 0 24px 80px rgba(0, 224, 138, 0.20);
   min-height: 100svh;
+  display: grid;
+  place-items: center;
   overflow-x: hidden;
   background:
     radial-gradient(circle at 18% 12%, rgba(0, 200, 255, 0.24), transparent 24rem),
@@ -4065,7 +4067,7 @@ textarea.quiz-input {
 }
 
 .fxp-intro {
-  width: min(100%, 920px);
+  width: min(100%, 1040px);
   min-height: 100svh;
   display: grid;
   align-content: center;
@@ -4086,7 +4088,7 @@ textarea.quiz-input {
 .fxp-intro h1,
 .fxp-processing h1,
 .fxp-result-card h1 {
-  max-width: 860px;
+  max-width: 980px;
   margin: 0;
   color: var(--fx-foreground);
   font-family: "Space Grotesk", Inter, ui-sans-serif, system-ui, sans-serif;
