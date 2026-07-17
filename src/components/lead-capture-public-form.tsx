@@ -498,9 +498,9 @@ function buildResultSummary(diagnostic: PersonalizedDiagnostic | undefined, fall
   const [scenario] = diagnostic.diagnostico.split("\n\n").filter(Boolean);
 
   const strategyByProfile: Record<PersonalizedDiagnostic["perfil"], string> = {
-    "Demanda abaixo do potencial": "No seu cenario, uma estrategia combinando geracao de demanda, trafego pago e IA no WhatsApp pode ajudar a colocar mais potenciais alunos em contato e criar um fluxo comercial mais previsivel.",
-    "Oportunidades sendo desperdicadas": "No seu cenario, melhorar a velocidade do atendimento, organizar o acompanhamento e usar IA no WhatsApp pode ajudar a aproveitar melhor cada lead que ja chega.",
-    "Pronto para acelerar": "No seu cenario, combinar campanhas de geracao de demanda com IA no WhatsApp pode aumentar a previsibilidade comercial sem criar novos gargalos na operacao.",
+    "Demanda abaixo do potencial": "No seu cenario, o caminho principal e gerar mais demanda com trafego pago para colocar mais potenciais alunos no WhatsApp. Depois, a IA e o sistema podem entrar como upgrade para organizar, qualificar e aproveitar melhor essas oportunidades.",
+    "Oportunidades sendo desperdicadas": "No seu cenario, o primeiro passo e fortalecer a geracao de demanda com trafego pago e criar um fluxo constante de novos interessados. Em seguida, a IA pode ser usada como upgrade para acelerar respostas, organizar follow-up e aumentar o aproveitamento dos leads.",
+    "Pronto para acelerar": "No seu cenario, a prioridade e escalar a entrada de oportunidades com campanhas de trafego pago e geracao de demanda. A IA e o sistema entram como proximo nivel para dar mais velocidade, controle e previsibilidade ao atendimento.",
   };
 
   return [scenario || fallback, strategyByProfile[diagnostic.perfil]];
