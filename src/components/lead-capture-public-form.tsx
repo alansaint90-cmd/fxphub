@@ -382,17 +382,15 @@ function IntroScreen({ onStart, settings }: { onStart: () => void; settings: Pub
       <p>
         A FXP combina geracao de demanda, estrategias de aquisicao e atendimento inteligente para ajudar autoescolas a atrair potenciais alunos e melhorar o aproveitamento das oportunidades que chegam pelo WhatsApp.
       </p>
-      <div className="fxp-growth-formula">
-        <span>Geracao de demanda</span>
-        <b>+</b>
-        <span>Trafego pago</span>
-        <b>+</b>
-        <span>Inteligencia Artificial</span>
-        <strong>Mais oportunidades de matricula</strong>
-      </div>
-      <div className="fxp-intro-grid">
-        <article><i />Resultados de campanhas e aquisicao previsivel</article>
-        <article><i />IA atendendo e qualificando interessados no WhatsApp</article>
+      <div className="fxp-intro-media-grid">
+        <figure>
+          <img src="/assets/diagnostico-atendimento-ia.png" alt="Central de atendimento com IA no WhatsApp" />
+          <figcaption>IA qualificando e apoiando conversas no WhatsApp</figcaption>
+        </figure>
+        <figure>
+          <img src="/assets/diagnostico-meta-ads.png" alt="Resultados de campanhas no gerenciador de anuncios" />
+          <figcaption>Campanhas gerando novas oportunidades de matricula</figcaption>
+        </figure>
       </div>
       <small>Responda com dados reais. Ao final, se o perfil for compativel, voce podera conversar com Fausto gratuitamente.</small>
       <button type="button" onClick={onStart}>Iniciar meu diagnostico</button>
@@ -405,7 +403,7 @@ function ProgressBar({ progress }: { progress: number }) {
 }
 
 function BrandMark() {
-  return <span className="quiz-brand-mark fxp-brand-mark" aria-label="FXP" />;
+  return <img className="fxp-brand-logo" src="/assets/fxp-hub-logo.png" alt="FXP Hub" />;
 }
 
 function QuestionView({
