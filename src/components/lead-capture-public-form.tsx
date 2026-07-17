@@ -377,7 +377,6 @@ function IntroScreen({ onStart, settings }: { onStart: () => void; settings: Pub
   return (
     <section className="fxp-intro">
       <BrandMark />
-      <span className="fxp-kicker">FXP Inteligencia Digital</span>
       <h1>{settings?.title || "DIAGNOSTICO DE CRESCIMENTO PARA AUTOESCOLAS"}</h1>
       <p className="fxp-intro-subtitle">
         Descubra como aumentar a entrada de novos interessados na sua autoescola e transformar mais oportunidades em matriculas utilizando trafego pago e Inteligencia Artificial.
