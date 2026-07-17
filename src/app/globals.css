@@ -4379,6 +4379,40 @@ textarea.quiz-input {
   color: #ffffff;
 }
 
+.fxp-scale-card {
+  width: 100%;
+  display: grid;
+  gap: 18px;
+  border: 1px solid rgba(34, 197, 94, 0.24);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 22% 8%, rgba(16, 185, 129, 0.18), transparent 18rem),
+    rgba(8, 13, 26, 0.86);
+  box-shadow: 0 0 54px rgba(16, 185, 129, 0.16);
+  padding: clamp(20px, 5vw, 34px);
+  text-align: left;
+}
+
+.fxp-scale-card span {
+  width: fit-content;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.16);
+  color: #34d399;
+  font-size: clamp(18px, 4.4vw, 28px);
+  font-weight: 950;
+  padding: 12px 18px;
+}
+
+.fxp-scale-card strong {
+  color: #ffffff;
+  font-size: clamp(18px, 4vw, 26px);
+  line-height: 1.45;
+}
+
+.fxp-scale-card b {
+  color: #22d3ee;
+}
+
 .fxp-result-card ul {
   width: 100%;
   display: grid;

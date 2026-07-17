@@ -471,6 +471,11 @@ function QualifiedResult({ answers, result, onWhatsappClick }: { answers: Record
         <p>Com base nas informacoes fornecidas sobre a {answers.businessName}, identificamos oportunidades que podem ser exploradas na sua operacao.</p>
         <span>Status: {result?.diagnosticStatus || "WARM"} | Score: {result?.score ?? 0}</span>
       </div>
+      <div className="fxp-scale-card">
+        <span>Pronto para escalar</span>
+        <p>Sua autoescola ja tem oportunidades que podem ser melhor aproveitadas. Com IA no WhatsApp, voce reduz gargalos no atendimento, aumenta a velocidade das respostas e libera sua equipe para focar no que realmente importa: crescer.</p>
+        <strong>Agora que voce viu seu diagnostico, existe uma forma simples de transformar seu WhatsApp em uma <b>maquina de agendamentos automaticos.</b></strong>
+      </div>
       <ul>
         <li>Geracao de novos interessados atraves do trafego pago.</li>
         <li>Atendimento rapido utilizando Inteligencia Artificial.</li>
