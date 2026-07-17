@@ -112,6 +112,7 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
           interesseReuniao: input.meetingInterest,
           leadScore: score.score,
           leadStatus: score.diagnosticStatus,
+          diagnostico: score.diagnostic,
         },
         monthlyEnrollments: input.monthlyEnrollments,
         salesAttendants: input.salesAttendants,
@@ -164,7 +165,7 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
         eventName: score.status === "qualified" ? "QualifiedLead" : "UnqualifiedLead",
         eventId: crypto.randomUUID(),
         eventSource: "qualification",
-        eventData: { reason: score.reason, summary: score.summary },
+        eventData: { reason: score.reason, summary: score.summary, diagnostic: score.diagnostic },
       },
     ]);
 
@@ -175,6 +176,7 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
       score: score.score,
       diagnosticStatus: score.diagnosticStatus,
       diagnosticSummary: score.summary,
+      diagnostic: score.diagnostic,
       reason: score.reason,
       whatsappUrl: score.status === "qualified" ? buildWhatsappUrl(settings.whatsappNumber, input) : null,
       settings: publicSettings(settings),

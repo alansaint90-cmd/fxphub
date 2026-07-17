@@ -29,11 +29,22 @@ interface SubmitResult {
   qualificationStatus?: "qualified" | "unqualified";
   diagnosticStatus?: LeadDiagnosticStatus;
   diagnosticSummary?: string;
+  diagnostic?: PersonalizedDiagnostic;
   score?: number;
   reason?: string;
   whatsappUrl?: string | null;
   settings?: { instagramUrl?: string | null; metaPixelId?: string | null };
   error?: string;
+}
+
+interface PersonalizedDiagnostic {
+  perfil: "Demanda abaixo do potencial" | "Oportunidades sendo desperdicadas" | "Pronto para acelerar";
+  titulo_diagnostico: string;
+  diagnostico: string;
+  pontos_criticos: [string, string, string];
+  oportunidades: [string, string, string];
+  solucao_recomendada: string;
+  cta_sugestao: string;
 }
 
 interface PublicFormSettings {
@@ -316,7 +327,7 @@ export function LeadCapturePublicForm({ slug }: { slug: string }) {
   if (view === "intro") {
     return (
       <main className="public-form-shell quiz-shell fxp-diagnostic-shell">
-        <IntroScreen onStart={() => setView("quiz")} settings={settings} />
+        <IntroScreen onStart={() => setView("quiz")} />
       </main>
     );
   }
@@ -334,7 +345,7 @@ export function LeadCapturePublicForm({ slug }: { slug: string }) {
     return (
       <main className="public-form-shell quiz-shell fxp-diagnostic-shell">
         {qualified ? (
-          <QualifiedResult onWhatsappClick={handleWhatsappClick} />
+          <QualifiedResult diagnostic={result?.diagnostic} onWhatsappClick={handleWhatsappClick} />
         ) : (
           <UnqualifiedResult />
         )}
@@ -373,7 +384,7 @@ export function LeadCapturePublicForm({ slug }: { slug: string }) {
   );
 }
 
-function IntroScreen({ onStart }: { onStart: () => void; settings: PublicFormSettings | null }) {
+function IntroScreen({ onStart }: { onStart: () => void }) {
   return (
     <section className="fxp-intro">
       <BrandMark />
@@ -459,18 +470,36 @@ function ProcessingScreen({ message }: { message: string }) {
   );
 }
 
-function QualifiedResult({ onWhatsappClick }: { onWhatsappClick: () => void }) {
+function QualifiedResult({ diagnostic, onWhatsappClick }: { diagnostic?: PersonalizedDiagnostic; onWhatsappClick: () => void }) {
+  const fallback = "O diagnostico mostrou uma oportunidade clara para sua autoescola aumentar a geracao de demanda, aproveitar melhor as conversas no WhatsApp e buscar mais matriculas com uma estrategia integrada.";
+  const paragraphs = (diagnostic?.diagnostico || fallback).split("\n\n");
+
   return (
     <section className="public-form-card result quiz-result fxp-result-card">
       <BrandMark />
-      <h1>Seu Diagnostico</h1>
+      <h1>{diagnostic?.titulo_diagnostico || "Seu Diagnostico"}</h1>
       <p>Baseado nas suas respostas</p>
+      <div className="fxp-diagnostic-copy">
+        {paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+      </div>
+      {diagnostic ? (
+        <div className="fxp-diagnostic-insights">
+          <article>
+            <span>Pontos criticos</span>
+            <ul>{diagnostic.pontos_criticos.map((item) => <li key={item}>{item}</li>)}</ul>
+          </article>
+          <article>
+            <span>Oportunidades</span>
+            <ul>{diagnostic.oportunidades.map((item) => <li key={item}>{item}</li>)}</ul>
+          </article>
+        </div>
+      ) : null}
       <div className="fxp-scale-card">
-        <span>↗ Potencial de crescimento</span>
-        <p>O diagnostico mostrou o potencial que sua empresa pode alcancar com uma estrategia focada em <b>atrair mais interessados, aproveitar melhor cada oportunidade e gerar mais matriculas.</b></p>
+        <span>{"\u2197 Potencial de crescimento"}</span>
+        <p>{diagnostic?.solucao_recomendada || "O diagnostico mostrou o potencial que sua empresa pode alcancar com uma estrategia focada em atrair mais interessados, aproveitar melhor cada oportunidade e gerar mais matriculas."}</p>
         <strong>Se voce quer transformar essa projecao em um plano de acao, fale agora com um de nossos consultores pelo WhatsApp e descubra <b>quais sao os proximos passos para comecar a buscar esses resultados.</b></strong>
       </div>
-      <button type="button" onClick={onWhatsappClick}>Quero dar o proximo passo →</button>
+      <button type="button" onClick={onWhatsappClick}>{"Quero dar o proximo passo \u2192"}</button>
       <small className="fxp-cta-note">Ao clicar, o nosso agente dara continuidade ao seu atendimento e fara o agendamento com um de nossos consultores. Leva no maximo 2 minutos.</small>
     </section>
   );
