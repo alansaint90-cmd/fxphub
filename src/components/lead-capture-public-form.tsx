@@ -1,6 +1,9 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import atendimentoIaImage from "../../public/assets/diagnostico-atendimento-ia.png";
+import metaAdsImage from "../../public/assets/diagnostico-meta-ads.png";
+import fxpHubLogo from "../../public/assets/fxp-hub-logo.png";
 
 type LeadDiagnosticStatus = "HOT" | "WARM" | "DISQUALIFIED";
 type QuizView = "intro" | "quiz" | "processing" | "result";
@@ -384,12 +387,12 @@ function IntroScreen({ onStart, settings }: { onStart: () => void; settings: Pub
       </p>
       <div className="fxp-intro-media-grid">
         <figure>
-          <img src="/assets/diagnostico-atendimento-ia.png" alt="Central de atendimento com IA no WhatsApp" />
-          <figcaption>IA qualificando e apoiando conversas no WhatsApp</figcaption>
+          <img src={metaAdsImage.src} alt="Resultados de campanhas no gerenciador de anuncios" />
+          <figcaption>Campanhas gerando novas oportunidades de matricula</figcaption>
         </figure>
         <figure>
-          <img src="/assets/diagnostico-meta-ads.png" alt="Resultados de campanhas no gerenciador de anuncios" />
-          <figcaption>Campanhas gerando novas oportunidades de matricula</figcaption>
+          <img src={atendimentoIaImage.src} alt="Central de atendimento com IA no WhatsApp" />
+          <figcaption>IA qualificando e apoiando conversas no WhatsApp</figcaption>
         </figure>
       </div>
       <small>Responda com dados reais. Ao final, se o perfil for compativel, voce podera conversar com Fausto gratuitamente.</small>
@@ -403,7 +406,7 @@ function ProgressBar({ progress }: { progress: number }) {
 }
 
 function BrandMark() {
-  return <img className="fxp-brand-logo" src="/assets/fxp-hub-logo.png" alt="FXP Hub" />;
+  return <img className="fxp-brand-logo" src={fxpHubLogo.src} alt="FXP Hub" />;
 }
 
 function QuestionView({
