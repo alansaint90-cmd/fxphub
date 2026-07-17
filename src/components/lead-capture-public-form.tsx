@@ -377,9 +377,9 @@ function IntroScreen({ onStart }: { onStart: () => void; settings: PublicFormSet
   return (
     <section className="fxp-intro">
       <BrandMark />
-      <h1>Atraia mais alunos para sua autoescola e transforme mais oportunidades em matriculas</h1>
+      <h1>Atraia mais potenciais clientes para o WhatsApp da sua autoescola e transforme oportunidades em novas matriculas.</h1>
       <p className="fxp-intro-subtitle">
-        A FXP une trafego pago, geracao de demanda e Inteligencia Artificial para colocar mais potenciais alunos no seu WhatsApp e ajudar sua autoescola a vender mais todos os dias.
+        Faca o diagnostico e descubra como a FXP pode unir trafego pago, geracao de demanda e Inteligencia Artificial para colocar mais potenciais alunos no seu WhatsApp e ajudar sua autoescola a vender mais matriculas todos os dias.
       </p>
       <div className="fxp-intro-media-grid">
         <figure>
@@ -388,7 +388,7 @@ function IntroScreen({ onStart }: { onStart: () => void; settings: PublicFormSet
         </figure>
         <figure>
           <img src={atendimentoIaImage.src} alt="Central de atendimento com IA no WhatsApp" />
-          <figcaption>Inteligencia Artificial qualificando e apoiando as conversas no WhatsApp, reduzindo o tempo de resposta e permitindo atender mais potenciais alunos.</figcaption>
+          <figcaption>Inteligencia Artificial apoiando as conversas no WhatsApp e permitindo atender mais potenciais alunos.</figcaption>
         </figure>
       </div>
       <small>Responda com dados reais. Ao final, se o perfil for compativel, voce podera conversar com Fausto gratuitamente.</small>
