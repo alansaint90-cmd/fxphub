@@ -162,7 +162,6 @@ export function LeadCapturePublicForm({ slug }: { slug: string }) {
   function choose(field: QuizField, value: string) {
     setAnswers((current) => ({ ...current, [field]: value }));
     setStatus("");
-    window.setTimeout(() => setCurrentQuestion((current) => Math.min(questions.length, current + 1)), 160);
   }
 
   if (result?.ok) {
@@ -189,22 +188,27 @@ export function LeadCapturePublicForm({ slug }: { slug: string }) {
 
   return (
     <main className="public-form-shell quiz-shell">
+      <div className="quiz-top-progress"><i style={{ width: `${progress}%` }} /></div>
       <form className="public-form-card quiz-card" onSubmit={handleSubmit}>
-        <header className="quiz-hero">
-          <span className="public-form-logo">FXP Assessoria</span>
-          <h1>{settings?.title || "Diagnostico comercial para autoescolas"}</h1>
-          <p>{settings?.description || "Responda em poucos cliques e descubra se sua autoescola esta pronta para a proxima etapa com IA."}</p>
+        <header className="quiz-mobile-top">
+          <button
+            aria-label="Voltar"
+            disabled={currentQuestion === 0}
+            type="button"
+            onClick={() => setCurrentQuestion((current) => Math.max(0, current - 1))}
+          >
+            {"\u2190"}
+          </button>
+          <span className="quiz-brand-mark" aria-label="FXP Assessoria" />
         </header>
 
         <div className="quiz-progress-head">
           <span>{isConsentStep ? "Confirmacao" : `Pergunta ${currentQuestion + 1} de ${questions.length}`}</span>
           <strong>{progress}%</strong>
         </div>
-        <div className="public-progress"><i style={{ width: `${progress}%` }} /></div>
 
         {!isConsentStep ? (
           <section className="quiz-question-card">
-            <span className="quiz-question-index">{String(currentQuestion + 1).padStart(2, "0")}</span>
             <h2>{question.title}</h2>
             <p>{question.subtitle}</p>
             {question.type === "choice" ? (
@@ -216,6 +220,7 @@ export function LeadCapturePublicForm({ slug }: { slug: string }) {
                     type="button"
                     onClick={() => choose(question.field, option)}
                   >
+                    <i />
                     <span>{option}</span>
                   </button>
                 ))}
@@ -239,7 +244,7 @@ export function LeadCapturePublicForm({ slug }: { slug: string }) {
             )}
           </section>
         ) : (
-          <section className="quiz-question-card">
+          <section className="quiz-question-card quiz-consent-card">
             <span className="quiz-question-index">OK</span>
             <h2>Confirme para enviar seu diagnostico</h2>
             <p>Usaremos seus dados apenas para contato comercial da FXP e continuidade do atendimento.</p>
@@ -252,7 +257,7 @@ export function LeadCapturePublicForm({ slug }: { slug: string }) {
         {status ? <p className="form-error">{status}</p> : null}
 
         <div className="public-form-actions quiz-actions">
-          <button className="secondary" disabled={currentQuestion === 0} type="button" onClick={() => setCurrentQuestion((current) => Math.max(0, current - 1))}>Voltar</button>
+          <button className="secondary quiz-back-bottom" disabled={currentQuestion === 0} type="button" onClick={() => setCurrentQuestion((current) => Math.max(0, current - 1))}>Voltar</button>
           {!isConsentStep ? <button type="button" onClick={goNext}>Continuar</button> : <button type="submit">Enviar diagnostico</button>}
         </div>
       </form>
