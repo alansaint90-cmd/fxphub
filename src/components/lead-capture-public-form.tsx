@@ -1,7 +1,6 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import atendimentoIaImage from "../../public/assets/diagnostico-atendimento-ia.png";
 import metaAdsImage from "../../public/assets/diagnostico-meta-ads.png";
 import fxpHubLogo from "../../public/assets/fxp-hub-logo.png";
 
@@ -388,21 +387,18 @@ function IntroScreen({ onStart }: { onStart: () => void }) {
   return (
     <section className="fxp-intro">
       <BrandMark />
-      <h1>Atraia mais potenciais clientes para o WhatsApp da sua autoescola e transforme oportunidades em novas matriculas.</h1>
+      <h1>
+        Atraia mais potenciais clientes para o <span className="fxp-text-cyan">WhatsApp da sua autoescola</span> e transforme oportunidades em <span className="fxp-text-green">novas matriculas</span>.
+      </h1>
       <p className="fxp-intro-subtitle">
-        Faca o diagnostico e descubra como a FXP pode unir trafego pago, geracao de demanda e Inteligencia Artificial para colocar mais potenciais alunos no seu WhatsApp e ajudar sua autoescola a vender mais matriculas todos os dias.
+        Faca o diagnostico e descubra como a FXP pode unir <span className="fxp-text-cyan">trafego pago</span>, <span className="fxp-text-green">geracao de demanda</span> e Inteligencia Artificial para colocar mais potenciais alunos no seu WhatsApp e ajudar sua autoescola a vender mais matriculas todos os dias.
       </p>
       <div className="fxp-intro-media-grid">
         <figure>
           <img src={metaAdsImage.src} alt="Resultados de campanhas no gerenciador de anuncios" />
           <figcaption>Campanhas gerando demanda e novas oportunidades de matricula.</figcaption>
         </figure>
-        <figure>
-          <img src={atendimentoIaImage.src} alt="Central de atendimento com IA no WhatsApp" />
-          <figcaption>Inteligencia Artificial apoiando as conversas no WhatsApp e permitindo atender mais potenciais alunos.</figcaption>
-        </figure>
       </div>
-      <small>Responda com dados reais. Ao final, se o perfil for compativel, voce podera conversar com Fausto gratuitamente.</small>
       <button type="button" onClick={onStart}>Iniciar meu diagnostico</button>
     </section>
   );
