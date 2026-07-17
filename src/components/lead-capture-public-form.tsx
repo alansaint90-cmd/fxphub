@@ -472,16 +472,17 @@ function QualifiedResult({ answers, result, onWhatsappClick }: { answers: Record
         <span>Status: {result?.diagnosticStatus || "WARM"} | Score: {result?.score ?? 0}</span>
       </div>
       <div className="fxp-scale-card">
-        <span>Pronto para escalar</span>
-        <p>Sua autoescola ja tem oportunidades que podem ser melhor aproveitadas. Com IA no WhatsApp, voce reduz gargalos no atendimento, aumenta a velocidade das respostas e libera sua equipe para focar no que realmente importa: crescer.</p>
-        <strong>Agora que voce viu seu diagnostico, existe uma forma simples de transformar seu WhatsApp em uma <b>maquina de agendamentos automaticos.</b></strong>
+        <span>Esse resultado faria diferenca para a sua autoescola?</span>
+        <p>O diagnostico mostrou o potencial que sua empresa pode alcancar com uma estrategia focada em <b>atrair mais interessados, aproveitar melhor cada oportunidade e gerar mais matriculas.</b></p>
+        <strong>Se voce quer transformar essa projecao em um plano de acao, fale agora com um de nossos consultores pelo WhatsApp e descubra <b>quais sao os proximos passos para comecar a buscar esses resultados.</b></strong>
+        <small>Ao clicar, o nosso agente dara continuidade ao seu atendimento e fara o agendamento com um de nossos consultores. Leva no maximo 2 minutos.</small>
       </div>
       <ul>
         <li>Geracao de novos interessados atraves do trafego pago.</li>
         <li>Atendimento rapido utilizando Inteligencia Artificial.</li>
         <li>Estrategias para transformar mais oportunidades em matriculas.</li>
       </ul>
-      <button type="button" onClick={onWhatsappClick}>Falar com Fausto agora</button>
+      <button type="button" onClick={onWhatsappClick}>Quero dar o proximo passo →</button>
     </section>
   );
 }
