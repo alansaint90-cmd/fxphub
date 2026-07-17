@@ -90,7 +90,8 @@ export function LeadCaptureWorkspace() {
   }, [leads, search]);
   const qualified = filtered.filter((lead) => lead.qualificationStatus === "qualified");
   const unqualified = filtered.filter((lead) => lead.qualificationStatus === "unqualified");
-  const publicUrl = settings ? `${typeof window !== "undefined" ? window.location.origin : ""}/formulario/${settings.slug}` : "";
+  const defaultSlug = settings?.slug || "diagnostico-autoescola";
+  const publicUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/formulario/${defaultSlug}`;
   const todayCount = leads.filter((lead) => new Date(lead.createdAt).toDateString() === new Date().toDateString()).length;
   const qualificationRate = leads.length ? Math.round((leads.filter((lead) => lead.qualificationStatus === "qualified").length / leads.length) * 100) : 0;
 
@@ -156,10 +157,15 @@ export function LeadCaptureWorkspace() {
         <section className="capture-config-grid">
           <div className="capture-config-card">
             <h3>Link publico</h3>
-            <input readOnly value={publicUrl || "Configuracao sera criada ao primeiro acesso"} />
+            <input readOnly value={publicUrl} />
             <div className="capture-actions">
               <button type="button" onClick={() => navigator.clipboard?.writeText(publicUrl)}>Copiar link</button>
-              <a href={publicUrl || "/formulario/diagnostico-autoescola"} target="_blank">Abrir formulario</a>
+              <a href={publicUrl} target="_blank">Abrir formulario</a>
+            </div>
+            <div className="capture-public-preview">
+              <span>Formulario interativo em 5 etapas</span>
+              <strong>{settings?.title || "Diagnostico comercial para autoescolas"}</strong>
+              <small>Use este link em anuncios, bio, WhatsApp ou QR Code.</small>
             </div>
           </div>
           <div className="capture-config-card">
@@ -167,6 +173,9 @@ export function LeadCaptureWorkspace() {
             <span>{settings?.isActive ? "Formulario ativo" : "Formulario aguardando configuracao"}</span>
             <span>Score minimo: {settings?.qualifiedMinScore ?? 50}</span>
             <span>WhatsApp: {settings?.whatsappNumber || "Nao configurado"}</span>
+            <div className="capture-qr" aria-label="QR Code visual do formulario">
+              <i /><i /><i /><i /><i /><i /><i /><i /><i />
+            </div>
           </div>
         </section>
       ) : null}

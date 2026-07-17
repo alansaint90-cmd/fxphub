@@ -15,11 +15,18 @@ interface SubmitResult {
   error?: string;
 }
 
+interface PublicFormSettings {
+  title?: string;
+  description?: string | null;
+  privacyPolicyUrl?: string | null;
+}
+
 export function LeadCapturePublicForm({ slug }: { slug: string }) {
   const [step, setStep] = useState(0);
   const [status, setStatus] = useState("");
   const [result, setResult] = useState<SubmitResult | null>(null);
   const [tracking, setTracking] = useState<Record<string, string>>({});
+  const [settings, setSettings] = useState<PublicFormSettings | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -29,7 +36,10 @@ export function LeadCapturePublicForm({ slug }: { slug: string }) {
       if (value) nextTracking[key] = value;
     });
     setTracking(nextTracking);
-    void fetch(`/api/lead-capture/forms/${slug}`, { cache: "no-store" });
+    void fetch(`/api/lead-capture/forms/${slug}`, { cache: "no-store" })
+      .then((response) => response.json())
+      .then((json: { settings?: PublicFormSettings }) => setSettings(json.settings ?? null))
+      .catch(() => setSettings(null));
   }, [slug]);
 
   const progress = useMemo(() => Math.round(((step + 1) / steps.length) * 100), [step]);
@@ -80,6 +90,14 @@ export function LeadCapturePublicForm({ slug }: { slug: string }) {
     window.location.href = result.whatsappUrl;
   }
 
+  function goNext() {
+    const fields = Array.from(document.querySelectorAll<HTMLElement>(`[data-step="${step}"] input, [data-step="${step}"] select, [data-step="${step}"] textarea`));
+    const invalid = fields.find((field) => "reportValidity" in field && !(field as HTMLInputElement).reportValidity());
+    if (invalid) return;
+    setStatus("");
+    setStep((current) => Math.min(steps.length - 1, current + 1));
+  }
+
   if (result?.ok) {
     const qualified = result.qualificationStatus === "qualified";
     return (
@@ -106,12 +124,19 @@ export function LeadCapturePublicForm({ slug }: { slug: string }) {
     <main className="public-form-shell">
       <form className="public-form-card" onSubmit={handleSubmit}>
         <span className="public-form-logo">FXP Assessoria</span>
-        <h1>Diagnostico comercial para autoescolas</h1>
-        <p>Responda algumas perguntas rapidas para avaliarmos o melhor proximo passo para sua autoescola.</p>
+        <h1>{settings?.title || "Diagnostico comercial para autoescolas"}</h1>
+        <p>{settings?.description || "Responda algumas perguntas rapidas para avaliarmos o melhor proximo passo para sua autoescola."}</p>
+        <div className="public-stepper">
+          {steps.map((item, index) => (
+            <button className={index === step ? "active" : index < step ? "done" : ""} key={item} type="button" onClick={() => setStep(index)}>
+              {index + 1}
+            </button>
+          ))}
+        </div>
         <div className="public-progress"><i style={{ width: `${progress}%` }} /></div>
         <strong>{steps[step]}</strong>
 
-        <div className={step === 0 ? "public-step" : "page-hidden"}>
+        <div className={step === 0 ? "public-step" : "page-hidden"} data-step="0">
           <Field name="name" label="Nome completo do responsavel" required />
           <Field name="businessName" label="Nome da autoescola" required />
           <Field name="phone" label="WhatsApp" required />
@@ -120,7 +145,7 @@ export function LeadCapturePublicForm({ slug }: { slug: string }) {
           <Field name="state" label="Estado" required />
         </div>
 
-        <div className={step === 1 ? "public-step" : "page-hidden"}>
+        <div className={step === 1 ? "public-step" : "page-hidden"} data-step="1">
           <Field name="monthlyEnrollments" label="Matriculas medias por mes" type="number" required />
           <Field name="salesAttendants" label="Pessoas atendendo leads no WhatsApp" type="number" required />
           <Select name="usesCrm" label="A autoescola ja utiliza CRM?" options={["Nao utiliza CRM", "Utiliza planilha", "Ja utiliza CRM"]} />
@@ -128,13 +153,13 @@ export function LeadCapturePublicForm({ slug }: { slug: string }) {
           <Field name="monthlyAdSpend" label="Investimento medio mensal em anuncios" type="number" />
         </div>
 
-        <div className={step === 2 ? "public-step" : "page-hidden"}>
+        <div className={step === 2 ? "public-step" : "page-hidden"} data-step="2">
           <Textarea name="mainChallenge" label="Maior dificuldade comercial atualmente" required />
           <Select name="responseTime" label="Em quanto tempo responde os leads?" options={["Ate 5 minutos", "Ate 30 minutos", "Algumas horas", "No dia seguinte"]} />
           <Select name="wantsWhatsappAutomation" label="Gostaria de automatizar o atendimento no WhatsApp?" options={["Sim", "Talvez", "Nao"]} />
         </div>
 
-        <div className={step === 3 ? "public-step" : "page-hidden"}>
+        <div className={step === 3 ? "public-step" : "page-hidden"} data-step="3">
           <Select
             name="meetingInterest"
             label="Voce tem interesse real em participar de uma reuniao online?"
@@ -148,16 +173,17 @@ export function LeadCapturePublicForm({ slug }: { slug: string }) {
           <Select name="preferredMeetingPeriod" label="Melhor periodo para reuniao" options={["Manha", "Tarde", "Noite", "A combinar"]} />
         </div>
 
-        <div className={step === 4 ? "public-step" : "page-hidden"}>
+        <div className={step === 4 ? "public-step" : "page-hidden"} data-step="4">
           <label className="public-check"><input name="contactAuthorized" type="checkbox" required /> Autorizo contato da FXP pelo WhatsApp.</label>
           <label className="public-check"><input name="privacyPolicyAccepted" type="checkbox" required /> Aceito a politica de privacidade e tratamento de dados.</label>
+          {settings?.privacyPolicyUrl ? <a className="public-policy-link" href={settings.privacyPolicyUrl} target="_blank">Abrir politica de privacidade</a> : null}
           {status ? <p className="form-error">{status}</p> : null}
         </div>
 
         <div className="public-form-actions">
           <button className="secondary" disabled={step === 0} type="button" onClick={() => setStep((current) => Math.max(0, current - 1))}>Voltar</button>
           {step < steps.length - 1 ? (
-            <button type="button" onClick={() => setStep((current) => Math.min(steps.length - 1, current + 1))}>Continuar</button>
+            <button type="button" onClick={goNext}>Continuar</button>
           ) : (
             <button type="submit">Enviar diagnostico</button>
           )}

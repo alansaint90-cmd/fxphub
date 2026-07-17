@@ -3569,6 +3569,47 @@ button.danger {
   padding: 16px;
 }
 
+.capture-public-preview {
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(135deg, rgba(79, 124, 255, 0.08), transparent),
+    #fbfbfb;
+  padding: 12px;
+}
+
+.capture-public-preview span,
+.capture-public-preview small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.capture-qr {
+  width: 132px;
+  height: 132px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #ffffff;
+  padding: 10px;
+}
+
+.capture-qr i {
+  border-radius: 4px;
+  background: #111111;
+}
+
+.capture-qr i:nth-child(2),
+.capture-qr i:nth-child(4),
+.capture-qr i:nth-child(8) {
+  background: #f2b705;
+}
+
 .public-form-shell {
   min-height: 100vh;
   display: grid;
@@ -3610,6 +3651,33 @@ button.danger {
   overflow: hidden;
   border-radius: 999px;
   background: #e8e9ed;
+}
+
+.public-stepper {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.public-stepper button {
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--muted-strong);
+  box-shadow: none;
+}
+
+.public-stepper button.active {
+  border-color: #111111;
+  background: #111111;
+  color: #ffffff;
+}
+
+.public-stepper button.done {
+  border-color: rgba(242, 183, 5, 0.42);
+  background: rgba(242, 183, 5, 0.16);
+  color: #8a6500;
 }
 
 .public-progress i {
@@ -3657,6 +3725,12 @@ button.danger {
   display: flex !important;
   align-items: center;
   gap: 10px;
+}
+
+.public-policy-link {
+  grid-column: 1 / -1;
+  color: var(--info);
+  font-weight: 900;
 }
 
 .public-form-actions {
