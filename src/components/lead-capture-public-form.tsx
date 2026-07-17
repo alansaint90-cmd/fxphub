@@ -2,10 +2,30 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
+type LeadDiagnosticStatus = "HOT" | "WARM" | "DISQUALIFIED";
+type QuizView = "intro" | "quiz" | "processing" | "result";
+type QuizField =
+  | "name"
+  | "businessName"
+  | "role"
+  | "paidTraffic"
+  | "paidTrafficReason"
+  | "currentDailyLeads"
+  | "desiredDailyLeads"
+  | "attendanceStructure"
+  | "responseTime"
+  | "mainChallenge"
+  | "strategyOpenness"
+  | "meetingInterest"
+  | "phone"
+  | "email";
+
 interface SubmitResult {
   ok?: boolean;
   leadId?: string;
   qualificationStatus?: "qualified" | "unqualified";
+  diagnosticStatus?: LeadDiagnosticStatus;
+  diagnosticSummary?: string;
   score?: number;
   reason?: string;
   whatsappUrl?: string | null;
@@ -19,80 +39,163 @@ interface PublicFormSettings {
   privacyPolicyUrl?: string | null;
 }
 
-type QuizField =
-  | "name"
-  | "businessName"
-  | "phone"
-  | "email"
-  | "city"
-  | "state"
-  | "monthlyEnrollments"
-  | "salesAttendants"
-  | "usesCrm"
-  | "runsPaidAds"
-  | "monthlyAdSpend"
-  | "mainChallenge"
-  | "responseTime"
-  | "wantsWhatsappAutomation"
-  | "meetingInterest"
-  | "preferredMeetingPeriod";
-
 interface QuizQuestion {
   field: QuizField;
   title: string;
-  subtitle: string;
-  type: "text" | "email" | "number" | "textarea" | "choice";
-  required?: boolean;
+  subtitle?: string;
+  type: "text" | "email" | "tel" | "choice";
+  placeholder?: string;
   options?: string[];
+  context?: string[];
+  when?: (answers: Record<QuizField, string>) => boolean;
 }
 
+const stoppedTrafficReasons = [
+  "Nao tivemos o retorno esperado.",
+  "Recebiamos contatos, mas poucos viravam matriculas.",
+  "A agencia ou gestor nao entregou o esperado.",
+  "O atendimento nao conseguia acompanhar os leads.",
+  "O investimento ficou alto para o retorno.",
+  "Outro.",
+];
+
+const activeTrafficReasons = [
+  "Quero gerar mais oportunidades.",
+  "Quero melhorar a qualidade dos leads.",
+  "Quero aumentar a conversao em matriculas.",
+  "Preciso melhorar o atendimento dos leads.",
+  "Quero reduzir o custo dos resultados.",
+  "Quero uma estrategia mais completa.",
+];
+
 const questions: QuizQuestion[] = [
-  { field: "name", title: "Qual e o seu nome?", subtitle: "Vamos identificar o responsavel pela autoescola.", type: "text", required: true },
-  { field: "businessName", title: "Qual e o nome da autoescola?", subtitle: "Use o nome comercial que sua equipe usa no atendimento.", type: "text", required: true },
-  { field: "phone", title: "Qual WhatsApp podemos usar?", subtitle: "Informe com DDD para liberar o contato com o Fausto.", type: "text", required: true },
-  { field: "email", title: "Qual e-mail de contato?", subtitle: "Opcional, mas ajuda no envio de materiais.", type: "email" },
-  { field: "city", title: "Em qual cidade fica a autoescola?", subtitle: "Cidade da operacao principal.", type: "text", required: true },
-  { field: "state", title: "Qual e o estado?", subtitle: "Exemplo: BA, SP, RJ.", type: "text", required: true },
-  { field: "monthlyEnrollments", title: "Quantas matriculas por mes?", subtitle: "Escolha a faixa mais proxima da realidade atual.", type: "choice", required: true, options: ["Ate 10", "11 a 20", "21 a 40", "Acima de 40"] },
-  { field: "salesAttendants", title: "Quantas pessoas atendem leads?", subtitle: "Conte quem responde WhatsApp, Instagram ou telefone.", type: "choice", required: true, options: ["Nenhum atendente dedicado", "1 atendente", "2 ou mais atendentes"] },
-  { field: "usesCrm", title: "Como voces organizam os leads hoje?", subtitle: "Isso mostra o nivel de maturidade comercial.", type: "choice", required: true, options: ["Nao utiliza CRM", "Utiliza planilha", "Ja utiliza CRM"] },
-  { field: "runsPaidAds", title: "A autoescola investe em anuncios?", subtitle: "Meta Ads, Google Ads ou impulsionamentos.", type: "choice", required: true, options: ["Ja investe em anuncios", "Ja investiu anteriormente", "Nunca investiu"] },
-  { field: "monthlyAdSpend", title: "Quanto investe por mes em anuncios?", subtitle: "Pode ser uma estimativa.", type: "number" },
-  { field: "mainChallenge", title: "Qual a maior dificuldade comercial hoje?", subtitle: "Exemplo: demora no atendimento, leads perdidos, falta de follow-up.", type: "textarea", required: true },
-  { field: "responseTime", title: "Em quanto tempo respondem os leads?", subtitle: "A velocidade de resposta impacta diretamente as matriculas.", type: "choice", required: true, options: ["Ate 5 minutos", "Ate 30 minutos", "Algumas horas", "No dia seguinte"] },
-  { field: "wantsWhatsappAutomation", title: "Voce quer automatizar o WhatsApp?", subtitle: "A IA pode responder, organizar e qualificar os interessados.", type: "choice", required: true, options: ["Sim", "Talvez", "Nao"] },
-  { field: "meetingInterest", title: "Voce tem interesse real em uma reuniao online?", subtitle: "Essa resposta define se o Fausto libera a proxima etapa.", type: "choice", required: true, options: ["Sim, quero participar de uma reuniao", "Tenho interesse, mas ainda nao sei quando", "Quero apenas conhecer melhor", "Nao tenho interesse em reuniao neste momento"] },
-  { field: "preferredMeetingPeriod", title: "Qual o melhor periodo para uma reuniao?", subtitle: "Vamos usar isso para orientar o proximo contato.", type: "choice", options: ["Manha", "Tarde", "Noite", "A combinar"] },
+  { field: "name", title: "Como voce se chama?", placeholder: "Digite seu primeiro nome", type: "text" },
+  { field: "businessName", title: "Qual e o nome da sua autoescola?", placeholder: "Digite o nome da sua autoescola", type: "text" },
+  {
+    field: "role",
+    title: "Qual e o seu papel na empresa?",
+    type: "choice",
+    options: ["Dono(a)", "Socio(a)", "Gestor(a)", "Responsavel pelo marketing ou comercial", "Funcionario(a)", "Outro"],
+  },
+  {
+    field: "paidTraffic",
+    title: "Voce ja utilizou trafego pago para atrair novos alunos?",
+    subtitle: "Meta Ads, Instagram Ads, Facebook Ads ou Google Ads.",
+    type: "choice",
+    options: ["Sim, utilizamos atualmente.", "Ja utilizamos, mas paramos.", "Nunca utilizamos."],
+  },
+  {
+    field: "paidTrafficReason",
+    title: "O que fez voce buscar uma nova solucao mesmo ja investindo?",
+    type: "choice",
+    options: activeTrafficReasons,
+    when: (answers) => answers.paidTraffic === "Sim, utilizamos atualmente.",
+  },
+  {
+    field: "paidTrafficReason",
+    title: "Qual foi o principal motivo para interromper suas campanhas?",
+    type: "choice",
+    options: stoppedTrafficReasons,
+    when: (answers) => answers.paidTraffic === "Ja utilizamos, mas paramos.",
+  },
+  {
+    field: "currentDailyLeads",
+    title: "Quantos novos interessados chegam por dia no WhatsApp?",
+    type: "choice",
+    options: ["Nenhum ou quase nenhum.", "1 a 5.", "6 a 10.", "11 a 20.", "Mais de 20."],
+  },
+  {
+    field: "desiredDailyLeads",
+    title: "Quantos novos interessados por dia voce gostaria de receber?",
+    type: "choice",
+    options: ["5 a 10.", "10 a 20.", "20 a 30.", "Mais de 30.", "Quero receber o maximo que minha operacao conseguir atender."],
+  },
+  {
+    field: "attendanceStructure",
+    title: "Hoje, quem atende os interessados que chegam pelo WhatsApp?",
+    type: "choice",
+    options: ["Eu mesmo(a).", "Uma pessoa responsavel.", "Temos uma equipe de atendimento.", "Ninguem exclusivamente.", "Temos automacao ou Inteligencia Artificial."],
+  },
+  {
+    field: "responseTime",
+    title: "Quanto tempo normalmente leva para responder um novo interessado?",
+    type: "choice",
+    options: ["Imediatamente.", "Ate 5 minutos.", "Entre 5 e 30 minutos.", "Mais de 30 minutos.", "As vezes so respondemos horas depois.", "Nao sei."],
+  },
+  {
+    field: "mainChallenge",
+    title: "Qual e o principal desafio para aumentar as matriculas?",
+    type: "choice",
+    options: [
+      "Poucas pessoas entrando em contato.",
+      "Muitos contatos, mas poucas matriculas.",
+      "Demora no atendimento.",
+      "Falta de acompanhamento dos interessados.",
+      "Dependencia de indicacao.",
+      "Nao temos uma estrategia previsivel para gerar novos alunos.",
+    ],
+  },
+  {
+    field: "strategyOpenness",
+    title: "Se identificarmos uma estrategia melhor, voce estaria disposto(a) a implementar?",
+    type: "choice",
+    options: [
+      "Sim, estou buscando exatamente isso.",
+      "Sim, se fizer sentido para minha realidade.",
+      "Talvez, quero entender primeiro.",
+      "Nao tenho interesse em mudar minha estrategia atual.",
+    ],
+  },
+  {
+    field: "meetingInterest",
+    title: "Voce tem interesse em conversar por cerca de 15 minutos com nosso especialista?",
+    subtitle: "A analise inicial e gratuita e sem compromisso.",
+    type: "choice",
+    context: [
+      "Com base nas suas respostas, podemos identificar oportunidades especificas para melhorar a geracao e o aproveitamento de novos clientes na sua autoescola.",
+      "Nessa conversa, mostramos um metodo que combina trafego pago, atendimento com IA e estrategias para transformar mais oportunidades em matriculas.",
+    ],
+    options: ["Sim, quero receber minha analise gratuita.", "Tenho interesse, mas preciso combinar outro momento.", "Nao tenho interesse em conversar."],
+  },
+  { field: "phone", title: "Entraremos em contato utilizando as informacoes abaixo", subtitle: "Informe seu WhatsApp para continuar com Fausto.", type: "tel", placeholder: "Seu WhatsApp com DDD" },
+  { field: "email", title: "Qual e o seu melhor e-mail?", subtitle: "Opcional, para receber materiais e confirmacoes.", type: "email", placeholder: "Digite seu melhor email" },
 ];
 
 const initialAnswers: Record<QuizField, string> = {
   name: "",
   businessName: "",
+  role: "",
+  paidTraffic: "",
+  paidTrafficReason: "",
+  currentDailyLeads: "",
+  desiredDailyLeads: "",
+  attendanceStructure: "",
+  responseTime: "",
+  mainChallenge: "",
+  strategyOpenness: "",
+  meetingInterest: "",
   phone: "",
   email: "",
-  city: "",
-  state: "",
-  monthlyEnrollments: "",
-  salesAttendants: "",
-  usesCrm: "",
-  runsPaidAds: "",
-  monthlyAdSpend: "",
-  mainChallenge: "",
-  responseTime: "",
-  wantsWhatsappAutomation: "",
-  meetingInterest: "",
-  preferredMeetingPeriod: "",
 };
 
+const processingMessages = [
+  "Analisando sua operacao...",
+  "Comparando seu cenario atual com oportunidades de crescimento...",
+  "Identificando possiveis gargalos...",
+  "Preparando seu diagnostico...",
+];
+
 export function LeadCapturePublicForm({ slug }: { slug: string }) {
+  const [view, setView] = useState<QuizView>("intro");
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState(initialAnswers);
-  const [contactAuthorized, setContactAuthorized] = useState(false);
-  const [privacyPolicyAccepted, setPrivacyPolicyAccepted] = useState(false);
+  const [contactAuthorized, setContactAuthorized] = useState(true);
+  const [privacyPolicyAccepted, setPrivacyPolicyAccepted] = useState(true);
   const [status, setStatus] = useState("");
   const [result, setResult] = useState<SubmitResult | null>(null);
   const [tracking, setTracking] = useState<Record<string, string>>({});
   const [settings, setSettings] = useState<PublicFormSettings | null>(null);
+  const [processingIndex, setProcessingIndex] = useState(0);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -108,23 +211,36 @@ export function LeadCapturePublicForm({ slug }: { slug: string }) {
       .catch(() => setSettings(null));
   }, [slug]);
 
-  const progress = useMemo(() => Math.round(((currentQuestion + 1) / (questions.length + 1)) * 100), [currentQuestion]);
-  const question = questions[currentQuestion];
-  const isConsentStep = currentQuestion >= questions.length;
+  useEffect(() => {
+    if (view !== "processing") return;
+    const interval = window.setInterval(() => {
+      setProcessingIndex((current) => Math.min(processingMessages.length - 1, current + 1));
+    }, 500);
+    return () => window.clearInterval(interval);
+  }, [view]);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  const visibleQuestions = useMemo(() => questions.filter((item) => !item.when || item.when(answers)), [answers]);
+  const question = visibleQuestions[currentQuestion] ?? visibleQuestions[0];
+  const progress = useMemo(() => Math.round(((currentQuestion + 1) / visibleQuestions.length) * 100), [currentQuestion, visibleQuestions.length]);
+  const canSubmit = currentQuestion === visibleQuestions.length - 1;
+
+  async function handleSubmit(event?: FormEvent<HTMLFormElement>) {
+    event?.preventDefault();
+    if (!validateCurrentQuestion()) return;
     if (!contactAuthorized || !privacyPolicyAccepted) {
       setStatus("Confirme as autorizacoes para concluir.");
       return;
     }
 
-    setStatus("Enviando diagnostico...");
+    setView("processing");
+    setProcessingIndex(0);
+    setStatus("");
+
     const payload = {
       ...answers,
-      monthlyEnrollments: parseEnrollments(answers.monthlyEnrollments),
-      salesAttendants: parseAttendants(answers.salesAttendants),
-      monthlyAdSpend: Number(answers.monthlyAdSpend || 0),
+      salesAttendants: parseAttendance(answers.attendanceStructure),
+      runsPaidAds: answers.paidTraffic,
+      wantsWhatsappAutomation: answers.attendanceStructure.includes("Inteligencia Artificial") ? "Sim" : "Nao informado",
       contactAuthorized,
       privacyPolicyAccepted,
       tracking,
@@ -137,10 +253,14 @@ export function LeadCapturePublicForm({ slug }: { slug: string }) {
         body: JSON.stringify(payload),
       });
       const json = (await response.json()) as SubmitResult;
+      await wait(2000);
       setResult(json);
       setStatus(json.ok ? "" : json.error ?? "Nao foi possivel enviar.");
+      setView("result");
     } catch {
+      await wait(800);
       setStatus("Erro ao enviar formulario.");
+      setView("quiz");
     }
   }
 
@@ -150,130 +270,240 @@ export function LeadCapturePublicForm({ slug }: { slug: string }) {
     window.location.href = result.whatsappUrl;
   }
 
-  function goNext() {
-    if (!isConsentStep && question.required && !answers[question.field].trim()) {
+  function validateCurrentQuestion() {
+    if (question.field === "email") return true;
+    if (!answers[question.field].trim()) {
       setStatus("Responda esta pergunta para continuar.");
-      return;
+      return false;
+    }
+    if (question.field === "phone" && answers.phone.replace(/\D/g, "").length < 10) {
+      setStatus("Informe um WhatsApp valido com DDD.");
+      return false;
     }
     setStatus("");
-    setCurrentQuestion((current) => Math.min(questions.length, current + 1));
+    return true;
+  }
+
+  function goNext() {
+    if (!validateCurrentQuestion()) return;
+    if (canSubmit) {
+      void handleSubmit();
+      return;
+    }
+    setCurrentQuestion((current) => Math.min(visibleQuestions.length - 1, current + 1));
+  }
+
+  function goBack() {
+    if (view === "intro") return;
+    if (currentQuestion === 0) {
+      setView("intro");
+      return;
+    }
+    setCurrentQuestion((current) => Math.max(0, current - 1));
   }
 
   function choose(field: QuizField, value: string) {
     setAnswers((current) => ({ ...current, [field]: value }));
     setStatus("");
+    window.setTimeout(() => {
+      setCurrentQuestion((current) => Math.min(visibleQuestions.length - 1, current + 1));
+    }, 180);
   }
 
-  if (result?.ok) {
-    const qualified = result.qualificationStatus === "qualified";
+  if (view === "intro") {
     return (
-      <main className="public-form-shell quiz-shell">
-        <section className="public-form-card result quiz-result">
-          <span className="public-form-logo">fxphub</span>
-          <h1>{qualified ? "Sua autoescola foi selecionada para a proxima etapa!" : "Obrigado pelo seu interesse na FXP Assessoria"}</h1>
-          <p>
-            {qualified
-              ? "Obrigado pelas informacoes. Identificamos que sua autoescola possui perfil para conhecer as solucoes da FXP Assessoria."
-              : "Analisamos as informacoes enviadas e registramos seus dados para futuras ofertas e conteudos mais compativeis com sua realidade."}
-          </p>
-          {qualified && result.whatsappUrl ? (
-            <button type="button" onClick={handleWhatsappClick}>Falar com o Fausto no WhatsApp</button>
-          ) : (
-            <a className="public-secondary-link" href={result.settings?.instagramUrl || "https://instagram.com"}>Conhecer conteudos da FXP</a>
-          )}
-        </section>
+      <main className="public-form-shell quiz-shell fxp-diagnostic-shell">
+        <IntroScreen onStart={() => setView("quiz")} settings={settings} />
+      </main>
+    );
+  }
+
+  if (view === "processing") {
+    return (
+      <main className="public-form-shell quiz-shell fxp-diagnostic-shell">
+        <ProcessingScreen message={processingMessages[processingIndex]} />
+      </main>
+    );
+  }
+
+  if (view === "result") {
+    const qualified = result?.qualificationStatus === "qualified";
+    return (
+      <main className="public-form-shell quiz-shell fxp-diagnostic-shell">
+        {qualified ? (
+          <QualifiedResult answers={answers} result={result} onWhatsappClick={handleWhatsappClick} />
+        ) : (
+          <UnqualifiedResult />
+        )}
       </main>
     );
   }
 
   return (
-    <main className="public-form-shell quiz-shell">
-      <div className="quiz-top-progress"><i style={{ width: `${progress}%` }} /></div>
-      <form className="public-form-card quiz-card" onSubmit={handleSubmit}>
-        <header className="quiz-mobile-top">
-          <button
-            aria-label="Voltar"
-            disabled={currentQuestion === 0}
-            type="button"
-            onClick={() => setCurrentQuestion((current) => Math.max(0, current - 1))}
-          >
-            {"\u2190"}
-          </button>
-          <span className="quiz-brand-mark" aria-label="FXP Assessoria" />
+    <main className="public-form-shell quiz-shell fxp-diagnostic-shell">
+      <ProgressBar progress={progress} />
+      <form className="public-form-card quiz-card fxp-quiz-card" onSubmit={handleSubmit}>
+        <header className="quiz-mobile-top fxp-quiz-top">
+          <button aria-label="Voltar" type="button" onClick={goBack}>{"\u2190"}</button>
+          <BrandMark />
+          <span />
         </header>
 
-        <div className="quiz-progress-head">
-          <span>{isConsentStep ? "Confirmacao" : `Pergunta ${currentQuestion + 1} de ${questions.length}`}</span>
-          <strong>{progress}%</strong>
-        </div>
+        <div className="fxp-step-label">Etapa {currentQuestion + 1} de {visibleQuestions.length}</div>
+        <QuestionView answers={answers} onChange={setAnswers} onChoose={choose} question={question} />
 
-        {!isConsentStep ? (
-          <section className="quiz-question-card">
-            <h2>{question.title}</h2>
-            <p>{question.subtitle}</p>
-            {question.type === "choice" ? (
-              <div className="quiz-options">
-                {question.options?.map((option) => (
-                  <button
-                    className={answers[question.field] === option ? "selected" : ""}
-                    key={option}
-                    type="button"
-                    onClick={() => choose(question.field, option)}
-                  >
-                    <i />
-                    <span>{option}</span>
-                  </button>
-                ))}
-              </div>
-            ) : question.type === "textarea" ? (
-              <textarea
-                autoFocus
-                className="quiz-input"
-                value={answers[question.field]}
-                onChange={(event) => setAnswers((current) => ({ ...current, [question.field]: event.target.value }))}
-                rows={5}
-              />
-            ) : (
-              <input
-                autoFocus
-                className="quiz-input"
-                type={question.type}
-                value={answers[question.field]}
-                onChange={(event) => setAnswers((current) => ({ ...current, [question.field]: event.target.value }))}
-              />
-            )}
-          </section>
-        ) : (
-          <section className="quiz-question-card quiz-consent-card">
-            <span className="quiz-question-index">OK</span>
-            <h2>Confirme para enviar seu diagnostico</h2>
-            <p>Usaremos seus dados apenas para contato comercial da FXP e continuidade do atendimento.</p>
-            <label className="public-check"><input checked={contactAuthorized} onChange={(event) => setContactAuthorized(event.target.checked)} type="checkbox" /> Autorizo contato da FXP pelo WhatsApp.</label>
-            <label className="public-check"><input checked={privacyPolicyAccepted} onChange={(event) => setPrivacyPolicyAccepted(event.target.checked)} type="checkbox" /> Aceito a politica de privacidade e tratamento de dados.</label>
-            {settings?.privacyPolicyUrl ? <a className="public-policy-link" href={settings.privacyPolicyUrl} target="_blank">Abrir politica de privacidade</a> : null}
-          </section>
-        )}
+        {question.field === "email" ? (
+          <div className="fxp-consent">
+            <label><input checked={contactAuthorized} onChange={(event) => setContactAuthorized(event.target.checked)} type="checkbox" /> Autorizo contato da FXP pelo WhatsApp.</label>
+            <label><input checked={privacyPolicyAccepted} onChange={(event) => setPrivacyPolicyAccepted(event.target.checked)} type="checkbox" /> Aceito a politica de privacidade.</label>
+            {settings?.privacyPolicyUrl ? <a href={settings.privacyPolicyUrl} target="_blank">Abrir politica de privacidade</a> : null}
+          </div>
+        ) : null}
 
         {status ? <p className="form-error">{status}</p> : null}
 
         <div className="public-form-actions quiz-actions">
-          <button className="secondary quiz-back-bottom" disabled={currentQuestion === 0} type="button" onClick={() => setCurrentQuestion((current) => Math.max(0, current - 1))}>Voltar</button>
-          {!isConsentStep ? <button type="button" onClick={goNext}>Continuar</button> : <button type="submit">Enviar diagnostico</button>}
+          <button type="button" onClick={goNext}>{canSubmit ? "Concluir diagnostico" : "Continuar"}</button>
         </div>
       </form>
     </main>
   );
 }
 
-function parseEnrollments(value: string) {
-  if (value === "11 a 20") return 15;
-  if (value === "21 a 40") return 30;
-  if (value === "Acima de 40") return 45;
-  return 10;
+function IntroScreen({ onStart, settings }: { onStart: () => void; settings: PublicFormSettings | null }) {
+  return (
+    <section className="fxp-intro">
+      <BrandMark />
+      <span className="fxp-kicker">FXP Inteligencia Digital</span>
+      <h1>{settings?.title || "DIAGNOSTICO DE CRESCIMENTO PARA AUTOESCOLAS"}</h1>
+      <p className="fxp-intro-subtitle">
+        Descubra como aumentar a entrada de novos interessados na sua autoescola e transformar mais oportunidades em matriculas utilizando trafego pago e Inteligencia Artificial.
+      </p>
+      <p>
+        A FXP combina geracao de demanda, estrategias de aquisicao e atendimento inteligente para ajudar autoescolas a atrair potenciais alunos e melhorar o aproveitamento das oportunidades que chegam pelo WhatsApp.
+      </p>
+      <div className="fxp-growth-formula">
+        <span>Geracao de demanda</span>
+        <b>+</b>
+        <span>Trafego pago</span>
+        <b>+</b>
+        <span>Inteligencia Artificial</span>
+        <strong>Mais oportunidades de matricula</strong>
+      </div>
+      <div className="fxp-intro-grid">
+        <article><i />Resultados de campanhas e aquisicao previsivel</article>
+        <article><i />IA atendendo e qualificando interessados no WhatsApp</article>
+      </div>
+      <small>Responda com dados reais. Ao final, se o perfil for compativel, voce podera conversar com Fausto gratuitamente.</small>
+      <button type="button" onClick={onStart}>Iniciar meu diagnostico</button>
+    </section>
+  );
 }
 
-function parseAttendants(value: string) {
-  if (value === "1 atendente") return 1;
-  if (value === "2 ou mais atendentes") return 2;
+function ProgressBar({ progress }: { progress: number }) {
+  return <div className="quiz-top-progress fxp-progress"><i style={{ width: `${progress}%` }} /></div>;
+}
+
+function BrandMark() {
+  return <span className="quiz-brand-mark fxp-brand-mark" aria-label="FXP" />;
+}
+
+function QuestionView({
+  answers,
+  onChange,
+  onChoose,
+  question,
+}: {
+  answers: Record<QuizField, string>;
+  onChange: (answers: Record<QuizField, string>) => void;
+  onChoose: (field: QuizField, value: string) => void;
+  question: QuizQuestion;
+}) {
+  return (
+    <section className="quiz-question-card fxp-question-card">
+      {question.context ? (
+        <div className="fxp-context-card">
+          {question.context.map((line) => <p key={line}>{line}</p>)}
+        </div>
+      ) : null}
+      <h2>{question.title}</h2>
+      {question.subtitle ? <p>{question.subtitle}</p> : null}
+      {question.type === "choice" ? (
+        <div className="quiz-options fxp-options">
+          {question.options?.map((option) => (
+            <button className={answers[question.field] === option ? "selected" : ""} key={option} type="button" onClick={() => onChoose(question.field, option)}>
+              <i />
+              <span>{option}</span>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <input
+          autoFocus
+          className="quiz-input fxp-input"
+          placeholder={question.placeholder}
+          type={question.type}
+          value={answers[question.field]}
+          onChange={(event) => onChange({ ...answers, [question.field]: event.target.value })}
+        />
+      )}
+    </section>
+  );
+}
+
+function ProcessingScreen({ message }: { message: string }) {
+  return (
+    <section className="fxp-processing">
+      <BrandMark />
+      <div className="fxp-orbit"><i /><i /><i /></div>
+      <h1>{message}</h1>
+      <p>Seu diagnostico esta sendo preparado pela FXP.</p>
+    </section>
+  );
+}
+
+function QualifiedResult({ answers, result, onWhatsappClick }: { answers: Record<QuizField, string>; result: SubmitResult | null; onWhatsappClick: () => void }) {
+  return (
+    <section className="public-form-card result quiz-result fxp-result-card">
+      <BrandMark />
+      <span className="fxp-kicker">Diagnostico concluido</span>
+      <h1>SEU DIAGNOSTICO FOI CONCLUIDO!</h1>
+      <p>Com base nas suas respostas, identificamos oportunidades para melhorar a geracao e o aproveitamento de novos clientes na sua autoescola.</p>
+      <div className="fxp-personal-card">
+        <strong>Ola, {answers.name}.</strong>
+        <p>Com base nas informacoes fornecidas sobre a {answers.businessName}, identificamos oportunidades que podem ser exploradas na sua operacao.</p>
+        <span>Status: {result?.diagnosticStatus || "WARM"} | Score: {result?.score ?? 0}</span>
+      </div>
+      <ul>
+        <li>Geracao de novos interessados atraves do trafego pago.</li>
+        <li>Atendimento rapido utilizando Inteligencia Artificial.</li>
+        <li>Estrategias para transformar mais oportunidades em matriculas.</li>
+      </ul>
+      <button type="button" onClick={onWhatsappClick}>Falar com Fausto agora</button>
+    </section>
+  );
+}
+
+function UnqualifiedResult() {
+  return (
+    <section className="public-form-card result quiz-result fxp-result-card">
+      <BrandMark />
+      <span className="fxp-kicker">Diagnostico concluido</span>
+      <h1>DIAGNOSTICO CONCLUIDO</h1>
+      <p>Obrigado por dedicar alguns minutos para realizar o diagnostico da FXP.</p>
+      <p>Com base nas respostas fornecidas, identificamos que neste momento o perfil ainda nao atende aos requisitos para avancar para uma analise estrategica individual.</p>
+      <p>Caso esse cenario mude no futuro, teremos prazer em realizar uma nova avaliacao.</p>
+    </section>
+  );
+}
+
+function parseAttendance(value: string) {
+  if (value === "Temos uma equipe de atendimento.") return 3;
+  if (value === "Uma pessoa responsavel.") return 1;
+  if (value === "Temos automacao ou Inteligencia Artificial.") return 2;
   return 0;
+}
+
+function wait(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
 }

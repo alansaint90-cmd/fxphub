@@ -5,42 +5,54 @@ const baseLead = {
   name: "Allan Nascimento",
   businessName: "Autoescola Modelo",
   phone: "5571999999999",
-  monthlyEnrollments: 45,
-  salesAttendants: 2,
-  usesCrm: "Nao utiliza CRM",
-  runsPaidAds: "Ja investe em anuncios",
-  mainChallenge: "Demora no atendimento e leads perdidos",
-  meetingInterest: "Sim, quero participar de uma reuniao",
+  role: "Dono(a)",
+  paidTraffic: "Sim, utilizamos atualmente.",
+  paidTrafficReason: "Quero aumentar a conversao em matriculas.",
+  currentDailyLeads: "1 a 5.",
+  desiredDailyLeads: "20 a 30.",
+  attendanceStructure: "Uma pessoa responsavel.",
+  responseTime: "Mais de 30 minutos.",
+  mainChallenge: "Demora no atendimento.",
+  strategyOpenness: "Sim, estou buscando exatamente isso.",
+  meetingInterest: "Sim, quero receber minha analise gratuita.",
 };
 
 describe("scoreLeadCapture", () => {
-  it("classifica lead qualificado com perfil ideal", () => {
+  it("classifica lead HOT com decisor e interesse claro", () => {
     const result = scoreLeadCapture(baseLead);
     expect(result.status).toBe("qualified");
-    expect(result.score).toBeGreaterThanOrEqual(50);
+    expect(result.diagnosticStatus).toBe("HOT");
+    expect(result.score).toBeGreaterThanOrEqual(12);
   });
 
-  it("reprova quando nao ha interesse real em reuniao", () => {
-    const result = scoreLeadCapture({ ...baseLead, meetingInterest: "Nao tenho interesse em reuniao neste momento" });
+  it("mantem WARM como qualificado quando ha abertura moderada", () => {
+    const result = scoreLeadCapture({
+      ...baseLead,
+      role: "Responsavel pelo marketing ou comercial",
+      currentDailyLeads: "Mais de 20.",
+      responseTime: "Imediatamente.",
+      strategyOpenness: "Talvez, quero entender primeiro.",
+      meetingInterest: "Tenho interesse, mas preciso combinar outro momento.",
+    });
+    expect(result.status).toBe("qualified");
+    expect(result.diagnosticStatus).toBe("WARM");
+  });
+
+  it("desqualifica quando nao ha poder de decisao", () => {
+    const result = scoreLeadCapture({ ...baseLead, role: "Funcionario(a)" });
+    expect(result.status).toBe("unqualified");
+    expect(result.reason).toContain("decisao");
+  });
+
+  it("desqualifica quando nao ha interesse em conversar", () => {
+    const result = scoreLeadCapture({ ...baseLead, meetingInterest: "Nao tenho interesse em conversar." });
     expect(result.status).toBe("unqualified");
     expect(result.reason).toContain("interesse");
   });
 
-  it("reprova telefone invalido", () => {
-    const result = scoreLeadCapture({ ...baseLead, phone: "123" });
-    expect(result.status).toBe("unqualified");
-    expect(result.reason).toContain("Telefone");
-  });
-
-  it("reprova score abaixo do minimo", () => {
-    const result = scoreLeadCapture({
-      ...baseLead,
-      monthlyEnrollments: 5,
-      salesAttendants: 0,
-      usesCrm: "Ja utiliza CRM",
-      runsPaidAds: "Nunca investiu",
-      mainChallenge: "Quero conhecer",
-    });
-    expect(result.status).toBe("unqualified");
+  it("gera resumo comercial estruturado", () => {
+    const result = scoreLeadCapture(baseLead);
+    expect(result.summary).toContain("Autoescola Modelo");
+    expect(result.summary).toContain("1 a 5");
   });
 });

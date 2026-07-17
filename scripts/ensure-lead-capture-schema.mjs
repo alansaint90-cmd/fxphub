@@ -20,6 +20,15 @@ try {
         email text,
         city text,
         state text,
+        role text,
+        paid_traffic_reason text,
+        current_daily_leads text,
+        desired_daily_leads text,
+        attendance_structure text,
+        strategy_openness text,
+        diagnostic_status text,
+        diagnostic_summary text,
+        diagnostic_answers jsonb default '{}'::jsonb not null,
         monthly_enrollments integer default 0 not null,
         sales_attendants integer default 0 not null,
         uses_crm text,
@@ -124,6 +133,22 @@ try {
         modified_by uuid not null
       );
     `;
+
+    const leadFormColumns = [
+      ["role", "text"],
+      ["paid_traffic_reason", "text"],
+      ["current_daily_leads", "text"],
+      ["desired_daily_leads", "text"],
+      ["attendance_structure", "text"],
+      ["strategy_openness", "text"],
+      ["diagnostic_status", "text"],
+      ["diagnostic_summary", "text"],
+      ["diagnostic_answers", "jsonb default '{}'::jsonb not null"],
+    ];
+
+    for (const [column, definition] of leadFormColumns) {
+      await tx.unsafe(`alter table lead_forms add column if not exists ${column} ${definition};`);
+    }
 
     await tx`
       do $$
