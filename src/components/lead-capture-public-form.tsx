@@ -463,15 +463,15 @@ function QualifiedResult({ onWhatsappClick }: { onWhatsappClick: () => void }) {
   return (
     <section className="public-form-card result quiz-result fxp-result-card">
       <BrandMark />
-      <span className="fxp-kicker">Diagnostico concluido</span>
-      <h1>SEU DIAGNOSTICO FOI CONCLUIDO!</h1>
+      <h1>Seu Diagnostico</h1>
+      <p>Baseado nas suas respostas</p>
       <div className="fxp-scale-card">
-        <span>Esse resultado faria diferenca para a sua autoescola?</span>
+        <span>↗ Potencial de crescimento</span>
         <p>O diagnostico mostrou o potencial que sua empresa pode alcancar com uma estrategia focada em <b>atrair mais interessados, aproveitar melhor cada oportunidade e gerar mais matriculas.</b></p>
         <strong>Se voce quer transformar essa projecao em um plano de acao, fale agora com um de nossos consultores pelo WhatsApp e descubra <b>quais sao os proximos passos para comecar a buscar esses resultados.</b></strong>
-        <small>Ao clicar, o nosso agente dara continuidade ao seu atendimento e fara o agendamento com um de nossos consultores. Leva no maximo 2 minutos.</small>
       </div>
       <button type="button" onClick={onWhatsappClick}>Quero dar o proximo passo →</button>
+      <small className="fxp-cta-note">Ao clicar, o nosso agente dara continuidade ao seu atendimento e fara o agendamento com um de nossos consultores. Leva no maximo 2 minutos.</small>
     </section>
   );
 }

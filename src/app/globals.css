@@ -4406,11 +4406,11 @@ textarea.quiz-input {
 .fxp-scale-card span {
   width: fit-content;
   border-radius: 999px;
-  background: rgba(16, 185, 129, 0.16);
-  color: #34d399;
-  font-size: clamp(18px, 4.4vw, 30px);
+  background: rgba(8, 47, 73, 0.92);
+  color: #22d3ee;
+  font-size: clamp(12px, 3.2vw, 15px);
   font-weight: 950;
-  padding: 12px 18px;
+  padding: 10px 18px;
 }
 
 .fxp-scale-card p {
@@ -4428,11 +4428,12 @@ textarea.quiz-input {
   color: #22d3ee;
 }
 
-.fxp-scale-card small {
+.fxp-cta-note {
   max-width: 680px;
   color: rgba(226, 232, 240, 0.70);
   font-size: clamp(13px, 3.2vw, 16px);
   line-height: 1.45;
+  text-align: center;
 }
 
 .fxp-result-card ul {
