@@ -4475,7 +4475,7 @@ textarea.quiz-input {
   width: 100%;
   display: grid;
   justify-items: center;
-  gap: 16px;
+  gap: 18px;
   border: 1px solid rgba(0, 224, 138, 0.28);
   border-radius: 28px;
   background:
@@ -4484,6 +4484,19 @@ textarea.quiz-input {
   box-shadow: var(--fx-glow-green);
   padding: clamp(18px, 4.5vw, 30px);
   text-align: center;
+}
+
+.fxp-scale-summary {
+  display: grid;
+  gap: 12px;
+  text-align: left;
+}
+
+.fxp-scale-summary p {
+  max-width: 680px;
+  color: rgba(210, 239, 255, 0.84);
+  font-size: clamp(14px, 3.4vw, 17px);
+  line-height: 1.48;
 }
 
 .fxp-scale-card span {

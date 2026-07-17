@@ -473,19 +473,17 @@ function ProcessingScreen({ message }: { message: string }) {
 function QualifiedResult({ diagnostic, onWhatsappClick }: { diagnostic?: PersonalizedDiagnostic; onWhatsappClick: () => void }) {
   const fallback = "O diagnostico mostrou uma oportunidade clara para sua autoescola aumentar a geracao de demanda, aproveitar melhor as conversas no WhatsApp e buscar mais matriculas com uma estrategia integrada.";
   const paragraphs = buildResultSummary(diagnostic, fallback);
-  const potential = buildPotentialPhrase(diagnostic);
 
   return (
     <section className="public-form-card result quiz-result fxp-result-card">
       <BrandMark />
       <h1>{diagnostic?.titulo_diagnostico || "Seu Diagnostico"}</h1>
       <p>Baseado nas suas respostas</p>
-      <div className="fxp-diagnostic-copy">
-        {paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-      </div>
       <div className="fxp-scale-card">
         <span>{"\u2197 Potencial de crescimento"}</span>
-        <p>{potential}</p>
+        <div className="fxp-scale-summary">
+          {paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+        </div>
         <strong>O proximo passo e entender como essa estrategia pode ser aplicada especificamente a realidade da sua autoescola.</strong>
       </div>
       <button type="button" onClick={onWhatsappClick}>{"QUERO DAR O PROXIMO PASSO \u2192"}</button>
@@ -506,20 +504,6 @@ function buildResultSummary(diagnostic: PersonalizedDiagnostic | undefined, fall
   };
 
   return [scenario || fallback, strategyByProfile[diagnostic.perfil]];
-}
-
-function buildPotentialPhrase(diagnostic: PersonalizedDiagnostic | undefined) {
-  if (!diagnostic) {
-    return "Potencial para atrair mais interessados, aproveitar melhor cada oportunidade e gerar mais matriculas.";
-  }
-
-  const potentialByProfile: Record<PersonalizedDiagnostic["perfil"], string> = {
-    "Demanda abaixo do potencial": "Potencial para aumentar a geracao de novos interessados e transformar mais oportunidades em matriculas.",
-    "Oportunidades sendo desperdicadas": "Potencial para aproveitar melhor os leads que ja chegam com um atendimento mais rapido e estruturado.",
-    "Pronto para acelerar": "Potencial para combinar geracao de demanda e automacao do atendimento em um fluxo comercial mais previsivel.",
-  };
-
-  return potentialByProfile[diagnostic.perfil];
 }
 
 function UnqualifiedResult() {
