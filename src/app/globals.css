@@ -4190,7 +4190,7 @@ textarea.quiz-input {
 }
 
 .fxp-brand-logo {
-  width: min(78vw, 320px);
+  width: min(62vw, 240px);
   height: auto;
   justify-self: center;
   object-fit: contain;
@@ -4198,7 +4198,7 @@ textarea.quiz-input {
 }
 
 .fxp-quiz-top .fxp-brand-logo {
-  width: min(54vw, 220px);
+  width: min(42vw, 160px);
 }
 
 .fxp-step-label {
