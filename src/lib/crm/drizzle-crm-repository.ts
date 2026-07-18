@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, gte, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { appointments, conversationMessages, leadForms, leads, qualificationAnswers } from "@/lib/db/schema";
 import { env } from "@/lib/env";
@@ -41,27 +41,28 @@ export class DrizzleCrmRepository implements CrmRepository {
       .orderBy(desc(leadForms.createdAt))
       .limit(1);
 
-    if (!formLead) return null;
+    const leadForm = formLead ?? (await getLatestClickedLeadForm());
+    if (!leadForm) return null;
 
     return {
-      formLeadId: formLead.id,
-      name: formLead.name,
-      businessName: formLead.businessName,
-      phone: formLead.phone,
-      city: formLead.city,
-      role: formLead.role,
-      runsPaidAds: formLead.runsPaidAds,
-      paidTrafficReason: formLead.paidTrafficReason,
-      currentDailyLeads: formLead.currentDailyLeads,
-      desiredDailyLeads: formLead.desiredDailyLeads,
-      attendanceStructure: formLead.attendanceStructure,
-      responseTime: formLead.responseTime,
-      mainChallenge: formLead.mainChallenge,
-      meetingInterest: formLead.meetingInterest,
-      diagnosticStatus: formLead.diagnosticStatus,
-      diagnosticSummary: formLead.diagnosticSummary,
-      qualificationScore: formLead.qualificationScore,
-      diagnosticAnswers: formLead.diagnosticAnswers,
+      formLeadId: leadForm.id,
+      name: leadForm.name,
+      businessName: leadForm.businessName,
+      phone: leadForm.phone,
+      city: leadForm.city,
+      role: leadForm.role,
+      runsPaidAds: leadForm.runsPaidAds,
+      paidTrafficReason: leadForm.paidTrafficReason,
+      currentDailyLeads: leadForm.currentDailyLeads,
+      desiredDailyLeads: leadForm.desiredDailyLeads,
+      attendanceStructure: leadForm.attendanceStructure,
+      responseTime: leadForm.responseTime,
+      mainChallenge: leadForm.mainChallenge,
+      meetingInterest: leadForm.meetingInterest,
+      diagnosticStatus: leadForm.diagnosticStatus,
+      diagnosticSummary: leadForm.diagnosticSummary,
+      qualificationScore: leadForm.qualificationScore,
+      diagnosticAnswers: leadForm.diagnosticAnswers,
     };
   }
 
@@ -218,6 +219,24 @@ function getPhoneLookupVariants(phone: string) {
   if (digits.length > 10) variants.add(digits.slice(-10));
 
   return [...variants];
+}
+
+async function getLatestClickedLeadForm() {
+  const recentWindow = new Date(Date.now() - 1000 * 60 * 60 * 4);
+  const [formLead] = await db
+    .select()
+    .from(leadForms)
+    .where(
+      and(
+        eq(leadForms.isDeleted, false),
+        eq(leadForms.faustoContactStarted, true),
+        gte(leadForms.whatsappClickedAt, recentWindow),
+      ),
+    )
+    .orderBy(desc(leadForms.whatsappClickedAt))
+    .limit(1);
+
+  return formLead ?? null;
 }
 
 function toLeadRecord(row: typeof leads.$inferSelect): LeadRecord {
