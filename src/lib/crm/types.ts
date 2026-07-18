@@ -64,6 +64,7 @@ export interface CrmRepository {
     funnelStage: FunnelStage;
     currentQualificationQuestion?: QualificationQuestionId | null;
   }): Promise<LeadRecord>;
+  setFunnelStage(input: { leadId: string; funnelStage: FunnelStage }): Promise<void>;
   setQualificationProgress(input: {
     leadId: string;
     currentQualificationQuestion: QualificationQuestionId | null;

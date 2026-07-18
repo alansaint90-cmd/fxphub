@@ -100,10 +100,14 @@ export async function POST(request: Request) {
     if (result.shouldSend) {
       stage = "send_whatsapp";
       const whatsapp = new EvolutionWhatsAppGateway();
-      await whatsapp.sendText({
-        phoneJid: payload.body.data.key.remoteJid,
-        text: result.response,
-      });
+      const messages = result.messages ?? [{ text: result.response }];
+      for (const message of messages) {
+        if (message.delayMs) await sleep(message.delayMs);
+        await whatsapp.sendText({
+          phoneJid: payload.body.data.key.remoteJid,
+          text: message.text,
+        });
+      }
     }
 
     return NextResponse.json({ ok: true });
@@ -112,4 +116,8 @@ export async function POST(request: Request) {
     console.error("[Evolution webhook]", { stage, message, error });
     return NextResponse.json({ ok: false, stage, error: message }, { status: 500 });
   }
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

@@ -82,7 +82,7 @@ export class DrizzleCrmRepository implements CrmRepository {
         score: input.context.qualificationScore,
         classification: input.context.diagnosticStatus === "HOT" ? "A" : input.context.diagnosticStatus === "WARM" ? "B" : "C",
         qualificationSummary: input.context.diagnosticSummary,
-        funnelStage: "agendamento_em_andamento",
+        funnelStage: "qualificado",
         currentQualificationQuestion: null,
         qualificationStarted: true,
         updatedAt: new Date(),
@@ -176,6 +176,17 @@ export class DrizzleCrmRepository implements CrmRepository {
       .set({
         currentQualificationQuestion: input.currentQualificationQuestion,
         qualificationStarted: input.qualificationStarted,
+        updatedAt: new Date(),
+        modifiedBy,
+      })
+      .where(and(eq(leads.id, input.leadId), eq(leads.isDeleted, false)));
+  }
+
+  async setFunnelStage(input: Parameters<CrmRepository["setFunnelStage"]>[0]): Promise<void> {
+    await db
+      .update(leads)
+      .set({
+        funnelStage: input.funnelStage,
         updatedAt: new Date(),
         modifiedBy,
       })

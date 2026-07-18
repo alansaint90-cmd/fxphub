@@ -9,6 +9,11 @@ import type { QualificationAnswerSet, QualificationQuestionId } from "@/lib/qual
 import { extractRequestedHours, isAvailabilityRequest, isScheduleRejection, matchesSlot } from "./scheduling";
 import type { CrmRepository, LeadRecord } from "./types";
 
+interface OutboundMessage {
+  text: string;
+  delayMs?: number;
+}
+
 interface HandleInboundInput {
   whatsappJid: string;
   phone: string;
@@ -25,7 +30,7 @@ export class FaustoConversationService {
     private readonly calendar: CalendarGateway,
   ) {}
 
-  async handleInbound(input: HandleInboundInput): Promise<{ response: string; shouldSend: boolean }> {
+  async handleInbound(input: HandleInboundInput): Promise<{ response: string; shouldSend: boolean; messages?: OutboundMessage[] }> {
     const lead = await this.crm.upsertLead({
       whatsappJid: input.whatsappJid,
       phone: input.phone,
@@ -55,12 +60,14 @@ export class FaustoConversationService {
       }
 
       const contextualizedLead = await this.crm.applyLeadFormContextToLead({ leadId: lead.id, context });
-      const response = await this.startPaidTrafficSchedulingFlow(contextualizedLead, context);
-      await this.crm.saveOutboundMessage({ leadId: contextualizedLead.id, body: response });
-      return { response, shouldSend: true };
+      const messages = this.startPaidTrafficIdentityFlow(contextualizedLead);
+      await Promise.all(
+        messages.map((message) => this.crm.saveOutboundMessage({ leadId: contextualizedLead.id, body: message.text })),
+      );
+      return { response: messages.map((message) => message.text).join("\n\n"), shouldSend: true, messages };
     }
 
-    const shouldUseStrictDraft = lead.funnelStage === "agendamento_em_andamento";
+    const shouldUseStrictDraft = lead.funnelStage === "agendamento_em_andamento" || shouldConfirmDiagnosticIdentity(lead);
     const draft = await this.buildDraftResponse(lead, input.text);
     const response = shouldUseStrictDraft
       ? draft
@@ -74,31 +81,23 @@ export class FaustoConversationService {
     return { response, shouldSend: true };
   }
 
-  private async startPaidTrafficSchedulingFlow(
-    lead: LeadRecord,
-    context: Awaited<ReturnType<CrmRepository["getLatestLeadFormContextByPhone"]>>,
-  ): Promise<string> {
-    if (!context) return this.finishQualification(lead, getAnswerSet(lead));
-
-    const slots = await this.calendar.getAvailableSlots();
-    const options = formatSlotOptions(slots);
-    const firstName = context.name.trim().split(/\s+/)[0] || "Tudo certo";
-    const pain = context.mainChallenge ? `Vi que o ponto principal hoje e ${context.mainChallenge.toLowerCase()}.` : "";
-    const trafficContext =
-      context.runsPaidAds === "Sim, utilizamos atualmente."
-        ? "Como voce ja usa trafego pago, a conversa vai ser sobre como melhorar a geracao de demanda e transformar mais oportunidades em matriculas."
-        : "Como o foco agora e gerar mais demanda, a conversa vai ser sobre trafego pago para colocar mais potenciais alunos no WhatsApp da sua autoescola.";
+  private startPaidTrafficIdentityFlow(lead: LeadRecord): OutboundMessage[] {
+    const leadName = lead.responsibleName?.trim() || lead.pushName?.trim() || "voce";
+    const schoolName = lead.drivingSchoolName?.trim() || "sua autoescola";
 
     return [
-      `${firstName}, peguei seu diagnostico da ${context.businessName}. ${pain}`.trim(),
-      `${trafficContext} A IA pode entrar depois como upgrade para organizar e acelerar o atendimento.`,
-      `Tenho ${options}. Qual horario prefere para uma conversa rapida?`,
-    ].join("\n");
+      { text: "Ja recebi o seu diagnostico por aqui." },
+      { text: `Falo com ${leadName} da ${schoolName}, certo?`, delayMs: 5000 },
+    ];
   }
 
   private async buildDraftResponse(lead: LeadRecord, text: string): Promise<string> {
     if (lead.funnelStage === "agendamento_em_andamento") {
       return this.tryScheduleMeeting(lead, text);
+    }
+
+    if (shouldConfirmDiagnosticIdentity(lead)) {
+      return this.handleDiagnosticIdentityConfirmation(lead, text);
     }
 
     const answers = getAnswerSet(lead);
@@ -164,6 +163,33 @@ export class FaustoConversationService {
       const detail = error instanceof Error ? error.message : "Nao consegui registrar essa resposta.";
       return `${detail}\n\n${currentQuestion.prompt}`;
     }
+  }
+
+  private async handleDiagnosticIdentityConfirmation(lead: LeadRecord, text: string): Promise<string> {
+    if (isIdentityDenied(text)) {
+      return "Sem problema. Me informe seu nome e o nome da autoescola para eu corrigir e continuar.";
+    }
+
+    if (!isIdentityConfirmed(text)) {
+      const leadName = lead.responsibleName?.trim() || lead.pushName?.trim() || "voce";
+      const schoolName = lead.drivingSchoolName?.trim() || "sua autoescola";
+      return `So para confirmar: falo com ${leadName} da ${schoolName}, certo?`;
+    }
+
+    await this.crm.setFunnelStage({ leadId: lead.id, funnelStage: "agendamento_em_andamento" });
+
+    const slots = await this.calendar.getAvailableSlots();
+    const options = formatSlotOptions(slots);
+    const firstName = lead.responsibleName?.trim().split(/\s+/)[0] || lead.pushName?.trim().split(/\s+/)[0] || "";
+    const greeting = firstName ? `Perfeito, ${firstName}.` : "Perfeito.";
+    const schoolName = lead.drivingSchoolName?.trim() || "sua autoescola";
+
+    return [
+      `${greeting} Eu sou o Fausto, da assessoria FXP. Somos um hub de solucoes digitais e de IA para autoescolas.`,
+      `Ajudamos autoescolas a atrair mais interessados pelo WhatsApp e transformar oportunidades em matriculas.`,
+      `Vou te mostrar em uma videochamada de 15 minutos como a estrategia de trafego pago + IA pode ser aplicada na ${schoolName}.`,
+      `Tenho ${options}. Qual horario prefere?`,
+    ].join("\n");
   }
 
   private async finishQualification(lead: LeadRecord, answers: QualificationAnswerSet): Promise<string> {
@@ -259,6 +285,27 @@ function isConversationClosed(text: string) {
     .replace(/[\u0300-\u036f]/g, "");
 
   return /\b(nao quero mais|obrigado|obrigada)\b/.test(normalizedText);
+}
+
+function shouldConfirmDiagnosticIdentity(lead: LeadRecord) {
+  return (
+    lead.funnelStage === "qualificado" &&
+    lead.qualificationStarted &&
+    Boolean(lead.responsibleName || lead.pushName) &&
+    Boolean(lead.drivingSchoolName)
+  );
+}
+
+function isIdentityConfirmed(text: string) {
+  const normalizedText = normalizeForIntent(text);
+  return /\b(sim|certo|correto|isso|exato|ok|confirmo|confirmado|sou eu|esta certo|ta certo)\b/.test(
+    normalizedText,
+  );
+}
+
+function isIdentityDenied(text: string) {
+  const normalizedText = normalizeForIntent(text);
+  return /\b(nao|errado|incorreto|nao sou|nao e|esta errado|ta errado)\b/.test(normalizedText);
 }
 
 function isDiagnosticFormTrigger(text: string) {
