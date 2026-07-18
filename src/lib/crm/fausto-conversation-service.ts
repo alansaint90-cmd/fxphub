@@ -67,6 +67,7 @@ export class FaustoConversationService {
       return { response: messages.map((message) => message.text).join("\n\n"), shouldSend: true, messages };
     }
 
+    const shouldSplitIdentityConfirmation = shouldConfirmDiagnosticIdentity(lead) && isIdentityConfirmed(input.text);
     const shouldUseStrictDraft = lead.funnelStage === "agendamento_em_andamento" || shouldConfirmDiagnosticIdentity(lead);
     const draft = await this.buildDraftResponse(lead, input.text);
     const response = shouldUseStrictDraft
@@ -77,8 +78,9 @@ export class FaustoConversationService {
           draft,
         });
 
-    await this.crm.saveOutboundMessage({ leadId: lead.id, body: response });
-    return { response, shouldSend: true };
+    const messages = shouldSplitIdentityConfirmation ? splitIntoWhatsAppMessages(response) : [{ text: response }];
+    await Promise.all(messages.map((message) => this.crm.saveOutboundMessage({ leadId: lead.id, body: message.text })));
+    return { response, shouldSend: true, messages: messages.length > 1 ? messages : undefined };
   }
 
   private startPaidTrafficIdentityFlow(lead: LeadRecord): OutboundMessage[] {
@@ -276,6 +278,14 @@ function formatSlotOptions(slots: { label: string }[]) {
   const options = slots.slice(0, 3).map((slot) => slot.label);
   if (options.length === 0) return "nenhum horario livre no momento";
   return options.join(", ");
+}
+
+function splitIntoWhatsAppMessages(response: string): OutboundMessage[] {
+  return response
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((text, index) => ({ text, delayMs: index === 0 ? undefined : 1200 }));
 }
 
 function isConversationClosed(text: string) {
