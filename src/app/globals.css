@@ -4587,20 +4587,79 @@ textarea.quiz-input {
   }
 
   .fxp-quiz-card {
-    padding-inline: 18px;
+    gap: 10px;
+    min-height: 100svh;
+    padding: 20px 16px 92px;
+  }
+
+  .fxp-quiz-top {
+    min-height: 48px;
+    grid-template-columns: 38px 1fr 38px;
+    align-items: center;
+  }
+
+  .fxp-quiz-top button {
+    min-height: 38px;
+    font-size: 30px;
+  }
+
+  .fxp-quiz-top .fxp-brand-logo {
+    width: min(28vw, 96px);
+  }
+
+  .fxp-step-label {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+
+  .fxp-question-card {
+    gap: 10px;
   }
 
   .fxp-question-card h2 {
-    margin-top: 16px;
+    margin: 8px 0 8px;
+    font-size: clamp(26px, 7vw, 38px);
+    line-height: 1.08;
+  }
+
+  .fxp-question-card p {
+    font-size: 15px;
+    line-height: 1.3;
+  }
+
+  .fxp-options {
+    gap: 8px;
+    margin-top: 4px;
   }
 
   .fxp-options button {
-    min-height: 76px;
-    border-radius: 20px;
+    min-height: 54px;
+    grid-template-columns: 30px minmax(0, 1fr);
+    border-radius: 16px;
+    padding: 8px 14px;
+  }
+
+  .fxp-options button i {
+    width: 24px;
+    height: 24px;
+    border-radius: 7px;
   }
 
   .fxp-options button span {
-    font-size: 18px;
+    font-size: 16px;
+    line-height: 1.18;
+  }
+
+  .quiz-actions {
+    right: 16px;
+    bottom: calc(env(safe-area-inset-bottom) + 10px);
+    left: 16px;
+  }
+
+  .quiz-actions button {
+    min-height: 58px;
+    border-radius: 18px;
+    font-size: 20px;
   }
 }
 
