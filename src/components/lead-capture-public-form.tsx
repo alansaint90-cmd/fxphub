@@ -493,7 +493,8 @@ function QualifiedResult({ diagnostic, onWhatsappClick }: { diagnostic?: Persona
 function buildResultSummary(diagnostic: PersonalizedDiagnostic | undefined, fallback: string) {
   if (!diagnostic) return [fallback];
 
-  const [scenario] = diagnostic.diagnostico.split("\n\n").filter(Boolean);
+  const [rawScenario] = diagnostic.diagnostico.split("\n\n").filter(Boolean);
+  const scenario = removeLeadVolumeRepetition(rawScenario);
 
   const strategyByProfile: Record<PersonalizedDiagnostic["perfil"], string> = {
     "Demanda abaixo do potencial": "No seu cenario, o caminho principal e gerar mais demanda com trafego pago para colocar mais potenciais alunos no WhatsApp. Depois, a IA e o sistema podem entrar como upgrade para organizar, qualificar e aproveitar melhor essas oportunidades.",
@@ -502,6 +503,13 @@ function buildResultSummary(diagnostic: PersonalizedDiagnostic | undefined, fall
   };
 
   return [scenario || fallback, strategyByProfile[diagnostic.perfil]];
+}
+
+function removeLeadVolumeRepetition(text = "") {
+  return text
+    .replace(/\s*Hoje, sua autoescola recebe .*? novos interessados por dia e (?:quer|deseja) chegar a .*?(?:\.|,)/i, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
 }
 
 function UnqualifiedResult() {

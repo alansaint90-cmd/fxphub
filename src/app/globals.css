@@ -4147,20 +4147,23 @@ textarea.quiz-input {
 
 .fxp-intro-media-grid img {
   width: 100%;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 1289 / 231;
   display: block;
-  object-fit: cover;
+  object-fit: contain;
+  background: #ffffff;
 }
 
 .fxp-intro-media-grid figcaption {
   min-height: 74px;
   display: grid;
   align-items: center;
+  justify-items: center;
   color: var(--fx-foreground);
   font-size: clamp(13px, 2.5vw, 15px);
   font-weight: 900;
   line-height: 1.35;
   padding: 14px 16px;
+  text-align: center;
 }
 
 .fxp-intro small {
@@ -4183,13 +4186,14 @@ textarea.quiz-input {
 
 .fxp-intro button {
   background:
-    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.48), transparent 18%),
-    linear-gradient(115deg, #00c8ff 0%, #00e08a 48%, #7c3cff 100%);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.26), transparent 42%),
+    linear-gradient(135deg, #18c7ff 0%, #0797d3 48%, #006aa8 100%);
   color: #03111b;
+  border: 1px solid rgba(147, 229, 255, 0.42);
   box-shadow:
-    0 0 22px rgba(0, 200, 255, 0.48),
-    0 0 42px rgba(0, 224, 138, 0.26),
-    0 20px 70px rgba(0, 200, 255, 0.26);
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    0 0 22px rgba(0, 200, 255, 0.34),
+    0 18px 54px rgba(0, 151, 211, 0.32);
   position: relative;
   isolation: isolate;
 }
@@ -4200,8 +4204,8 @@ textarea.quiz-input {
   inset: 1px;
   z-index: -1;
   border-radius: inherit;
-  background: linear-gradient(115deg, rgba(255, 255, 255, 0.34), transparent 34%, rgba(255, 255, 255, 0.18));
-  opacity: 0.72;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+  opacity: 0.54;
 }
 
 .fxp-diagnostic-shell .quiz-actions button {
