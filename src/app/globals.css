@@ -4261,6 +4261,10 @@ textarea.quiz-input {
   width: min(42vw, 160px);
 }
 
+.fxp-result-card .fxp-brand-logo {
+  width: min(36vw, 150px);
+}
+
 .fxp-step-label {
   justify-self: center;
   width: fit-content;

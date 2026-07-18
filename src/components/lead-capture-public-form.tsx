@@ -469,9 +469,6 @@ function ProcessingScreen({ message }: { message: string }) {
 }
 
 function QualifiedResult({ diagnostic, onWhatsappClick }: { diagnostic?: PersonalizedDiagnostic; onWhatsappClick: () => void }) {
-  const fallback = "O diagnostico mostrou uma oportunidade clara para sua autoescola aumentar a geracao de demanda, aproveitar melhor as conversas no WhatsApp e buscar mais matriculas com uma estrategia integrada.";
-  const paragraphs = buildResultSummary(diagnostic, fallback);
-
   return (
     <section className="public-form-card result quiz-result fxp-result-card">
       <BrandMark />
@@ -479,37 +476,12 @@ function QualifiedResult({ diagnostic, onWhatsappClick }: { diagnostic?: Persona
       <p>Baseado nas suas respostas</p>
       <div className="fxp-scale-card">
         <span>{"\u2197 Potencial de crescimento"}</span>
-        <div className="fxp-scale-summary">
-          {paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-        </div>
         <strong>O proximo passo e entender como essa estrategia pode ser aplicada especificamente a realidade da sua autoescola.</strong>
       </div>
       <button type="button" onClick={onWhatsappClick}>{"QUERO DAR O PROXIMO PASSO \u2192"}</button>
       <small className="fxp-cta-note">Ao clicar, nosso agente dara continuidade ao seu atendimento e fara o agendamento com um de nossos consultores. Leva no maximo 2 minutos.</small>
     </section>
   );
-}
-
-function buildResultSummary(diagnostic: PersonalizedDiagnostic | undefined, fallback: string) {
-  if (!diagnostic) return [fallback];
-
-  const [rawScenario] = diagnostic.diagnostico.split("\n\n").filter(Boolean);
-  const scenario = removeLeadVolumeRepetition(rawScenario);
-
-  const strategyByProfile: Record<PersonalizedDiagnostic["perfil"], string> = {
-    "Demanda abaixo do potencial": "No seu cenario, o caminho principal e gerar mais demanda com trafego pago para colocar mais potenciais alunos no WhatsApp. Depois, a IA e o sistema podem entrar como upgrade para organizar, qualificar e aproveitar melhor essas oportunidades.",
-    "Oportunidades sendo desperdicadas": "No seu cenario, o primeiro passo e fortalecer a geracao de demanda com trafego pago e criar um fluxo constante de novos interessados. Em seguida, a IA pode ser usada como upgrade para acelerar respostas, organizar follow-up e aumentar o aproveitamento dos leads.",
-    "Pronto para acelerar": "No seu cenario, a prioridade e escalar a entrada de oportunidades com campanhas de trafego pago e geracao de demanda. A IA e o sistema entram como proximo nivel para dar mais velocidade, controle e previsibilidade ao atendimento.",
-  };
-
-  return [scenario || fallback, strategyByProfile[diagnostic.perfil]];
-}
-
-function removeLeadVolumeRepetition(text = "") {
-  return text
-    .replace(/\s*Hoje, sua autoescola recebe .*? novos interessados por dia e (?:quer|deseja) chegar a .*?(?:\.|,)/i, " ")
-    .replace(/\s{2,}/g, " ")
-    .trim();
 }
 
 function UnqualifiedResult() {
