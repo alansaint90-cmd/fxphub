@@ -4182,9 +4182,26 @@ textarea.quiz-input {
 }
 
 .fxp-intro button {
-  background: linear-gradient(135deg, var(--fx-primary), #008fc7);
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.48), transparent 18%),
+    linear-gradient(115deg, #00c8ff 0%, #00e08a 48%, #7c3cff 100%);
   color: #03111b;
-  box-shadow: var(--fx-glow-cyan);
+  box-shadow:
+    0 0 22px rgba(0, 200, 255, 0.48),
+    0 0 42px rgba(0, 224, 138, 0.26),
+    0 20px 70px rgba(0, 200, 255, 0.26);
+  position: relative;
+  isolation: isolate;
+}
+
+.fxp-intro button::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(115deg, rgba(255, 255, 255, 0.34), transparent 34%, rgba(255, 255, 255, 0.18));
+  opacity: 0.72;
 }
 
 .fxp-diagnostic-shell .quiz-actions button {

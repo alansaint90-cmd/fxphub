@@ -399,6 +399,9 @@ function IntroScreen({ onStart }: { onStart: () => void }) {
         </figure>
       </div>
       <button type="button" onClick={onStart}>Iniciar meu diagnostico</button>
+      <small>
+        Responda com dados reais. Ao final, se o perfil de sua empresa for compativel com os nossos servicos, iremos te encaminhar para um consultor tirar as suas duvidas no WhatsApp.
+      </small>
     </section>
   );
 }
