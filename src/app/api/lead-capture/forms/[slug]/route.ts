@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { leadFormEvents, leadForms, leadFormSettings } from "@/lib/db/schema";
 import { env } from "@/lib/env";
 import { onlyDigits, scoreLeadCapture } from "@/lib/lead-capture/scoring";
+import { leadCaptureWhatsappStartMessage } from "@/lib/lead-capture/whatsapp";
 
 const paramsSchema = z.object({ slug: z.string().trim().min(2) });
 const faustoWhatsappNumber = "5571920017753";
@@ -224,6 +225,5 @@ function publicSettings(settings: typeof leadFormSettings.$inferSelect) {
 function buildWhatsappUrl(phone: string | null, input: z.infer<typeof submitSchema>) {
   const target = onlyDigits(faustoWhatsappNumber || phone || process.env.WHATSAPP_DEFAULT_NUMBER || "");
   if (!target) return null;
-  const text = `Ola, Fausto! Acabei de concluir o diagnostico da FXP. Meu nome e ${input.name} e sou da ${input.businessName}. Gostaria de continuar minha analise e entender qual estrategia pode ser aplicada na minha autoescola.`;
-  return `https://wa.me/${target}?text=${encodeURIComponent(text)}`;
+  return `https://wa.me/${target}?text=${encodeURIComponent(leadCaptureWhatsappStartMessage)}`;
 }

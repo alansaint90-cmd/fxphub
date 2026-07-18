@@ -1,5 +1,6 @@
 import type { CalendarGateway } from "@/lib/integrations/calendar";
 import type { AiMessagePlanner } from "@/lib/integrations/openai";
+import { leadCaptureWhatsappStartMessage } from "@/lib/lead-capture/whatsapp";
 import { faustoSystemPrompt } from "@/lib/qualification/fausto-prompt";
 import { parseAnswer } from "@/lib/qualification/parser";
 import { getNextQuestion, qualificationQuestions } from "@/lib/qualification/questions";
@@ -42,6 +43,23 @@ export class FaustoConversationService {
       return { response: "", shouldSend: false };
     }
 
+    if (isDiagnosticFormTrigger(input.text)) {
+      const context = await this.crm.getLatestLeadFormContextByPhone(input.phone);
+      if (!context) {
+        const response = [
+          "Recebi sua mensagem do diagnostico, mas ainda nao encontrei seus dados do formulario.",
+          "Pode concluir o diagnostico novamente ou me informar o nome da autoescola para eu continuar?",
+        ].join("\n");
+        await this.crm.saveOutboundMessage({ leadId: lead.id, body: response });
+        return { response, shouldSend: true };
+      }
+
+      const contextualizedLead = await this.crm.applyLeadFormContextToLead({ leadId: lead.id, context });
+      const response = await this.startPaidTrafficSchedulingFlow(contextualizedLead, context);
+      await this.crm.saveOutboundMessage({ leadId: contextualizedLead.id, body: response });
+      return { response, shouldSend: true };
+    }
+
     const shouldUseStrictDraft = lead.funnelStage === "agendamento_em_andamento";
     const draft = await this.buildDraftResponse(lead, input.text);
     const response = shouldUseStrictDraft
@@ -54,6 +72,28 @@ export class FaustoConversationService {
 
     await this.crm.saveOutboundMessage({ leadId: lead.id, body: response });
     return { response, shouldSend: true };
+  }
+
+  private async startPaidTrafficSchedulingFlow(
+    lead: LeadRecord,
+    context: Awaited<ReturnType<CrmRepository["getLatestLeadFormContextByPhone"]>>,
+  ): Promise<string> {
+    if (!context) return this.finishQualification(lead, getAnswerSet(lead));
+
+    const slots = await this.calendar.getAvailableSlots();
+    const options = formatSlotOptions(slots);
+    const firstName = context.name.trim().split(/\s+/)[0] || "Tudo certo";
+    const pain = context.mainChallenge ? `Vi que o ponto principal hoje e ${context.mainChallenge.toLowerCase()}.` : "";
+    const trafficContext =
+      context.runsPaidAds === "Sim, utilizamos atualmente."
+        ? "Como voce ja usa trafego pago, a conversa vai ser sobre como melhorar a geracao de demanda e transformar mais oportunidades em matriculas."
+        : "Como o foco agora e gerar mais demanda, a conversa vai ser sobre trafego pago para colocar mais potenciais alunos no WhatsApp da sua autoescola.";
+
+    return [
+      `${firstName}, peguei seu diagnostico da ${context.businessName}. ${pain}`.trim(),
+      `${trafficContext} A IA pode entrar depois como upgrade para organizar e acelerar o atendimento.`,
+      `Tenho ${options}. Qual horario prefere para uma conversa rapida?`,
+    ].join("\n");
   }
 
   private async buildDraftResponse(lead: LeadRecord, text: string): Promise<string> {
@@ -219,6 +259,19 @@ function isConversationClosed(text: string) {
     .replace(/[\u0300-\u036f]/g, "");
 
   return /\b(nao quero mais|obrigado|obrigada)\b/.test(normalizedText);
+}
+
+function isDiagnosticFormTrigger(text: string) {
+  return normalizeForIntent(text) === normalizeForIntent(leadCaptureWhatsappStartMessage);
+}
+
+function normalizeForIntent(text: string) {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function getAnswerSet(lead: LeadRecord): QualificationAnswerSet {

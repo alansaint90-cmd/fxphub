@@ -1,8 +1,8 @@
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { appointments, conversationMessages, leads, qualificationAnswers } from "@/lib/db/schema";
+import { appointments, conversationMessages, leadForms, leads, qualificationAnswers } from "@/lib/db/schema";
 import { env } from "@/lib/env";
-import type { CrmRepository, LeadRecord } from "./types";
+import type { CrmRepository, LeadFormConversationContext, LeadRecord } from "./types";
 
 const modifiedBy = env.SYSTEM_USER_ID;
 
@@ -29,6 +29,67 @@ export class DrizzleCrmRepository implements CrmRepository {
       })
       .returning();
 
+    return toLeadRecord(lead);
+  }
+
+  async getLatestLeadFormContextByPhone(phone: string): Promise<LeadFormConversationContext | null> {
+    const [formLead] = await db
+      .select()
+      .from(leadForms)
+      .where(and(eq(leadForms.phone, phone), eq(leadForms.isDeleted, false)))
+      .orderBy(desc(leadForms.createdAt))
+      .limit(1);
+
+    if (!formLead) return null;
+
+    return {
+      formLeadId: formLead.id,
+      name: formLead.name,
+      businessName: formLead.businessName,
+      phone: formLead.phone,
+      city: formLead.city,
+      role: formLead.role,
+      runsPaidAds: formLead.runsPaidAds,
+      paidTrafficReason: formLead.paidTrafficReason,
+      currentDailyLeads: formLead.currentDailyLeads,
+      desiredDailyLeads: formLead.desiredDailyLeads,
+      attendanceStructure: formLead.attendanceStructure,
+      responseTime: formLead.responseTime,
+      mainChallenge: formLead.mainChallenge,
+      meetingInterest: formLead.meetingInterest,
+      diagnosticStatus: formLead.diagnosticStatus,
+      diagnosticSummary: formLead.diagnosticSummary,
+      qualificationScore: formLead.qualificationScore,
+      diagnosticAnswers: formLead.diagnosticAnswers,
+    };
+  }
+
+  async applyLeadFormContextToLead(input: {
+    leadId: string;
+    context: LeadFormConversationContext;
+  }): Promise<LeadRecord> {
+    const [lead] = await db
+      .update(leads)
+      .set({
+        responsibleName: input.context.name,
+        drivingSchoolName: input.context.businessName,
+        city: input.context.city ?? undefined,
+        runsPaidTraffic: input.context.runsPaidAds === "Sim, utilizamos atualmente.",
+        usesCrm: input.context.attendanceStructure === "Temos automacao ou Inteligencia Artificial.",
+        mainPain: input.context.mainChallenge ?? undefined,
+        score: input.context.qualificationScore,
+        classification: input.context.diagnosticStatus === "HOT" ? "A" : input.context.diagnosticStatus === "WARM" ? "B" : "C",
+        qualificationSummary: input.context.diagnosticSummary,
+        funnelStage: "agendamento_em_andamento",
+        currentQualificationQuestion: null,
+        qualificationStarted: true,
+        updatedAt: new Date(),
+        modifiedBy,
+      })
+      .where(and(eq(leads.id, input.leadId), eq(leads.isDeleted, false)))
+      .returning();
+
+    if (!lead) throw new Error("Lead nao encontrado para aplicar contexto do formulario.");
     return toLeadRecord(lead);
   }
 
