@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import metaAdsImage from "../../public/assets/diagnostico-meta-ads.png";
+import fxpHubLogo from "../../public/assets/fxp-hub-logo.png";
 
 type LeadDiagnosticStatus = "HOT" | "WARM" | "DISQUALIFIED";
 type QuizView = "intro" | "quiz" | "processing" | "result";
@@ -408,12 +409,7 @@ function ProgressBar({ progress }: { progress: number }) {
 }
 
 function BrandMark() {
-  return (
-    <div className="fxp-brand-mark" aria-label="FXP inteligencia digital acessivel a sua empresa">
-      <strong>FXP</strong>
-      <small>inteligencia digital acessivel a sua empresa</small>
-    </div>
-  );
+  return <img className="fxp-brand-logo" src={fxpHubLogo.src} alt="FXP Hub" />;
 }
 
 function QuestionView({
