@@ -386,9 +386,8 @@ export function LeadCapturePublicForm({ slug }: { slug: string }) {
 function IntroScreen({ onStart }: { onStart: () => void }) {
   return (
     <section className="fxp-intro">
-      <BrandMark />
       <h1>
-        Atraia mais potenciais clientes para o <span className="fxp-text-cyan">WhatsApp da sua autoescola</span> e transforme oportunidades em <span className="fxp-text-green">novas matriculas</span>.
+        Atraia mais potenciais clientes para o <span className="fxp-text-cyan">WhatsApp da sua autoescola</span>.
       </h1>
       <p className="fxp-intro-subtitle">
         Faca o diagnostico e descubra como a FXP pode unir <span className="fxp-text-cyan">trafego pago</span> e <span className="fxp-text-green">Inteligencia Artificial</span> para colocar mais potenciais alunos no seu WhatsApp e <span className="fxp-text-cyan">ajudar sua autoescola a vender mais matriculas todos os dias.</span>
