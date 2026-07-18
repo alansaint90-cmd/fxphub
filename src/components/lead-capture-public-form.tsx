@@ -164,10 +164,6 @@ const questions: QuizQuestion[] = [
     title: "Voce tem interesse em conversar por cerca de 15 minutos com nosso especialista?",
     subtitle: "A analise inicial e gratuita e sem compromisso.",
     type: "choice",
-    context: [
-      "Com base nas suas respostas, podemos identificar oportunidades especificas para melhorar a geracao e o aproveitamento de novos clientes na sua autoescola.",
-      "Nessa conversa, mostramos um metodo que combina trafego pago, atendimento com IA e estrategias para transformar mais oportunidades em matriculas.",
-    ],
     options: ["Sim, quero receber minha analise gratuita.", "Tenho interesse, mas preciso combinar outro momento.", "Nao tenho interesse em conversar."],
   },
   { field: "phone", title: "Entraremos em contato utilizando as informacoes abaixo", subtitle: "Informe seu WhatsApp para continuar com Fausto.", type: "tel", placeholder: "Seu WhatsApp com DDD" },
@@ -476,6 +472,10 @@ function QualifiedResult({ diagnostic, onWhatsappClick }: { diagnostic?: Persona
       <p>Baseado nas suas respostas</p>
       <div className="fxp-scale-card">
         <span>{"\u2197 Potencial de crescimento"}</span>
+        <div className="fxp-scale-summary">
+          <p>Com base nas suas respostas, podemos identificar oportunidades especificas para melhorar a geracao e o aproveitamento de novos clientes na sua autoescola.</p>
+          <p>Nessa conversa, mostramos um metodo que combina trafego pago, atendimento com IA e estrategias para transformar mais oportunidades em matriculas.</p>
+        </div>
         <strong>O proximo passo e entender como essa estrategia pode ser aplicada especificamente a realidade da sua autoescola.</strong>
       </div>
       <button type="button" onClick={onWhatsappClick}>{"QUERO DAR O PROXIMO PASSO \u2192"}</button>
