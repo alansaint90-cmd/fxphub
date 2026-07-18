@@ -4184,7 +4184,8 @@ textarea.quiz-input {
   text-transform: uppercase;
 }
 
-.fxp-intro button {
+.fxp-intro button,
+.fxp-result-card button {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.26), transparent 42%),
     linear-gradient(135deg, #18c7ff 0%, #0797d3 48%, #006aa8 100%);
@@ -4198,7 +4199,8 @@ textarea.quiz-input {
   isolation: isolate;
 }
 
-.fxp-intro button::before {
+.fxp-intro button::before,
+.fxp-result-card button::before {
   content: "";
   position: absolute;
   inset: 1px;
@@ -4212,12 +4214,6 @@ textarea.quiz-input {
   background: linear-gradient(135deg, var(--fx-primary), #008fc7);
   color: #03111b;
   box-shadow: var(--fx-glow-cyan);
-}
-
-.fxp-result-card button {
-  background: linear-gradient(135deg, var(--fx-accent), #08bd78);
-  color: #06110d;
-  box-shadow: var(--fx-glow-green);
 }
 
 .fxp-quiz-card {
