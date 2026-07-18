@@ -78,7 +78,11 @@ export class FaustoConversationService {
           draft,
         });
 
-    const messages = shouldSplitIdentityConfirmation ? splitIntoWhatsAppMessages(response) : [{ text: response }];
+    const shouldSplitMeetingConfirmation = response.startsWith("Reuniao confirmada.");
+    const messages =
+      shouldSplitIdentityConfirmation || shouldSplitMeetingConfirmation
+        ? splitIntoWhatsAppMessages(response)
+        : [{ text: response }];
     await Promise.all(messages.map((message) => this.crm.saveOutboundMessage({ leadId: lead.id, body: message.text })));
     return { response, shouldSend: true, messages: messages.length > 1 ? messages : undefined };
   }
@@ -180,17 +184,14 @@ export class FaustoConversationService {
 
     await this.crm.setFunnelStage({ leadId: lead.id, funnelStage: "agendamento_em_andamento" });
 
-    const slots = await this.calendar.getAvailableSlots();
-    const options = formatSlotOptions(slots);
     const firstName = lead.responsibleName?.trim().split(/\s+/)[0] || lead.pushName?.trim().split(/\s+/)[0] || "";
     const greeting = firstName ? `Perfeito, ${firstName}.` : "Perfeito.";
-    const schoolName = lead.drivingSchoolName?.trim() || "sua autoescola";
 
     return [
       `${greeting} Eu sou o Fausto, da assessoria FXP. Somos um hub de solucoes digitais e de IA para autoescolas.`,
       `Ajudamos autoescolas a atrair mais interessados pelo WhatsApp e transformar oportunidades em matriculas.`,
-      `Vou te mostrar em uma videochamada de 15 minutos como a estrategia de trafego pago + IA pode ser aplicada na ${schoolName}.`,
-      `Tenho ${options}. Qual horario prefere?`,
+      "Posso te agendar com o nosso time para uma demonstracao rapida sobre como conseguimos implementar a estrategia de trafego pago e IA aplicada em sua autoescola.",
+      "Seria interessante pra voce?",
     ].join("\n");
   }
 
@@ -250,6 +251,10 @@ export class FaustoConversationService {
         return "Sem problema. Me diga qual dia e horario voce prefere que eu consulto a agenda.";
       }
 
+      if (hasSchedulingObjection(text)) {
+        return "Claro. Qual e a sua duvida? Te respondo de forma objetiva para vermos se faz sentido agendar.";
+      }
+
       return `Consultei a agenda e tenho ${formatSlotOptions(slots)}. Qual desses fica melhor?`;
     }
 
@@ -269,7 +274,8 @@ export class FaustoConversationService {
 
     return [
       "Reuniao confirmada.",
-      "Na demonstracao vamos mostrar como organizar os leads e acelerar o atendimento pelo WhatsApp.",
+      "Na demonstracao vamos mostrar como resolver o desejo urgente com trafego pago.",
+      "2 horas antes mandaremos a mensagem de lembrete da reuniao. Ate breve!",
     ].join("\n");
   }
 }
@@ -285,7 +291,10 @@ function splitIntoWhatsAppMessages(response: string): OutboundMessage[] {
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean)
-    .map((text, index) => ({ text, delayMs: index === 0 ? undefined : 1200 }));
+    .map((text, index) => ({
+      text,
+      delayMs: index === 0 ? undefined : text.startsWith("Seria interessante") ? 2000 : 1200,
+    }));
 }
 
 function isConversationClosed(text: string) {
@@ -295,6 +304,13 @@ function isConversationClosed(text: string) {
     .replace(/[\u0300-\u036f]/g, "");
 
   return /\b(nao quero mais|obrigado|obrigada)\b/.test(normalizedText);
+}
+
+function hasSchedulingObjection(text: string) {
+  const normalizedText = normalizeForIntent(text);
+  return /\b(nao|tenho duvida|duvida|depende|quanto custa|qual valor|preco|valor|como funciona|explica|me explica|nao entendi)\b/.test(
+    normalizedText,
+  );
 }
 
 function shouldConfirmDiagnosticIdentity(lead: LeadRecord) {
