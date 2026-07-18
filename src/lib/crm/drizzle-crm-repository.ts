@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { appointments, conversationMessages, leadForms, leads, qualificationAnswers } from "@/lib/db/schema";
 import { env } from "@/lib/env";
@@ -33,10 +33,11 @@ export class DrizzleCrmRepository implements CrmRepository {
   }
 
   async getLatestLeadFormContextByPhone(phone: string): Promise<LeadFormConversationContext | null> {
+    const phoneVariants = getPhoneLookupVariants(phone);
     const [formLead] = await db
       .select()
       .from(leadForms)
-      .where(and(eq(leadForms.phone, phone), eq(leadForms.isDeleted, false)))
+      .where(and(inArray(leadForms.phone, phoneVariants), eq(leadForms.isDeleted, false)))
       .orderBy(desc(leadForms.createdAt))
       .limit(1);
 
@@ -204,6 +205,19 @@ export class DrizzleCrmRepository implements CrmRepository {
       })
       .where(and(eq(leads.id, input.leadId), eq(leads.isDeleted, false)));
   }
+}
+
+function getPhoneLookupVariants(phone: string) {
+  const digits = phone.replace(/\D/g, "");
+  const variants = new Set<string>();
+
+  if (digits) variants.add(digits);
+  if (digits.startsWith("55") && digits.length > 11) variants.add(digits.slice(2));
+  if (!digits.startsWith("55") && digits.length >= 10) variants.add(`55${digits}`);
+  if (digits.length > 11) variants.add(digits.slice(-11));
+  if (digits.length > 10) variants.add(digits.slice(-10));
+
+  return [...variants];
 }
 
 function toLeadRecord(row: typeof leads.$inferSelect): LeadRecord {
