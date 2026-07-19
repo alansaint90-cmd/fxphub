@@ -381,9 +381,16 @@ export function LeadCapturePublicForm({ slug }: { slug: string }) {
 
 function IntroScreen({ onStart }: { onStart: () => void }) {
   return (
-    <section className="fxp-intro">
+    <section
+      className="fxp-intro"
+      onKeyDownCapture={(event) => {
+        if (event.key !== "Enter") return;
+        event.preventDefault();
+        event.stopPropagation();
+      }}
+    >
       <h1>
-        Donos de <span className="fxp-headline-gold">autoescola estão vendendo mais matrículas</span> em parceria com a <span className="fxp-headline-lilac">nossa assessoria</span>
+        Donos de <span className="fxp-headline-gold">autoescola estão vendendo mais matrículas</span> em parceria com a nossa assessoria
       </h1>
       <div className="fxp-intro-media-grid">
         <figure>
@@ -479,7 +486,7 @@ function QualifiedResult({ diagnostic, onWhatsappClick }: { diagnostic?: Persona
         <span>{"\u2197 Potencial de crescimento"}</span>
         <div className="fxp-scale-summary">
           <p>Com base nas suas respostas, podemos identificar oportunidades especificas para melhorar a geracao e o aproveitamento de novos clientes na sua autoescola.</p>
-          <p>Nessa conversa, mostramos um metodo que combina trafego pago, atendimento com IA e estrategias para transformar mais oportunidades em matriculas.</p>
+          <p>{diagnostic?.solucao_recomendada || "Com uma campanha de trafego pago para gerar demanda combinada com analises feitas por IA, conseguimos ajudar sua autoescola a organizar melhor as oportunidades, priorizar contatos com maior interesse e buscar mais matriculas todos os dias."}</p>
         </div>
         <strong>O proximo passo e entender como essa estrategia pode ser aplicada especificamente a realidade da sua autoescola.</strong>
       </div>

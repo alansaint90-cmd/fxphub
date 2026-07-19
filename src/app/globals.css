@@ -4132,15 +4132,6 @@ textarea.quiz-input {
     0 0 54px rgba(255, 138, 0, 0.18);
 }
 
-.fxp-headline-lilac {
-  display: inline-block;
-  background: linear-gradient(95deg, #ff9af6 0%, #ffffff 42%, #a855f7 100%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  text-shadow: 0 0 34px rgba(168, 85, 247, 0.28);
-}
-
 .fxp-intro-media-grid {
   width: min(100%, 1120px);
   display: grid;
@@ -4280,6 +4271,8 @@ textarea.quiz-input {
   margin: 0 auto;
   background: transparent;
   color: var(--fx-foreground);
+  gap: 10px;
+  padding-bottom: 86px;
 }
 
 .fxp-progress {
@@ -4293,7 +4286,7 @@ textarea.quiz-input {
 }
 
 .fxp-quiz-top {
-  min-height: 82px;
+  min-height: 54px;
 }
 
 .fxp-quiz-top button {
@@ -4338,7 +4331,8 @@ textarea.quiz-input {
 
 .fxp-question-card h2 {
   color: var(--fx-foreground);
-  font-size: clamp(32px, 7.6vw, 58px);
+  margin: 18px 0 8px;
+  font-size: clamp(30px, 5vw, 48px);
 }
 
 .fxp-question-card p {
@@ -4366,10 +4360,16 @@ textarea.quiz-input {
 
 .fxp-options {
   width: min(100%, 760px);
+  max-height: min(52svh, 520px);
+  overflow-y: auto;
   justify-self: center;
+  gap: 10px;
+  padding-right: 4px;
 }
 
 .fxp-options button {
+  min-height: 64px;
+  border-radius: 18px;
   border-color: var(--fx-border);
   background: rgba(15, 15, 12, 0.64);
   color: var(--fx-foreground);
@@ -4386,8 +4386,14 @@ textarea.quiz-input {
 }
 
 .fxp-options button i {
+  width: 26px;
+  height: 26px;
   border-color: rgba(245, 239, 218, 0.38);
   background: rgba(255, 255, 255, 0.04);
+}
+
+.fxp-options button span {
+  font-size: clamp(18px, 2.2vw, 24px);
 }
 
 .fxp-options button.selected i {

@@ -142,6 +142,7 @@ export function buildPersonalizedDiagnostic(input: LeadCaptureScoringInput): Per
   const responseTime = lowerFirst(input.responseTime);
   const challenge = lowerFirst(input.mainChallenge);
   const trafficContext = trafficSentence(input);
+  const solutionRecommendation = buildSolutionRecommendation(input, perfil);
   const transition = "Com base no seu cenario, identificamos uma oportunidade clara para aumentar a geracao e o aproveitamento de novos clientes na sua autoescola. O proximo passo e entender como essa estrategia pode ser aplicada especificamente a sua operacao.";
 
   if (perfil === "Demanda abaixo do potencial") {
@@ -164,7 +165,7 @@ export function buildPersonalizedDiagnostic(input: LeadCaptureScoringInput): Per
         "Medir o volume de interessados gerados e acompanhar quais viram oportunidade real",
         "Usar IA para qualificar rapidamente os contatos que chegarem pelas campanhas",
       ],
-      solucao_recomendada: "Foco principal em geracao de demanda e trafego pago, com IA apoiando a qualificacao inicial dos interessados.",
+      solucao_recomendada: solutionRecommendation,
       cta_sugestao: "Falar com Fausto e receber minha analise gratuita",
     };
   }
@@ -189,7 +190,7 @@ export function buildPersonalizedDiagnostic(input: LeadCaptureScoringInput): Per
         "Qualificar interessados automaticamente antes da abordagem comercial",
         "Organizar follow-up para evitar que conversas quentes sejam esquecidas",
       ],
-      solucao_recomendada: "Foco principal em melhoria do atendimento com IA para aproveitar melhor os leads que ja chegam.",
+      solucao_recomendada: solutionRecommendation,
       cta_sugestao: "Falar com Fausto e receber minha analise gratuita",
     };
   }
@@ -213,7 +214,7 @@ export function buildPersonalizedDiagnostic(input: LeadCaptureScoringInput): Per
       "Usar IA para manter velocidade de atendimento durante o crescimento",
       "Acompanhar melhor as oportunidades ate a decisao de matricula",
     ],
-    solucao_recomendada: "Foco em estrategia completa de trafego pago, geracao de demanda e IA no WhatsApp.",
+    solucao_recomendada: solutionRecommendation,
     cta_sugestao: "Falar com Fausto e receber minha analise gratuita",
   };
 }
@@ -278,6 +279,32 @@ function trafficSentence(input: LeadCaptureScoringInput) {
     return `A autoescola ja investe em trafego pago.${reason} O ponto agora e integrar melhor geracao de demanda, atendimento e conversao em matriculas.`;
   }
   return input.paidTraffic;
+}
+
+function buildSolutionRecommendation(input: LeadCaptureScoringInput, perfil: DiagnosticProfile) {
+  const challenge = input.mainChallenge.toLowerCase();
+
+  if (input.paidTraffic === "Nunca utilizamos.") {
+    return "Com uma campanha de trafego pago para gerar demanda, combinada com analises feitas por IA, conseguimos ajudar sua autoescola a atrair mais interessados para o WhatsApp e criar uma rotina mais previsivel de novas matriculas.";
+  }
+
+  if (input.paidTraffic === "Ja utilizamos, mas paramos.") {
+    return "Com uma campanha de trafego pago melhor estruturada e analises feitas por IA, conseguimos ajudar sua autoescola a entender onde as oportunidades se perdem e transformar os novos contatos em conversas com maior chance de matricula.";
+  }
+
+  if (input.paidTraffic === "Sim, utilizamos atualmente.") {
+    return "Com campanhas de trafego pago acompanhadas por analises de IA, conseguimos ajudar sua autoescola a melhorar o aproveitamento dos leads que ja chegam e direcionar a equipe para as oportunidades com maior potencial de matricula.";
+  }
+
+  if (challenge.includes("demora") || challenge.includes("acompanhamento") || perfil === "Oportunidades sendo desperdicadas") {
+    return "Com uma campanha de trafego pago para gerar demanda e IA analisando as conversas do WhatsApp, conseguimos ajudar sua autoescola a responder mais rapido, acompanhar melhor cada interessado e reduzir perdas no atendimento.";
+  }
+
+  if (challenge.includes("poucas") || challenge.includes("indicacao") || perfil === "Demanda abaixo do potencial") {
+    return "Com uma campanha de trafego pago focada em captar novos interessados e analises feitas por IA, conseguimos ajudar sua autoescola a depender menos de indicacoes e aumentar o fluxo de oportunidades no WhatsApp.";
+  }
+
+  return "Com uma campanha de trafego pago para gerar demanda combinada com analises feitas por IA, conseguimos ajudar sua autoescola a organizar melhor as oportunidades, priorizar contatos com maior interesse e buscar mais matriculas todos os dias.";
 }
 
 function reasonFor(status: DiagnosticLeadStatus, score: number) {
