@@ -382,6 +382,7 @@ export function LeadCapturePublicForm({ slug }: { slug: string }) {
 function IntroScreen({ onStart }: { onStart: () => void }) {
   return (
     <section className="fxp-intro">
+      <BrandMark />
       <h1>
         Gestores de autoescola estão transformando o WhatsApp em uma máquina de novas matrículas com <span className="fxp-text-cyan">Tráfego Pago</span> e <span className="fxp-text-cyan">Inteligencia Artificial</span>.
       </h1>
