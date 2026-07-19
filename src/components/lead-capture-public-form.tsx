@@ -384,7 +384,7 @@ function IntroScreen({ onStart }: { onStart: () => void }) {
     <section className="fxp-intro">
       <BrandMark />
       <h1>
-        Donos de autoescola estão vendendo mais matrículas usando <span className="fxp-text-cyan">Tráfego Pago</span> e <span className="fxp-text-cyan">Inteligência Artificial</span>.
+        Donos de autoescola estão vendendo mais matrículas em parceria com a <span className="fxp-text-cyan">Assessoria FXP</span>.
       </h1>
       <div className="fxp-intro-media-grid">
         <figure>
