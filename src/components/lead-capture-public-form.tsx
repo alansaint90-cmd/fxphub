@@ -384,7 +384,7 @@ function IntroScreen({ onStart }: { onStart: () => void }) {
     <section className="fxp-intro">
       <BrandMark />
       <h1>
-        Gestores de autoescola estão transformando o WhatsApp em uma máquina de novas matrículas com <span className="fxp-text-cyan">Tráfego Pago</span> e <span className="fxp-text-cyan">Inteligencia Artificial</span>.
+        Donos de autoescola estão vendendo mais matrículas usando <span className="fxp-text-cyan">Tráfego Pago</span> e <span className="fxp-text-cyan">Inteligência Artificial</span>.
       </h1>
       <div className="fxp-intro-media-grid">
         <figure>
