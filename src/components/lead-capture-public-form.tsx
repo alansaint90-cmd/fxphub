@@ -383,10 +383,10 @@ function IntroScreen({ onStart }: { onStart: () => void }) {
   return (
     <section className="fxp-intro">
       <h1>
-        Atraia mais potenciais clientes para o <span className="fxp-text-cyan">WhatsApp da sua autoescola</span>.
+        Descubra quanto sua autoescola pode crescer com uma estratégia certa de captação e atendimento.
       </h1>
       <p className="fxp-intro-subtitle">
-        Faca o diagnostico e descubra como a FXP pode unir <span className="fxp-text-cyan">trafego pago</span> e <span className="fxp-text-green">Inteligencia Artificial</span> para colocar mais potenciais alunos no seu WhatsApp e <span className="fxp-text-cyan">ajudar sua autoescola a vender mais matriculas todos os dias.</span>
+        Responda algumas perguntas rápidas e receba um <span className="fxp-text-cyan">diagnóstico personalizado</span> mostrando as oportunidades de crescimento da sua autoescola e como a FXP pode unir <span className="fxp-text-cyan">Tráfego Pago + Inteligência Artificial</span> para gerar mais oportunidades e ajudar você a transformá-las em matrículas.
       </p>
       <div className="fxp-intro-media-grid">
         <figure>
