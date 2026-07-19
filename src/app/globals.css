@@ -4124,6 +4124,21 @@ textarea.quiz-input {
   text-shadow: 0 0 28px rgba(255, 138, 0, 0.28);
 }
 
+.fxp-headline-gold {
+  color: var(--fx-primary);
+  text-shadow:
+    0 0 22px rgba(255, 196, 0, 0.3),
+    0 0 54px rgba(255, 138, 0, 0.18);
+}
+
+.fxp-headline-lilac {
+  background: linear-gradient(95deg, #ff9af6 0%, #ffffff 42%, #a855f7 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 34px rgba(168, 85, 247, 0.28);
+}
+
 .fxp-intro-media-grid {
   width: min(100%, 1120px);
   display: grid;

@@ -382,9 +382,8 @@ export function LeadCapturePublicForm({ slug }: { slug: string }) {
 function IntroScreen({ onStart }: { onStart: () => void }) {
   return (
     <section className="fxp-intro">
-      <BrandMark />
       <h1>
-        Donos de autoescola estão vendendo mais matrículas em parceria com a <span className="fxp-text-cyan">Assessoria FXP</span>.
+        Donos de <span className="fxp-headline-gold">autoescola estão vendendo mais matrículas</span> em parceria com a <span className="fxp-headline-lilac">Assessoria FXP</span>.
       </h1>
       <div className="fxp-intro-media-grid">
         <figure>
