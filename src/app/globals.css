@@ -4093,7 +4093,8 @@ textarea.quiz-input {
   color: var(--fx-foreground);
   font-family: "Space Grotesk", Inter, ui-sans-serif, system-ui, sans-serif;
   font-size: clamp(30px, 5.4vw, 58px);
-  line-height: 1.06;
+  line-height: 1.12;
+  padding-bottom: 0.08em;
   text-align: center;
 }
 
@@ -4132,6 +4133,7 @@ textarea.quiz-input {
 }
 
 .fxp-headline-lilac {
+  display: inline-block;
   background: linear-gradient(95deg, #ff9af6 0%, #ffffff 42%, #a855f7 100%);
   background-clip: text;
   -webkit-background-clip: text;

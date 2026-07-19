@@ -383,7 +383,7 @@ function IntroScreen({ onStart }: { onStart: () => void }) {
   return (
     <section className="fxp-intro">
       <h1>
-        Donos de <span className="fxp-headline-gold">autoescola estão vendendo mais matrículas</span> em parceria com a <span className="fxp-headline-lilac">Assessoria FXP</span>.
+        Donos de <span className="fxp-headline-gold">autoescola estão vendendo mais matrículas</span> em parceria com a <span className="fxp-headline-lilac">nossa assessoria</span>
       </h1>
       <div className="fxp-intro-media-grid">
         <figure>
