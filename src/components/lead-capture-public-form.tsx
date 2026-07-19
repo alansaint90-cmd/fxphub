@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, KeyboardEvent, useEffect, useMemo, useState } from "react";
 import metaAdsImage from "../../public/assets/diagnostico-meta-ads.png";
 import fxpHubLogo from "../../public/assets/fxp-hub-logo.png";
 
@@ -351,7 +351,7 @@ export function LeadCapturePublicForm({ slug }: { slug: string }) {
   return (
     <main className="public-form-shell quiz-shell fxp-diagnostic-shell">
       <ProgressBar progress={progress} />
-      <form className="public-form-card quiz-card fxp-quiz-card" onSubmit={handleSubmit}>
+      <form className="public-form-card quiz-card fxp-quiz-card" onKeyDownCapture={blockEnterKey} onSubmit={handleSubmit}>
         <header className="quiz-mobile-top fxp-quiz-top">
           <button aria-label="Voltar" type="button" onClick={goBack}>{"\u2190"}</button>
           <BrandMark />
@@ -383,11 +383,7 @@ function IntroScreen({ onStart }: { onStart: () => void }) {
   return (
     <section
       className="fxp-intro"
-      onKeyDownCapture={(event) => {
-        if (event.key !== "Enter") return;
-        event.preventDefault();
-        event.stopPropagation();
-      }}
+      onKeyDownCapture={blockEnterKey}
     >
       <h1>
         Donos de <span className="fxp-headline-gold">autoescola estão vendendo mais matrículas</span> em parceria com a nossa assessoria
@@ -412,6 +408,12 @@ function IntroScreen({ onStart }: { onStart: () => void }) {
       </small>
     </section>
   );
+}
+
+function blockEnterKey(event: KeyboardEvent<HTMLElement>) {
+  if (event.key !== "Enter") return;
+  event.preventDefault();
+  event.stopPropagation();
 }
 
 function ProgressBar({ progress }: { progress: number }) {
