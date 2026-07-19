@@ -4023,25 +4023,25 @@ textarea.quiz-input {
 }
 
 .fxp-diagnostic-shell {
-  --fx-bg: #07101f;
-  --fx-card: rgba(14, 26, 45, 0.68);
-  --fx-card-strong: rgba(14, 26, 45, 0.88);
-  --fx-secondary: rgba(22, 43, 70, 0.76);
+  --fx-bg: #050505;
+  --fx-card: rgba(15, 15, 12, 0.74);
+  --fx-card-strong: rgba(18, 17, 13, 0.9);
+  --fx-secondary: rgba(36, 31, 18, 0.78);
   --fx-foreground: #f4f8ff;
-  --fx-muted: rgba(190, 203, 220, 0.72);
-  --fx-primary: #00c8ff;
-  --fx-accent: #00e08a;
-  --fx-border: rgba(113, 154, 191, 0.22);
-  --fx-glow-cyan: 0 24px 80px rgba(0, 200, 255, 0.18);
-  --fx-glow-green: 0 24px 80px rgba(0, 224, 138, 0.20);
+  --fx-muted: rgba(235, 229, 205, 0.74);
+  --fx-primary: #ffc400;
+  --fx-accent: #ff8a00;
+  --fx-border: rgba(255, 196, 0, 0.28);
+  --fx-glow-cyan: 0 24px 80px rgba(255, 196, 0, 0.2);
+  --fx-glow-green: 0 24px 80px rgba(255, 138, 0, 0.18);
   min-height: 100svh;
   display: grid;
   place-items: center;
   overflow-x: hidden;
   background:
-    radial-gradient(circle at 18% 12%, rgba(0, 200, 255, 0.24), transparent 24rem),
-    radial-gradient(circle at 88% 24%, rgba(0, 224, 138, 0.15), transparent 22rem),
-    linear-gradient(180deg, #07101f 0%, #050b16 100%);
+    radial-gradient(circle at 18% 12%, rgba(255, 196, 0, 0.2), transparent 24rem),
+    radial-gradient(circle at 88% 24%, rgba(255, 138, 0, 0.12), transparent 22rem),
+    linear-gradient(180deg, #090909 0%, #020202 100%);
   color: var(--fx-foreground);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
@@ -4052,8 +4052,8 @@ textarea.quiz-input {
   inset: 0;
   pointer-events: none;
   background-image:
-    linear-gradient(rgba(0, 200, 255, 0.055) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 200, 255, 0.045) 1px, transparent 1px);
+    linear-gradient(rgba(255, 196, 0, 0.048) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 196, 0, 0.04) 1px, transparent 1px);
   background-size: 38px 38px;
   mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), transparent);
 }
@@ -4088,11 +4088,11 @@ textarea.quiz-input {
 .fxp-intro h1,
 .fxp-processing h1,
 .fxp-result-card h1 {
-  max-width: 980px;
+  max-width: 1080px;
   margin: 0;
   color: var(--fx-foreground);
   font-family: "Space Grotesk", Inter, ui-sans-serif, system-ui, sans-serif;
-  font-size: clamp(32px, 6.8vw, 60px);
+  font-size: clamp(30px, 5.4vw, 58px);
   line-height: 1.06;
   text-align: center;
 }
@@ -4109,25 +4109,25 @@ textarea.quiz-input {
 }
 
 .fxp-intro-subtitle {
-  color: rgba(210, 239, 255, 0.88) !important;
+  color: rgba(245, 239, 218, 0.9) !important;
   font-size: clamp(18px, 3.8vw, 25px) !important;
   line-height: 1.35 !important;
 }
 
 .fxp-text-cyan {
   color: var(--fx-primary);
-  text-shadow: 0 0 28px rgba(0, 200, 255, 0.28);
+  text-shadow: 0 0 28px rgba(255, 196, 0, 0.3);
 }
 
 .fxp-text-green {
   color: var(--fx-accent);
-  text-shadow: 0 0 28px rgba(0, 224, 138, 0.24);
+  text-shadow: 0 0 28px rgba(255, 138, 0, 0.28);
 }
 
 .fxp-intro-media-grid {
-  width: min(100%, 980px);
+  width: min(100%, 1120px);
   display: grid;
-  grid-template-columns: minmax(0, 680px);
+  grid-template-columns: minmax(0, 920px);
   justify-content: center;
   gap: 14px;
 }
@@ -4187,14 +4187,14 @@ textarea.quiz-input {
 .fxp-intro button,
 .fxp-result-card button {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.26), transparent 42%),
-    linear-gradient(135deg, #18c7ff 0%, #0797d3 48%, #006aa8 100%);
-  color: #03111b;
-  border: 1px solid rgba(147, 229, 255, 0.42);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.32), transparent 42%),
+    linear-gradient(135deg, #ffd84a 0%, #ffc400 48%, #f08a00 100%);
+  color: #0b0903;
+  border: 1px solid rgba(255, 222, 92, 0.62);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.42),
-    0 0 22px rgba(0, 200, 255, 0.34),
-    0 18px 54px rgba(0, 151, 211, 0.32);
+    0 0 22px rgba(255, 196, 0, 0.34),
+    0 18px 54px rgba(255, 138, 0, 0.26);
   position: relative;
   isolation: isolate;
 }
@@ -4211,8 +4211,8 @@ textarea.quiz-input {
 }
 
 .fxp-diagnostic-shell .quiz-actions button {
-  background: linear-gradient(135deg, var(--fx-primary), #008fc7);
-  color: #03111b;
+  background: linear-gradient(135deg, #ffd84a, var(--fx-primary), #f08a00);
+  color: #0b0903;
   box-shadow: var(--fx-glow-cyan);
 }
 
@@ -4264,7 +4264,7 @@ textarea.quiz-input {
 .fxp-step-label {
   justify-self: center;
   width: fit-content;
-  border: 1px solid rgba(0, 200, 255, 0.24);
+  border: 1px solid rgba(255, 196, 0, 0.32);
   border-radius: 999px;
   background: var(--fx-card);
   color: var(--fx-primary);
@@ -4283,7 +4283,7 @@ textarea.quiz-input {
 }
 
 .fxp-question-card p {
-  color: rgba(210, 239, 255, 0.88);
+  color: rgba(245, 239, 218, 0.9);
 }
 
 .fxp-context-card {
@@ -4312,7 +4312,7 @@ textarea.quiz-input {
 
 .fxp-options button {
   border-color: var(--fx-border);
-  background: rgba(14, 26, 45, 0.54);
+  background: rgba(15, 15, 12, 0.64);
   color: var(--fx-foreground);
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.18);
   transition: border-color 180ms ease, background 180ms ease, transform 180ms ease;
@@ -4321,20 +4321,20 @@ textarea.quiz-input {
 .fxp-options button:hover,
 .fxp-options button.selected {
   border-color: var(--fx-primary);
-  background: rgba(0, 200, 255, 0.12);
+  background: rgba(255, 196, 0, 0.14);
   box-shadow: var(--fx-glow-cyan);
   transform: translateY(-1px);
 }
 
 .fxp-options button i {
-  border-color: rgba(210, 239, 255, 0.36);
+  border-color: rgba(245, 239, 218, 0.38);
   background: rgba(255, 255, 255, 0.04);
 }
 
 .fxp-options button.selected i {
   border-color: var(--fx-primary);
   background:
-    linear-gradient(135deg, transparent 0 42%, #03111b 43% 57%, transparent 58%),
+    linear-gradient(135deg, transparent 0 42%, #0b0903 43% 57%, transparent 58%),
     var(--fx-primary);
 }
 
@@ -4342,7 +4342,7 @@ textarea.quiz-input {
   width: min(100%, 760px);
   justify-self: center;
   border-color: var(--fx-border);
-  background: rgba(14, 26, 45, 0.78);
+  background: rgba(15, 15, 12, 0.78);
   color: var(--fx-foreground);
 }
 
@@ -4390,7 +4390,7 @@ textarea.quiz-input {
   position: relative;
   width: 150px;
   height: 150px;
-  border: 1px solid rgba(0, 200, 255, 0.25);
+  border: 1px solid rgba(255, 196, 0, 0.32);
   border-radius: 999px;
   animation: fxpSpin 1.4s linear infinite;
 }
@@ -4437,9 +4437,9 @@ textarea.quiz-input {
   width: 100%;
   display: grid;
   gap: 8px;
-  border: 1px solid rgba(0, 200, 255, 0.24);
+  border: 1px solid rgba(255, 196, 0, 0.3);
   border-radius: 22px;
-  background: rgba(0, 200, 255, 0.10);
+  background: rgba(255, 196, 0, 0.1);
   padding: 18px;
   text-align: left;
 }
@@ -4453,17 +4453,17 @@ textarea.quiz-input {
   width: 100%;
   display: grid;
   gap: 12px;
-  border: 1px solid rgba(0, 200, 255, 0.22);
+  border: 1px solid rgba(255, 196, 0, 0.26);
   border-radius: 24px;
-  background: rgba(14, 26, 45, 0.58);
-  box-shadow: 0 18px 60px rgba(0, 200, 255, 0.10);
+  background: rgba(15, 15, 12, 0.62);
+  box-shadow: 0 18px 60px rgba(255, 196, 0, 0.1);
   padding: clamp(16px, 3.6vw, 24px);
   text-align: left;
 }
 
 .fxp-diagnostic-copy p {
   max-width: none;
-  color: rgba(210, 239, 255, 0.84);
+  color: rgba(245, 239, 218, 0.84);
   font-size: clamp(14px, 3.4vw, 17px);
   line-height: 1.48;
 }
@@ -4480,7 +4480,7 @@ textarea.quiz-input {
   gap: 12px;
   border: 1px solid var(--fx-border);
   border-radius: 22px;
-  background: rgba(14, 26, 45, 0.58);
+  background: rgba(15, 15, 12, 0.62);
   padding: 18px;
   text-align: left;
 }
@@ -4510,10 +4510,10 @@ textarea.quiz-input {
   display: grid;
   justify-items: center;
   gap: 18px;
-  border: 1px solid rgba(0, 224, 138, 0.28);
+  border: 1px solid rgba(255, 196, 0, 0.34);
   border-radius: 28px;
   background:
-    radial-gradient(circle at 22% 8%, rgba(0, 224, 138, 0.16), transparent 18rem),
+    radial-gradient(circle at 22% 8%, rgba(255, 196, 0, 0.18), transparent 18rem),
     var(--fx-card-strong);
   box-shadow: var(--fx-glow-green);
   padding: clamp(18px, 4.5vw, 30px);
@@ -4528,7 +4528,7 @@ textarea.quiz-input {
 
 .fxp-scale-summary p {
   max-width: 680px;
-  color: rgba(210, 239, 255, 0.84);
+  color: rgba(245, 239, 218, 0.84);
   font-size: clamp(14px, 3.4vw, 17px);
   line-height: 1.48;
 }
@@ -4536,7 +4536,7 @@ textarea.quiz-input {
 .fxp-scale-card span {
   width: fit-content;
   border-radius: 999px;
-  background: rgba(0, 200, 255, 0.12);
+  background: rgba(255, 196, 0, 0.14);
   color: var(--fx-primary);
   font-size: clamp(12px, 3.2vw, 15px);
   font-weight: 950;

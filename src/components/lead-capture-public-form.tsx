@@ -383,17 +383,17 @@ function IntroScreen({ onStart }: { onStart: () => void }) {
   return (
     <section className="fxp-intro">
       <h1>
-        Descubra quanto sua autoescola pode crescer com uma estratégia certa de captação e atendimento.
+        Gestores de autoescola estão transformando o WhatsApp em uma máquina de novas matrículas com <span className="fxp-text-cyan">Tráfego Pago</span> e <span className="fxp-text-cyan">Inteligencia Artificial</span>.
       </h1>
-      <p className="fxp-intro-subtitle">
-        Responda algumas perguntas rápidas e receba um <span className="fxp-text-cyan">diagnóstico personalizado</span> mostrando as oportunidades de crescimento da sua autoescola e como a FXP pode unir <span className="fxp-text-cyan">Tráfego Pago + Inteligência Artificial</span> para gerar mais oportunidades e ajudar você a transformá-las em matrículas.
-      </p>
       <div className="fxp-intro-media-grid">
         <figure>
           <img src={metaAdsImage.src} alt="Resultados de campanhas no gerenciador de anuncios" />
           <figcaption>Campanhas gerando demanda e novas oportunidades de matricula.</figcaption>
         </figure>
       </div>
+      <p className="fxp-intro-subtitle">
+        Responda algumas perguntas rápidas e receba um <span className="fxp-text-cyan">diagnóstico personalizado</span> mostrando as oportunidades de crescimento da sua autoescola e como a FXP pode unir <span className="fxp-text-cyan">Tráfego Pago + Inteligência Artificial</span> para gerar mais oportunidades e ajudar você a transformá-las em matrículas.
+      </p>
       <button type="button" onClick={onStart}>Iniciar meu diagnostico</button>
       <small>
         Responda com dados reais. Ao final, se o perfil de sua empresa for compativel com os nossos servicos, iremos te encaminhar para um consultor tirar as suas duvidas no WhatsApp.
