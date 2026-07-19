@@ -4125,9 +4125,9 @@ textarea.quiz-input {
 }
 
 .fxp-intro-media-grid {
-  width: min(100%, 640px);
+  width: min(100%, 1120px);
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 920px);
   justify-content: center;
   gap: 14px;
 }
@@ -4135,12 +4135,10 @@ textarea.quiz-input {
 .fxp-intro-media-grid figure {
   position: relative;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: 0;
   border: 1px solid var(--fx-border);
   border-radius: 26px;
-  aspect-ratio: 1 / 1;
   background: var(--fx-card);
   box-shadow: var(--fx-glow-cyan);
   backdrop-filter: blur(18px);
@@ -4150,26 +4148,21 @@ textarea.quiz-input {
 
 .fxp-intro-media-grid img {
   width: 100%;
-  flex: 1 1 auto;
-  min-height: 0;
+  aspect-ratio: 1289 / 231;
   display: block;
-  object-fit: cover;
-  object-position: center top;
+  object-fit: contain;
   background: #ffffff;
 }
 
 .fxp-growth-metrics {
-  position: absolute;
-  left: 18px;
-  right: 18px;
-  bottom: 86px;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
+  padding: 14px 16px 0;
 }
 
 .fxp-growth-metrics span {
-  min-height: 74px;
+  min-height: 68px;
   display: grid;
   align-content: center;
   justify-items: center;
@@ -4204,7 +4197,6 @@ textarea.quiz-input {
 
 .fxp-intro-media-grid figcaption {
   min-height: 74px;
-  flex: 0 0 auto;
   display: grid;
   align-items: center;
   justify-items: center;
@@ -4649,10 +4641,8 @@ textarea.quiz-input {
   }
 
   .fxp-growth-metrics {
-    left: 10px;
-    right: 10px;
-    bottom: 78px;
     gap: 6px;
+    padding: 10px 10px 0;
   }
 
   .fxp-growth-metrics span {
