@@ -393,7 +393,7 @@ function IntroScreen({ onStart }: { onStart: () => void }) {
             <span><b>+47</b><small>Leads diários</small></span>
             <span><b>+3x</b><small>Mais resultado</small></span>
           </div>
-          <figcaption>Campanhas gerando demanda e novas oportunidades de matricula.</figcaption>
+          <figcaption>Dados reais de campanhas gerando demanda e novas oportunidades de matricula.</figcaption>
         </figure>
       </div>
       <p className="fxp-intro-subtitle">
