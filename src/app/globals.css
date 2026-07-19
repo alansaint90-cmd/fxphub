@@ -4125,19 +4125,22 @@ textarea.quiz-input {
 }
 
 .fxp-intro-media-grid {
-  width: min(100%, 1120px);
+  width: min(100%, 640px);
   display: grid;
-  grid-template-columns: minmax(0, 920px);
+  grid-template-columns: minmax(0, 1fr);
   justify-content: center;
   gap: 14px;
 }
 
 .fxp-intro-media-grid figure {
+  position: relative;
   overflow: hidden;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 0;
   border: 1px solid var(--fx-border);
   border-radius: 26px;
+  aspect-ratio: 1 / 1;
   background: var(--fx-card);
   box-shadow: var(--fx-glow-cyan);
   backdrop-filter: blur(18px);
@@ -4147,14 +4150,61 @@ textarea.quiz-input {
 
 .fxp-intro-media-grid img {
   width: 100%;
-  aspect-ratio: 1289 / 231;
+  flex: 1 1 auto;
+  min-height: 0;
   display: block;
-  object-fit: contain;
+  object-fit: cover;
+  object-position: center top;
   background: #ffffff;
+}
+
+.fxp-growth-metrics {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 86px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.fxp-growth-metrics span {
+  min-height: 74px;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 2px;
+  border: 1px solid rgba(255, 196, 0, 0.52);
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(255, 196, 0, 0.16), rgba(8, 8, 6, 0.86)),
+    rgba(8, 8, 6, 0.92);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 12px 34px rgba(0, 0, 0, 0.38),
+    0 0 24px rgba(255, 196, 0, 0.18);
+  color: var(--fx-primary);
+  text-align: center;
+}
+
+.fxp-growth-metrics b {
+  color: var(--fx-primary);
+  font-family: "Space Grotesk", Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: clamp(20px, 4.4vw, 32px);
+  line-height: 1;
+}
+
+.fxp-growth-metrics small {
+  color: rgba(245, 239, 218, 0.84);
+  font-size: clamp(10px, 2.2vw, 12px);
+  font-weight: 900;
+  line-height: 1.2;
+  text-transform: uppercase;
 }
 
 .fxp-intro-media-grid figcaption {
   min-height: 74px;
+  flex: 0 0 auto;
   display: grid;
   align-items: center;
   justify-items: center;
@@ -4596,6 +4646,18 @@ textarea.quiz-input {
 @media (max-width: 720px) {
   .fxp-intro-media-grid {
     grid-template-columns: 1fr;
+  }
+
+  .fxp-growth-metrics {
+    left: 10px;
+    right: 10px;
+    bottom: 78px;
+    gap: 6px;
+  }
+
+  .fxp-growth-metrics span {
+    min-height: 58px;
+    border-radius: 12px;
   }
 
   .fxp-diagnostic-insights {

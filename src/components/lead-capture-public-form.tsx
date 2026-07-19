@@ -389,11 +389,16 @@ function IntroScreen({ onStart }: { onStart: () => void }) {
       <div className="fxp-intro-media-grid">
         <figure>
           <img src={metaAdsImage.src} alt="Resultados de campanhas no gerenciador de anuncios" />
+          <div className="fxp-growth-metrics" aria-label="Indicadores de crescimento">
+            <span><b>+128%</b><small>Matrículas</small></span>
+            <span><b>+47</b><small>Leads diários</small></span>
+            <span><b>+3x</b><small>Mais resultado</small></span>
+          </div>
           <figcaption>Campanhas gerando demanda e novas oportunidades de matricula.</figcaption>
         </figure>
       </div>
       <p className="fxp-intro-subtitle">
-        Responda algumas perguntas rápidas e receba um <span className="fxp-text-cyan">diagnóstico personalizado</span> mostrando as oportunidades de crescimento da sua autoescola e como a FXP pode unir <span className="fxp-text-cyan">Tráfego Pago + Inteligência Artificial</span> para gerar mais oportunidades e ajudar você a transformá-las em matrículas.
+        Faça um diagnóstico gratuito e descubra como a FXP pode unir estratégias de <span className="fxp-text-cyan">Tráfego Pago + Inteligência Artificial</span> para gerar mais oportunidades para sua autoescola e transformá-las em novas matrículas.
       </p>
       <button type="button" onClick={onStart}>Iniciar meu diagnostico</button>
       <small>
