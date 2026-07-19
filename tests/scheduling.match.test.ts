@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isAvailabilityRequest, isScheduleRejection, matchesSlot } from "../src/lib/crm/scheduling";
+import { getSaoPauloHour, isAvailabilityRequest, isScheduleRejection, matchesSlot } from "../src/lib/crm/scheduling";
 
 const thirteenSlot = {
   startsAt: new Date("2026-07-03T13:00:00-03:00"),
@@ -20,6 +20,17 @@ describe("matchesSlot", () => {
 
   it("nao confirma horario diferente do slot", () => {
     expect(matchesSlot("16 horas", thirteenSlot)).toBe(false);
+  });
+
+  it("usa a hora de Sao Paulo ao comparar slots salvos em UTC", () => {
+    const tenInSaoPauloSlot = {
+      startsAt: new Date("2026-07-20T13:00:00.000Z"),
+      label: "seg, 20/07 as 10h",
+    };
+
+    expect(getSaoPauloHour(tenInSaoPauloSlot.startsAt)).toBe(10);
+    expect(matchesSlot("segunda 10 horas", tenInSaoPauloSlot)).toBe(true);
+    expect(matchesSlot("segunda 13 horas", tenInSaoPauloSlot)).toBe(false);
   });
 });
 

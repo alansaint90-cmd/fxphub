@@ -48,6 +48,7 @@ export interface CrmRepository {
   applyLeadFormContextToLead(input: { leadId: string; context: LeadFormConversationContext }): Promise<LeadRecord>;
   saveInboundMessage(input: { leadId: string; body: string; messageType: string; providerMessageId?: string }): Promise<void>;
   saveOutboundMessage(input: { leadId: string; body: string }): Promise<void>;
+  getLatestOutboundMessage(leadId: string): Promise<string | null>;
   saveQualificationAnswer(input: {
     leadId: string;
     questionId: QualificationQuestionId;

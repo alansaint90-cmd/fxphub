@@ -6,6 +6,7 @@ import { parseAnswer } from "@/lib/qualification/parser";
 import { getNextQuestion, qualificationQuestions } from "@/lib/qualification/questions";
 import { calculateQualification } from "@/lib/qualification/scoring";
 import type { QualificationAnswerSet, QualificationQuestionId } from "@/lib/qualification/types";
+import { getSchedulingObjectionResponse } from "./objections";
 import { extractRequestedHours, isAvailabilityRequest, isScheduleRejection, matchesSlot } from "./scheduling";
 import type { CrmRepository, LeadRecord } from "./types";
 
@@ -227,10 +228,20 @@ export class FaustoConversationService {
     const requestedHours = extractRequestedHours(text);
     const slots = await this.calendar.getAvailableSlots({ preferredHours: requestedHours });
     const availabilityRequest = isAvailabilityRequest(text);
+    const latestOutbound = await this.crm.getLatestOutboundMessage(lead.id);
+    const pendingConfirmationSlot = findPendingConfirmationSlot(latestOutbound, slots);
+
+    if (pendingConfirmationSlot && isIdentityDenied(text)) {
+      return "Sem problema. Qual dia e horario voce prefere que eu consulte na agenda?";
+    }
+
+    if (pendingConfirmationSlot && (isIdentityConfirmed(text) || matchesSlot(text, pendingConfirmationSlot))) {
+      return this.createConfirmedMeeting(lead, pendingConfirmationSlot);
+    }
 
     if (availabilityRequest) {
       const preferredSlots = requestedHours.length
-        ? slots.filter((slot) => requestedHours.includes(slot.startsAt.getHours()))
+        ? slots.filter((slot) => requestedHours.some((hour) => matchesSlot(`${hour} horas`, slot)))
         : [];
 
       if (preferredSlots.length > 0) {
@@ -251,13 +262,18 @@ export class FaustoConversationService {
         return "Sem problema. Me diga qual dia e horario voce prefere que eu consulto a agenda.";
       }
 
-      if (hasSchedulingObjection(text)) {
-        return "Claro. Qual e a sua duvida? Te respondo de forma objetiva para vermos se faz sentido agendar.";
+      const objectionResponse = getSchedulingObjectionResponse(text);
+      if (objectionResponse) {
+        return objectionResponse;
       }
 
       return `Consultei a agenda e tenho ${formatSlotOptions(slots)}. Qual desses fica melhor?`;
     }
 
+    return `So confirmando: posso marcar sua reuniao para ${selectedSlot.label}?`;
+  }
+
+  private async createConfirmedMeeting(lead: LeadRecord, selectedSlot: { startsAt: Date; endsAt: Date }) {
     const event = await this.calendar.createEvent({
       startsAt: selectedSlot.startsAt,
       endsAt: selectedSlot.endsAt,
@@ -286,6 +302,14 @@ function formatSlotOptions(slots: { label: string }[]) {
   return options.join(", ");
 }
 
+function findPendingConfirmationSlot(
+  latestOutbound: string | null,
+  slots: { startsAt: Date; endsAt: Date; label: string }[],
+) {
+  if (!latestOutbound?.startsWith("So confirmando: posso marcar sua reuniao para ")) return null;
+  return slots.find((slot) => latestOutbound.includes(slot.label)) ?? null;
+}
+
 function splitIntoWhatsAppMessages(response: string): OutboundMessage[] {
   return response
     .split("\n")
@@ -304,13 +328,6 @@ function isConversationClosed(text: string) {
     .replace(/[\u0300-\u036f]/g, "");
 
   return /\b(nao quero mais|obrigado|obrigada)\b/.test(normalizedText);
-}
-
-function hasSchedulingObjection(text: string) {
-  const normalizedText = normalizeForIntent(text);
-  return /\b(nao|tenho duvida|duvida|depende|quanto custa|qual valor|preco|valor|como funciona|explica|me explica|nao entendi)\b/.test(
-    normalizedText,
-  );
 }
 
 function shouldConfirmDiagnosticIdentity(lead: LeadRecord) {

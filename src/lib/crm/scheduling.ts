@@ -1,6 +1,6 @@
 export function matchesSlot(text: string, slot: { startsAt: Date; label: string }) {
   const normalizedText = normalizeScheduleText(text);
-  const slotHour = slot.startsAt.getHours();
+  const slotHour = getSaoPauloHour(slot.startsAt);
   const hour = `${String(slotHour).padStart(2, "0")}h`;
   const hourWithMinutes = `${String(slotHour).padStart(2, "0")}:00`;
   const selectedHours = extractRequestedHours(normalizedText);
@@ -64,4 +64,14 @@ export function normalizeScheduleText(value: string) {
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+export function getSaoPauloHour(date: Date) {
+  return Number(
+    new Intl.DateTimeFormat("pt-BR", {
+      hour: "2-digit",
+      hour12: false,
+      timeZone: "America/Sao_Paulo",
+    }).format(date),
+  );
 }

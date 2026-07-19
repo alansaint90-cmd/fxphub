@@ -123,6 +123,23 @@ export class DrizzleCrmRepository implements CrmRepository {
     });
   }
 
+  async getLatestOutboundMessage(leadId: string): Promise<string | null> {
+    const [message] = await db
+      .select({ body: conversationMessages.body })
+      .from(conversationMessages)
+      .where(
+        and(
+          eq(conversationMessages.leadId, leadId),
+          eq(conversationMessages.direction, "outbound"),
+          eq(conversationMessages.isDeleted, false),
+        ),
+      )
+      .orderBy(desc(conversationMessages.createdAt))
+      .limit(1);
+
+    return message?.body ?? null;
+  }
+
   async saveQualificationAnswer(input: {
     leadId: string;
     questionId: string;
