@@ -388,15 +388,16 @@ function IntroScreen({ onStart }: { onStart: () => void }) {
       <h1>
         <span className="fxp-headline-line">Donos de autoescola</span>{" "}
         <span className="fxp-headline-line fxp-headline-gold">estão vendendo mais matrículas</span>{" "}
-        <span className="fxp-headline-line">com as estratégias da nossa assessoria</span>
+        <span className="fxp-headline-line">com as estratégias</span>{" "}
+        <span className="fxp-headline-line">da nossa assessoria</span>
       </h1>
       <div className="fxp-intro-media-grid">
         <figure>
           <img src={metaAdsImage.src} alt="Resultados de campanhas no gerenciador de anuncios" />
           <div className="fxp-growth-metrics" aria-label="Indicadores de crescimento">
-            <span><b>+128%</b><small>Matrículas</small></span>
-            <span><b>+47</b><small>Leads diários</small></span>
-            <span><b>+3x</b><small>Mais resultado</small></span>
+            <span><b>307</b><small>Novos orçamentos mensais</small></span>
+            <span><b>+128%</b><small>Matrículas a mais</small></span>
+            <span><b>+3x</b><small>Resultados</small></span>
           </div>
           <figcaption>Dados reais de campanhas gerando demanda e novas oportunidades de matricula.</figcaption>
         </figure>

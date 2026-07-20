@@ -4216,7 +4216,7 @@ textarea.quiz-input {
   display: grid;
   align-content: center;
   justify-items: center;
-  gap: 2px;
+  gap: 4px;
   border: 1px solid rgba(255, 196, 0, 0.52);
   border-radius: 16px;
   background:
@@ -4233,15 +4233,17 @@ textarea.quiz-input {
 .fxp-growth-metrics b {
   color: var(--fx-primary);
   font-family: "Space Grotesk", Inter, ui-sans-serif, system-ui, sans-serif;
-  font-size: clamp(23px, 4.8vw, 38px);
+  font-size: clamp(22px, 4.4vw, 34px);
   line-height: 1;
 }
 
 .fxp-growth-metrics small {
   color: rgba(245, 239, 218, 0.84);
-  font-size: clamp(10px, 2.2vw, 13px);
+  max-width: 92%;
+  font-size: clamp(9px, 1.95vw, 12px);
   font-weight: 900;
-  line-height: 1.2;
+  line-height: 1.12;
+  text-align: center;
   text-transform: uppercase;
 }
 
@@ -4752,17 +4754,13 @@ textarea.quiz-input {
 
   .fxp-intro h1 {
     max-width: 100%;
-    font-size: clamp(19px, 5vw, 24px);
+    font-size: clamp(22px, 5.8vw, 27px);
     line-height: 1.08;
   }
 
   .fxp-headline-line {
     display: block;
     white-space: nowrap;
-  }
-
-  .fxp-headline-line:last-child {
-    font-size: 0.82em;
   }
 
   .fxp-quiz-card {
