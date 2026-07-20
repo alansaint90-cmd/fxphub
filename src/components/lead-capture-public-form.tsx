@@ -386,7 +386,9 @@ function IntroScreen({ onStart }: { onStart: () => void }) {
       onKeyDownCapture={blockEnterKey}
     >
       <h1>
-        Donos de autoescola estão vendendo mais matrículas com as estratégias da nossa assessoria
+        <span className="fxp-headline-line">Donos de autoescola</span>{" "}
+        <span className="fxp-headline-line fxp-headline-gold">estão vendendo mais matrículas</span>{" "}
+        <span className="fxp-headline-line">com as estratégias da nossa assessoria</span>
       </h1>
       <div className="fxp-intro-media-grid">
         <figure>
