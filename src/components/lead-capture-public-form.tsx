@@ -388,8 +388,8 @@ function IntroScreen({ onStart }: { onStart: () => void }) {
       <h1>
         <span className="fxp-headline-line">Donos de autoescola</span>{" "}
         <span className="fxp-headline-line fxp-headline-gold">estão vendendo mais matrículas</span>{" "}
-        <span className="fxp-headline-line">com as estratégias</span>{" "}
-        <span className="fxp-headline-line">da nossa assessoria</span>
+        <span className="fxp-headline-line">com as estratégias da nossa</span>{" "}
+        <span className="fxp-headline-line">assessoria</span>
       </h1>
       <div className="fxp-intro-media-grid">
         <figure>
