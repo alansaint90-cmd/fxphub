@@ -4344,14 +4344,14 @@ textarea.quiz-input {
 .fxp-intro button,
 .fxp-result-card button {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.32), transparent 42%),
-    linear-gradient(135deg, #ffd84a 0%, #ffc400 48%, #f08a00 100%);
-  color: #0b0903;
-  border: 1px solid rgba(255, 222, 92, 0.62);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.28), transparent 42%),
+    linear-gradient(135deg, #ff9af6 0%, #b85cff 48%, #6d28d9 100%);
+  color: #ffffff;
+  border: 1px solid rgba(255, 154, 246, 0.58);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.42),
-    0 0 16px rgba(255, 196, 0, 0.22),
-    0 16px 42px rgba(255, 138, 0, 0.18);
+    0 0 18px rgba(184, 92, 255, 0.3),
+    0 16px 42px rgba(109, 40, 217, 0.22);
   position: relative;
   isolation: isolate;
 }
@@ -4377,15 +4377,15 @@ textarea.quiz-input {
     transform: scale(1);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.42),
-      0 0 16px rgba(255, 196, 0, 0.22),
-      0 16px 42px rgba(255, 138, 0, 0.18);
+      0 0 18px rgba(184, 92, 255, 0.3),
+      0 16px 42px rgba(109, 40, 217, 0.22);
   }
   50% {
     transform: scale(1.025);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.5),
-      0 0 24px rgba(255, 196, 0, 0.34),
-      0 18px 50px rgba(255, 138, 0, 0.24);
+      0 0 30px rgba(255, 154, 246, 0.42),
+      0 18px 54px rgba(109, 40, 217, 0.32);
   }
 }
 
