@@ -4085,7 +4085,7 @@ textarea.quiz-input {
   inset: 0;
   z-index: -2;
   pointer-events: none;
-  background: url("/assets/diagnostic-hero-background.png") center / cover no-repeat;
+  background: url("/assets/diagnostic-hero-background-v2.png") center / cover no-repeat;
   filter: saturate(0.72) contrast(0.9) brightness(0.62);
   opacity: 0.72;
 }
@@ -4820,7 +4820,7 @@ textarea.quiz-input {
   }
 
   .fxp-intro::before {
-    background: url("/assets/diagnostic-hero-background.png") center top / cover no-repeat;
+    background: url("/assets/diagnostic-hero-background-v2.png") center top / cover no-repeat;
     filter: saturate(0.58) contrast(0.86) brightness(0.42);
     opacity: 0.34;
   }
