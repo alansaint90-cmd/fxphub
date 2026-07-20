@@ -2,7 +2,6 @@
 
 import { FormEvent, KeyboardEvent, useEffect, useMemo, useState } from "react";
 import metaAdsImage from "../../public/assets/diagnostico-meta-ads.png";
-import fxpDigitalLogo from "../../public/assets/fxp-digital-logo.png";
 import fxpHubLogo from "../../public/assets/fxp-hub-logo.png";
 
 type LeadDiagnosticStatus = "HOT" | "WARM" | "DISQUALIFIED";
@@ -386,7 +385,10 @@ function IntroScreen({ onStart }: { onStart: () => void }) {
       className="fxp-intro"
       onKeyDownCapture={blockEnterKey}
     >
-      <img className="fxp-intro-logo" src={fxpDigitalLogo.src} alt="FXP Inteligencia Digital" />
+      <div className="fxp-intro-logo" aria-label="FXP Assessoria">
+        <span>FXP</span>
+        <small>assessoria</small>
+      </div>
       <h1>
         <span className="fxp-headline-line">Donos de autoescola</span>{" "}
         <span className="fxp-headline-line fxp-headline-gold">estão vendendo mais matrículas</span>{" "}
