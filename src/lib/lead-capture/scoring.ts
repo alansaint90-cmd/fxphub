@@ -142,13 +142,14 @@ export function buildPersonalizedDiagnostic(input: LeadCaptureScoringInput): Per
   const responseTime = lowerFirst(input.responseTime);
   const challenge = lowerFirst(input.mainChallenge);
   const trafficContext = trafficSentence(input);
+  const resultTitle = buildResultTitle(input, perfil);
   const solutionRecommendation = buildSolutionRecommendation(input, perfil);
   const transition = "Com base no seu cenario, identificamos uma oportunidade clara para aumentar a geracao e o aproveitamento de novos clientes na sua autoescola. O proximo passo e entender como essa estrategia pode ser aplicada especificamente a sua operacao.";
 
   if (perfil === "Demanda abaixo do potencial") {
     return {
       perfil,
-      titulo_diagnostico: "Sua demanda pode crescer",
+      titulo_diagnostico: resultTitle,
       diagnostico: [
         `${firstName}, o diagnostico da ${company} mostra que o principal ponto de atencao esta na entrada de novos interessados. Hoje, sua autoescola recebe ${currentLeads} novos interessados por dia e deseja chegar a ${desiredLeads}. Esse gap indica que existe espaco para criar uma rotina mais previsivel de geracao de oportunidades.`,
         `O desafio informado foi ${challenge}. Nesse cenario, depender apenas da demanda atual pode limitar o volume de conversas comerciais e, consequentemente, o numero de novas matriculas que a equipe consegue buscar.`,
@@ -173,7 +174,7 @@ export function buildPersonalizedDiagnostic(input: LeadCaptureScoringInput): Per
   if (perfil === "Oportunidades sendo desperdicadas") {
     return {
       perfil,
-      titulo_diagnostico: "Aproveite melhor seus leads",
+      titulo_diagnostico: resultTitle,
       diagnostico: [
         `${firstName}, a ${company} ja demonstra entrada de interessados, mas o diagnostico indica que parte das oportunidades pode estar sendo perdida no atendimento. Hoje, sua autoescola recebe ${currentLeads} novos interessados por dia e quer chegar a ${desiredLeads}.`,
         `O tempo de resposta informado foi ${responseTime}, e o principal desafio apontado foi ${challenge}. Quando existe demora, falta de acompanhamento ou baixa conversao, o problema deixa de ser apenas gerar mais contatos e passa a ser aproveitar melhor cada conversa que chega.`,
@@ -197,7 +198,7 @@ export function buildPersonalizedDiagnostic(input: LeadCaptureScoringInput): Per
 
   return {
     perfil,
-    titulo_diagnostico: "Pronto para acelerar",
+    titulo_diagnostico: resultTitle,
     diagnostico: [
       `${firstName}, as respostas da ${company} mostram uma operacao com base para crescer. Hoje, sua autoescola recebe ${currentLeads} novos interessados por dia e deseja chegar a ${desiredLeads}, o que revela uma oportunidade clara de aumentar previsibilidade sem criar novos gargalos.`,
       `O atendimento atual funciona com ${lowerFirst(input.attendanceStructure)} e o tempo de resposta costuma ser ${responseTime}. Como existe abertura para uma nova estrategia, o proximo salto esta em conectar geracao de demanda, acompanhamento e velocidade comercial.`,
@@ -282,29 +283,56 @@ function trafficSentence(input: LeadCaptureScoringInput) {
 }
 
 function buildSolutionRecommendation(input: LeadCaptureScoringInput, perfil: DiagnosticProfile) {
+  const opportunity = classifyResultOpportunity(input, perfil);
+
+  if (opportunity === "demand") {
+    return "Seu diagnóstico indica que sua autoescola tem potencial para aumentar a quantidade de potenciais alunos chegando até o seu negócio.\n\nCom uma estratégia de Tráfego Pago mais estruturada, é possível ampliar a geração de novas oportunidades e colocar sua autoescola diante de mais pessoas interessadas em tirar ou adicionar uma categoria na CNH.";
+  }
+
+  if (opportunity === "attendance") {
+    return "Seu diagnóstico indica que sua autoescola pode aproveitar melhor os potenciais alunos que já entram em contato pelo WhatsApp.\n\nCom processos de atendimento mais rápidos e o apoio da Inteligência Artificial, é possível reduzir oportunidades perdidas e aumentar as chances de transformar mais conversas em matrículas.";
+  }
+
+  if (opportunity === "structure") {
+    return "Seu diagnóstico mostra que sua autoescola já possui uma estrutura comercial, mas ainda existem oportunidades para potencializar seus resultados.\n\nUma estratégia mais estruturada de Tráfego Pago, aliada à Inteligência Artificial, pode ajudar a aumentar a geração de oportunidades, melhorar o acompanhamento dos contatos e criar um processo mais eficiente de aquisição de novas matrículas.";
+  }
+
+  return "Seu diagnóstico indica oportunidades tanto na geração de novos contatos quanto no aproveitamento dos potenciais alunos que chegam até sua autoescola.\n\nUnindo Tráfego Pago + Inteligência Artificial, a FXP pode ajudar a gerar mais oportunidades, melhorar o atendimento e aumentar as chances de transformar interessados em novas matrículas.";
+}
+
+function buildResultTitle(input: LeadCaptureScoringInput, perfil: DiagnosticProfile) {
+  const opportunity = classifyResultOpportunity(input, perfil);
+  if (opportunity === "demand") return "Potencial para gerar mais oportunidades";
+  if (opportunity === "attendance") return "Potencial para aproveitar melhor suas oportunidades";
+  if (opportunity === "structure") return "Potencial para acelerar seus resultados";
+  return "Alto potencial de crescimento";
+}
+
+function classifyResultOpportunity(input: LeadCaptureScoringInput, perfil: DiagnosticProfile) {
   const challenge = input.mainChallenge.toLowerCase();
+  const needsDemand =
+    ["Nenhum ou quase nenhum.", "1 a 5."].includes(input.currentDailyLeads) ||
+    ["Nunca utilizamos.", "Ja utilizamos, mas paramos."].includes(input.paidTraffic) ||
+    challenge.includes("poucas") ||
+    challenge.includes("indicacao") ||
+    challenge.includes("previsivel") ||
+    perfil === "Demanda abaixo do potencial";
+  const needsAttendance =
+    hasServiceDelay(input.responseTime) ||
+    challenge.includes("demora") ||
+    challenge.includes("acompanhamento") ||
+    challenge.includes("poucas matriculas") ||
+    perfil === "Oportunidades sendo desperdicadas";
+  const hasStructure =
+    ["Temos uma equipe de atendimento.", "Temos automacao ou Inteligencia Artificial."].includes(input.attendanceStructure) ||
+    input.paidTraffic === "Sim, utilizamos atualmente.";
 
-  if (input.paidTraffic === "Nunca utilizamos.") {
-    return "Com uma campanha de trafego pago para gerar demanda, combinada com analises feitas por IA, conseguimos ajudar sua autoescola a atrair mais interessados para o WhatsApp e criar uma rotina mais previsivel de novas matriculas.";
-  }
-
-  if (input.paidTraffic === "Ja utilizamos, mas paramos.") {
-    return "Com uma campanha de trafego pago melhor estruturada e analises feitas por IA, conseguimos ajudar sua autoescola a entender onde as oportunidades se perdem e transformar os novos contatos em conversas com maior chance de matricula.";
-  }
-
-  if (input.paidTraffic === "Sim, utilizamos atualmente.") {
-    return "Com campanhas de trafego pago acompanhadas por analises de IA, conseguimos ajudar sua autoescola a melhorar o aproveitamento dos leads que ja chegam e direcionar a equipe para as oportunidades com maior potencial de matricula.";
-  }
-
-  if (challenge.includes("demora") || challenge.includes("acompanhamento") || perfil === "Oportunidades sendo desperdicadas") {
-    return "Com uma campanha de trafego pago para gerar demanda e IA analisando as conversas do WhatsApp, conseguimos ajudar sua autoescola a responder mais rapido, acompanhar melhor cada interessado e reduzir perdas no atendimento.";
-  }
-
-  if (challenge.includes("poucas") || challenge.includes("indicacao") || perfil === "Demanda abaixo do potencial") {
-    return "Com uma campanha de trafego pago focada em captar novos interessados e analises feitas por IA, conseguimos ajudar sua autoescola a depender menos de indicacoes e aumentar o fluxo de oportunidades no WhatsApp.";
-  }
-
-  return "Com uma campanha de trafego pago para gerar demanda combinada com analises feitas por IA, conseguimos ajudar sua autoescola a organizar melhor as oportunidades, priorizar contatos com maior interesse e buscar mais matriculas todos os dias.";
+  if (hasStructure && !needsDemand && !needsAttendance) return "structure";
+  if (needsDemand && needsAttendance) return "growth";
+  if (needsAttendance) return "attendance";
+  if (needsDemand) return "demand";
+  if (hasStructure) return "structure";
+  return "growth";
 }
 
 function reasonFor(status: DiagnosticLeadStatus, score: number) {

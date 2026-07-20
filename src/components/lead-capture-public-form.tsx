@@ -482,18 +482,19 @@ function QualifiedResult({ diagnostic, onWhatsappClick }: { diagnostic?: Persona
   return (
     <section className="public-form-card result quiz-result fxp-result-card">
       <BrandMark />
-      <h1>{diagnostic?.titulo_diagnostico || "Seu Diagnostico"}</h1>
-      <p>Baseado nas suas respostas</p>
+      <h1>Sua autoescola tem potencial para vender mais matrículas</h1>
+      <p>Com base nas suas respostas, identificamos oportunidades de crescimento.</p>
       <div className="fxp-scale-card">
-        <span>{"\u2197 Potencial de crescimento"}</span>
+        <span>{`\u2197 ${diagnostic?.titulo_diagnostico || "Alto potencial de crescimento"}`}</span>
         <div className="fxp-scale-summary">
-          <p>Com base nas suas respostas, podemos identificar oportunidades especificas para melhorar a geracao e o aproveitamento de novos clientes na sua autoescola.</p>
-          <p>{diagnostic?.solucao_recomendada || "Com uma campanha de trafego pago para gerar demanda combinada com analises feitas por IA, conseguimos ajudar sua autoescola a organizar melhor as oportunidades, priorizar contatos com maior interesse e buscar mais matriculas todos os dias."}</p>
+          {(diagnostic?.solucao_recomendada || "Seu diagnóstico indica oportunidades tanto na geração de novos contatos quanto no aproveitamento dos potenciais alunos que chegam até sua autoescola.\n\nUnindo Tráfego Pago + Inteligência Artificial, a FXP pode ajudar a gerar mais oportunidades, melhorar o atendimento e aumentar as chances de transformar interessados em novas matrículas.").split("\n\n").map((paragraph) => (
+            <p key={paragraph}>{paragraph}</p>
+          ))}
         </div>
-        <strong>O proximo passo e entender como essa estrategia pode ser aplicada especificamente a realidade da sua autoescola.</strong>
+        <strong>O próximo passo é entender como essa estratégia pode ser aplicada especificamente à realidade da sua autoescola.</strong>
       </div>
-      <button type="button" onClick={onWhatsappClick}>{"QUERO DAR O PROXIMO PASSO \u2192"}</button>
-      <small className="fxp-cta-note">Ao clicar, nosso agente dara continuidade ao seu atendimento e fara o agendamento com um de nossos consultores. Leva no maximo 2 minutos.</small>
+      <button type="button" onClick={onWhatsappClick}>{"QUERO DAR O PRÓXIMO PASSO \u2192"}</button>
+      <small className="fxp-cta-note">Ao clicar, nosso agente dará continuidade ao seu atendimento pelo WhatsApp e fará seu agendamento com um de nossos consultores. Leva menos de 2 minutos.</small>
     </section>
   );
 }
