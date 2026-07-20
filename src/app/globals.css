@@ -4100,7 +4100,7 @@ textarea.quiz-input {
 }
 
 .fxp-intro-logo {
-  width: min(46vw, 180px);
+  width: min(38vw, 142px);
   height: auto;
   display: block;
   object-fit: contain;
@@ -4800,7 +4800,7 @@ textarea.quiz-input {
   }
 
   .fxp-intro-logo {
-    width: min(42vw, 132px);
+    width: min(34vw, 104px);
   }
 
   .fxp-headline-line {
