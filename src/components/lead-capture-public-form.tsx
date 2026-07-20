@@ -385,10 +385,7 @@ function IntroScreen({ onStart }: { onStart: () => void }) {
       className="fxp-intro"
       onKeyDownCapture={blockEnterKey}
     >
-      <div className="fxp-intro-logo" aria-label="FXP Assessoria">
-        <span>FXP</span>
-        <small>assessoria</small>
-      </div>
+      <img className="fxp-intro-logo" src={fxpHubLogo.src} alt="FXP Hub" />
       <h1>
         <span className="fxp-headline-line">Donos de autoescola</span>{" "}
         <span className="fxp-headline-line fxp-headline-gold">estão vendendo mais matrículas</span>{" "}

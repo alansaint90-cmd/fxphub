@@ -4100,35 +4100,11 @@ textarea.quiz-input {
 }
 
 .fxp-intro-logo {
-  display: inline-flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 6px;
-  color: #ffffff;
-  font-family: "Space Grotesk", Inter, ui-sans-serif, system-ui, sans-serif;
-  font-style: italic;
-  font-weight: 950;
-  letter-spacing: -0.05em;
-  line-height: 1;
-  filter:
-    drop-shadow(0 0 18px rgba(214, 92, 255, 0.3))
-    drop-shadow(0 0 26px rgba(255, 154, 246, 0.16));
-}
-
-.fxp-intro-logo span {
-  font-size: clamp(34px, 8vw, 62px);
-  background: linear-gradient(100deg, #ff9af6 0%, #ffffff 34%, #ffffff 72%, #c15cff 100%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-}
-
-.fxp-intro-logo small {
-  color: #c15cff;
-  font-size: clamp(16px, 3.6vw, 30px);
-  font-weight: 800;
-  letter-spacing: -0.06em;
-  text-shadow: 0 0 18px rgba(193, 92, 255, 0.45);
+  width: min(46vw, 180px);
+  height: auto;
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 0 18px rgba(214, 92, 255, 0.22));
 }
 
 .fxp-intro > *,
@@ -4824,7 +4800,7 @@ textarea.quiz-input {
   }
 
   .fxp-intro-logo {
-    width: auto;
+    width: min(42vw, 132px);
   }
 
   .fxp-headline-line {
