@@ -4754,13 +4754,24 @@ textarea.quiz-input {
   }
 
   .fxp-growth-metrics {
-    gap: 6px;
-    padding: 10px 10px 0;
+    gap: 5px;
+    padding: 8px 8px 0;
   }
 
   .fxp-growth-metrics span {
-    min-height: 58px;
-    border-radius: 12px;
+    min-height: 48px;
+    border-radius: 10px;
+    padding: 4px 3px;
+  }
+
+  .fxp-growth-metrics b {
+    font-size: clamp(15px, 4.4vw, 18px);
+  }
+
+  .fxp-growth-metrics small {
+    max-width: 84%;
+    font-size: clamp(6.8px, 1.75vw, 8px);
+    line-height: 1.05;
   }
 
   .fxp-diagnostic-insights {
