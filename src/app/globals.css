@@ -4752,13 +4752,17 @@ textarea.quiz-input {
 
   .fxp-intro h1 {
     max-width: 100%;
-    font-size: clamp(22px, 5.9vw, 27px);
+    font-size: clamp(19px, 5vw, 24px);
     line-height: 1.08;
   }
 
   .fxp-headline-line {
     display: block;
     white-space: nowrap;
+  }
+
+  .fxp-headline-line:last-child {
+    font-size: 0.82em;
   }
 
   .fxp-quiz-card {
