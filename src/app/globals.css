@@ -4076,6 +4076,31 @@ textarea.quiz-input {
   gap: 18px;
   padding: 34px clamp(20px, 5vw, 56px) 116px;
   text-align: center;
+  isolation: isolate;
+}
+
+.fxp-intro::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(2, 2, 2, 0.74), rgba(2, 2, 2, 0.86)),
+    radial-gradient(circle at 50% 36%, rgba(255, 196, 0, 0.12), transparent 34rem),
+    url("/assets/diagnostic-hero-background.png") center / cover no-repeat;
+  filter: saturate(0.86) contrast(0.94);
+}
+
+.fxp-intro::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 46%, transparent 0 22rem, rgba(0, 0, 0, 0.42) 46rem),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.58), transparent 28%, transparent 72%, rgba(0, 0, 0, 0.58));
 }
 
 .fxp-kicker {
@@ -4791,6 +4816,13 @@ textarea.quiz-input {
     width: min(100%, 520px);
     gap: 14px;
     padding-top: 28px;
+  }
+
+  .fxp-intro::before {
+    background:
+      linear-gradient(180deg, rgba(2, 2, 2, 0.82), rgba(2, 2, 2, 0.9)),
+      radial-gradient(circle at 50% 28%, rgba(255, 196, 0, 0.1), transparent 20rem),
+      url("/assets/diagnostic-hero-background.png") center top / cover no-repeat;
   }
 
   .fxp-intro h1 {
