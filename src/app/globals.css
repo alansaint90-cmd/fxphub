@@ -4741,7 +4741,15 @@ textarea.quiz-input {
 
   .fxp-intro {
     align-content: start;
+    width: min(100%, 520px);
+    gap: 14px;
     padding-top: 28px;
+  }
+
+  .fxp-intro h1 {
+    max-width: 100%;
+    font-size: clamp(31px, 8.6vw, 42px);
+    line-height: 1.04;
   }
 
   .fxp-quiz-card {

@@ -392,9 +392,9 @@ function IntroScreen({ onStart }: { onStart: () => void }) {
         <figure>
           <img src={metaAdsImage.src} alt="Resultados de campanhas no gerenciador de anuncios" />
           <div className="fxp-growth-metrics" aria-label="Indicadores de crescimento">
-            <span><b>307</b><small>Conversas iniciadas</small></span>
-            <span><b>30.074</b><small>Pessoas alcançadas</small></span>
-            <span><b>R$ 1,68</b><small>Por conversa</small></span>
+            <span><b>+128%</b><small>Matrículas</small></span>
+            <span><b>+47</b><small>Leads diários</small></span>
+            <span><b>+3x</b><small>Mais resultado</small></span>
           </div>
           <figcaption>Dados reais de campanhas gerando demanda e novas oportunidades de matricula.</figcaption>
         </figure>
