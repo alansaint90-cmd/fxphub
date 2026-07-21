@@ -184,6 +184,11 @@ export class FaustoConversationService {
   }
 
   private async handleDiagnosticIdentityConfirmation(lead: LeadRecord, text: string): Promise<string> {
+    const latestOutbound = await this.crm.getLatestOutboundMessage(lead.id);
+    if (isGreetingOnly(text) && latestOutbound && !latestOutbound.startsWith("Falo com ")) {
+      return buildOpenHelpResponse(lead);
+    }
+
     if (isIdentityDenied(text)) {
       return "Sem problema. Me informe seu nome e o nome da autoescola para eu corrigir e continuar.";
     }
@@ -287,6 +292,10 @@ export class FaustoConversationService {
   private async handleScheduledMeetingChange(lead: LeadRecord, text: string): Promise<string> {
     const latestOutbound = await this.crm.getLatestOutboundMessage(lead.id);
 
+    if (isGreetingOnly(text)) {
+      return buildOpenHelpResponse(lead);
+    }
+
     if (latestOutbound?.startsWith("So confirmando: posso cancelar sua reuniao") && isIdentityConfirmed(text)) {
       await this.crm.cancelUpcomingMeeting({ leadId: lead.id });
       return "Reuniao cancelada. Vou deixar seu contato salvo para retomarmos quando fizer sentido.";
@@ -368,6 +377,17 @@ function isConversationClosed(text: string) {
     .replace(/[\u0300-\u036f]/g, "");
 
   return /\b(nao quero mais|obrigado|obrigada)\b/.test(normalizedText);
+}
+
+function isGreetingOnly(text: string) {
+  const normalizedText = normalizeForIntent(text);
+  return /^(oi|ola|olá|bom dia|boa tarde|boa noite|opa|e ai|eai|tudo bem|td bem)[!.? ]*$/.test(normalizedText);
+}
+
+function buildOpenHelpResponse(lead: LeadRecord) {
+  const firstName = lead.responsibleName?.trim().split(/\s+/)[0] || lead.pushName?.trim().split(/\s+/)[0] || "";
+  const greeting = firstName ? `Oi, ${firstName}.` : "Oi.";
+  return `${greeting} Como posso ajudar? Posso tirar alguma duvida, remarcar ou cancelar seu agendamento.`;
 }
 
 function shouldConfirmDiagnosticIdentity(lead: LeadRecord) {

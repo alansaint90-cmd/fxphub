@@ -321,7 +321,7 @@ export function LeadCapturePublicForm({ slug }: { slug: string }) {
 
   if (view === "intro") {
     return (
-      <main className="public-form-shell quiz-shell fxp-diagnostic-shell">
+      <main className="public-form-shell quiz-shell fxp-diagnostic-shell fxp-diagnostic-intro-shell">
         <IntroScreen onStart={() => setView("quiz")} />
       </main>
     );

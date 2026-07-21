@@ -4046,10 +4046,10 @@ textarea.quiz-input {
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-.fxp-diagnostic-shell:has(.fxp-intro) {
+.fxp-diagnostic-intro-shell {
   background:
     linear-gradient(180deg, rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.18)),
-    url("/assets/diagnostic-hero-background-v3.png") center / cover no-repeat fixed,
+    url("/assets/diagnostic-hero-background-v4.png") center / cover no-repeat fixed,
     linear-gradient(180deg, #060606 0%, #010101 100%);
 }
 
@@ -4820,10 +4820,10 @@ textarea.quiz-input {
     grid-template-columns: 1fr;
   }
 
-  .fxp-diagnostic-shell:has(.fxp-intro) {
+  .fxp-diagnostic-intro-shell {
     background:
       linear-gradient(180deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.34)),
-      url("/assets/diagnostic-hero-background-mobile-v2.png") center top / cover no-repeat,
+      url("/assets/diagnostic-hero-background-v4.png") center top / cover no-repeat,
       linear-gradient(180deg, #050505 0%, #010101 100%);
     background-attachment: scroll;
   }
