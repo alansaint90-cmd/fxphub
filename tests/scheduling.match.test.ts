@@ -32,11 +32,30 @@ describe("matchesSlot", () => {
     expect(matchesSlot("segunda 10 horas", tenInSaoPauloSlot)).toBe(true);
     expect(matchesSlot("segunda 13 horas", tenInSaoPauloSlot)).toBe(false);
   });
+
+  it("nao confirma outro dia quando o lead informa data e horario", () => {
+    const wednesdayNineSlot = {
+      startsAt: new Date("2026-07-22T09:00:00-03:00"),
+      label: "qua, 22/07 as 09h",
+    };
+    const thursdayNineSlot = {
+      startsAt: new Date("2026-07-23T09:00:00-03:00"),
+      label: "qui, 23/07 as 09h",
+    };
+
+    expect(matchesSlot("pode ser dia 23 as 09", wednesdayNineSlot)).toBe(false);
+    expect(matchesSlot("pode ser dia 23 as 09", thursdayNineSlot)).toBe(true);
+    expect(matchesSlot("para dia 23 do 07", thursdayNineSlot)).toBe(false);
+  });
 });
 
 describe("schedule intent", () => {
   it("identifica pedido de outro horario como consulta de disponibilidade", () => {
     expect(isAvailabilityRequest("Nao tem as 15?")).toBe(true);
+  });
+
+  it("identifica pedido de data como consulta de disponibilidade", () => {
+    expect(isAvailabilityRequest("pode ser dia 23 do 07?")).toBe(true);
   });
 
   it("identifica rejeicao dos horarios sugeridos", () => {

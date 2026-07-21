@@ -9,11 +9,14 @@ import type { QualificationAnswerSet, QualificationQuestionId } from "@/lib/qual
 import { getSchedulingObjectionResponse } from "./objections";
 import {
   extractRequestedHours,
+  extractRequestedDates,
   extractRequestedWeekdays,
+  getSaoPauloWeekdayNumber,
   isAvailabilityRequest,
   isCancellationRequest,
   isRescheduleRequest,
   isScheduleRejection,
+  matchesRequestedDate,
   matchesSlot,
 } from "./scheduling";
 import type { CrmRepository, LeadRecord } from "./types";
@@ -253,6 +256,7 @@ export class FaustoConversationService {
 
   private async tryScheduleMeeting(lead: LeadRecord, text: string): Promise<string> {
     const requestedHours = extractRequestedHours(text);
+    const requestedDates = extractRequestedDates(text);
     const requestedWeekdays = extractRequestedWeekdays(text);
     const slots = await this.calendar.getAvailableSlots({
       preferredHours: requestedHours,
@@ -271,10 +275,22 @@ export class FaustoConversationService {
       return this.createConfirmedMeeting(lead, pendingConfirmationSlot);
     }
 
+    const selectedSlot = slots.find((slot) => matchesSlot(text, slot));
+
+    if (selectedSlot) {
+      return `So confirmando: posso marcar sua reuniao para ${selectedSlot.label}?`;
+    }
+
     if (availabilityRequest) {
-      const preferredSlots = requestedHours.length
-        ? slots.filter((slot) => requestedHours.some((hour) => matchesSlot(`${hour} horas`, slot)))
-        : [];
+      const preferredSlots = slots.filter((slot) => {
+        const matchesHour =
+          requestedHours.length === 0 || requestedHours.some((hour) => matchesSlot(`${hour} horas`, slot));
+        const matchesWeekday =
+          requestedWeekdays.length === 0 || requestedWeekdays.includes(getSaoPauloWeekdayNumber(slot.startsAt));
+        const matchesDate =
+          requestedDates.length === 0 || requestedDates.some((requestedDate) => matchesRequestedDate(slot.startsAt, requestedDate));
+        return matchesHour && matchesWeekday && matchesDate;
+      });
 
       if (preferredSlots.length > 0) {
         return `Consultei a agenda e tenho ${formatSlotOptions(preferredSlots)}. Qual desses prefere?`;
@@ -283,30 +299,24 @@ export class FaustoConversationService {
       return `Nesse horario nao tenho vaga livre. Tenho ${formatSlotOptions(slots, { preserveOrder: hasPreferredSchedule })}. Algum desses funciona?`;
     }
 
-    const selectedSlot = slots.find((slot) => matchesSlot(text, slot));
-
-    if (!selectedSlot) {
-      if (isScheduleRejection(text)) {
-        if (isConversationClosed(text)) {
-          return "Tudo bem. Vou deixar seu contato salvo para retomarmos em outro momento.";
-        }
-
-        return "Sem problema. Me diga qual dia e horario voce prefere que eu consulto a agenda.";
+    if (isScheduleRejection(text)) {
+      if (isConversationClosed(text)) {
+        return "Tudo bem. Vou deixar seu contato salvo para retomarmos em outro momento.";
       }
 
-      const objectionResponse = getSchedulingObjectionResponse(text);
-      if (objectionResponse) {
-        return objectionResponse;
-      }
-
-      if (isQuestionLike(text)) {
-        return "Entendi sua pergunta. Me diga exatamente qual ponto voce quer esclarecer que eu respondo de forma objetiva antes de seguir para a agenda.";
-      }
-
-      return `Consultei a agenda e tenho ${formatSlotOptions(slots, { preserveOrder: hasPreferredSchedule })}. Qual desses fica melhor?`;
+      return "Sem problema. Me diga qual dia e horario voce prefere que eu consulto a agenda.";
     }
 
-    return `So confirmando: posso marcar sua reuniao para ${selectedSlot.label}?`;
+    const objectionResponse = getSchedulingObjectionResponse(text);
+    if (objectionResponse) {
+      return objectionResponse;
+    }
+
+    if (isQuestionLike(text)) {
+      return "Entendi sua pergunta. Me diga exatamente qual ponto voce quer esclarecer que eu respondo de forma objetiva antes de seguir para a agenda.";
+    }
+
+    return `Consultei a agenda e tenho ${formatSlotOptions(slots, { preserveOrder: hasPreferredSchedule })}. Qual desses fica melhor?`;
   }
 
   private async handleScheduledMeetingChange(lead: LeadRecord, text: string): Promise<string> {
