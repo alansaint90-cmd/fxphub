@@ -264,7 +264,9 @@ export class DrizzleCrmRepository implements CrmRepository {
     await db
       .update(leads)
       .set({
-        funnelStage: "qualificado",
+        funnelStage: "ia_atendendo",
+        qualificationStarted: false,
+        currentQualificationQuestion: null,
         updatedAt: new Date(),
         modifiedBy,
       })

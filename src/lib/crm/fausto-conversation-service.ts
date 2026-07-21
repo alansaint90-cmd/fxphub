@@ -304,7 +304,7 @@ export class FaustoConversationService {
 
     if (latestOutbound?.startsWith("So confirmando: posso cancelar sua reuniao") && isIdentityConfirmed(text)) {
       await this.crm.cancelUpcomingMeeting({ leadId: lead.id });
-      return "Reuniao cancelada. Vou deixar seu contato salvo para retomarmos quando fizer sentido.";
+      return "Reuniao cancelada. Reagende a qualquer momento entrando em contato por aqui. A FXP agradece!";
     }
 
     if (latestOutbound?.startsWith("So confirmando: posso consultar novos horarios") && isIdentityConfirmed(text)) {
