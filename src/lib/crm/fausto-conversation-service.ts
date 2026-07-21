@@ -263,9 +263,20 @@ export class FaustoConversationService {
       preferredWeekdays: requestedWeekdays,
     });
     const availabilityRequest = isAvailabilityRequest(text);
-    const hasPreferredSchedule = requestedHours.length > 0 || requestedWeekdays.length > 0;
+    const hasPreferredSchedule = requestedHours.length > 0 || requestedWeekdays.length > 0 || requestedDates.length > 0;
     const latestOutbound = await this.crm.getLatestOutboundMessage(lead.id);
-    const pendingConfirmationSlot = findPendingConfirmationSlot(latestOutbound, slots);
+    let pendingConfirmationSlot = findPendingConfirmationSlot(latestOutbound, slots);
+    if (
+      !pendingConfirmationSlot &&
+      isIdentityConfirmed(text) &&
+      startsWithNormalized(latestOutbound, "So confirmando: posso marcar sua reuniao para")
+    ) {
+      const confirmationSlots = await this.calendar.getAvailableSlots({
+        preferredHours: extractRequestedHours(latestOutbound ?? ""),
+        preferredWeekdays: extractRequestedWeekdays(latestOutbound ?? ""),
+      });
+      pendingConfirmationSlot = findPendingConfirmationSlot(latestOutbound, confirmationSlots);
+    }
 
     if (pendingConfirmationSlot && isIdentityDenied(text)) {
       return "Sem problema. Qual dia e horario voce prefere que eu consulte na agenda?";
