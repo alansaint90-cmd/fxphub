@@ -72,4 +72,5 @@ export interface CrmRepository {
     qualificationStarted: boolean;
   }): Promise<void>;
   markMeetingScheduled(input: { leadId: string; startsAt: Date; endsAt: Date; externalEventId?: string }): Promise<void>;
+  cancelUpcomingMeeting(input: { leadId: string }): Promise<void>;
 }

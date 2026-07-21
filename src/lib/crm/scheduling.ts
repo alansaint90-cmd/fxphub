@@ -38,6 +38,22 @@ export function isScheduleRejection(text: string) {
   );
 }
 
+export function isRescheduleRequest(text: string) {
+  const normalizedText = normalizeScheduleText(text);
+
+  return /\b(remarcar|reagendar|mudar horario|trocar horario|mudar a reuniao|trocar a reuniao|outro dia|outro horario)\b/.test(
+    normalizedText,
+  );
+}
+
+export function isCancellationRequest(text: string) {
+  const normalizedText = normalizeScheduleText(text);
+
+  return /\b(cancelar|cancela|desmarcar|desmarca|nao vou conseguir participar|nao vou participar)\b/.test(
+    normalizedText,
+  );
+}
+
 export function extractRequestedHours(text: string) {
   const normalizedText = normalizeScheduleText(text);
   const requestedHours = new Set<number>();

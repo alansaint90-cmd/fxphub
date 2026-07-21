@@ -7,7 +7,14 @@ import { getNextQuestion, qualificationQuestions } from "@/lib/qualification/que
 import { calculateQualification } from "@/lib/qualification/scoring";
 import type { QualificationAnswerSet, QualificationQuestionId } from "@/lib/qualification/types";
 import { getSchedulingObjectionResponse } from "./objections";
-import { extractRequestedHours, isAvailabilityRequest, isScheduleRejection, matchesSlot } from "./scheduling";
+import {
+  extractRequestedHours,
+  isAvailabilityRequest,
+  isCancellationRequest,
+  isRescheduleRequest,
+  isScheduleRejection,
+  matchesSlot,
+} from "./scheduling";
 import type { CrmRepository, LeadRecord } from "./types";
 
 interface OutboundMessage {
@@ -99,6 +106,10 @@ export class FaustoConversationService {
   }
 
   private async buildDraftResponse(lead: LeadRecord, text: string): Promise<string> {
+    if (lead.funnelStage === "reuniao_agendada") {
+      return this.handleScheduledMeetingChange(lead, text);
+    }
+
     if (lead.funnelStage === "agendamento_em_andamento") {
       return this.tryScheduleMeeting(lead, text);
     }
@@ -191,7 +202,7 @@ export class FaustoConversationService {
     return [
       `${greeting} Eu sou o Fausto, da assessoria FXP. Somos um hub de solucoes digitais e de IA para autoescolas.`,
       `Ajudamos autoescolas a atrair mais interessados pelo WhatsApp e transformar oportunidades em matriculas.`,
-      "Posso te agendar com o nosso time para uma demonstracao rapida sobre como conseguimos implementar a estrategia de trafego pago e IA aplicada em sua autoescola.",
+      "Posso te agendar com o nosso time para uma demonstracao rapida sobre como a gestao de trafego pago, com apoio de IA, pode ser aplicada em sua autoescola.",
       "Seria interessante pra voce?",
     ].join("\n");
   }
@@ -271,6 +282,35 @@ export class FaustoConversationService {
     }
 
     return `So confirmando: posso marcar sua reuniao para ${selectedSlot.label}?`;
+  }
+
+  private async handleScheduledMeetingChange(lead: LeadRecord, text: string): Promise<string> {
+    const latestOutbound = await this.crm.getLatestOutboundMessage(lead.id);
+
+    if (latestOutbound?.startsWith("So confirmando: posso cancelar sua reuniao") && isIdentityConfirmed(text)) {
+      await this.crm.cancelUpcomingMeeting({ leadId: lead.id });
+      return "Reuniao cancelada. Vou deixar seu contato salvo para retomarmos quando fizer sentido.";
+    }
+
+    if (latestOutbound?.startsWith("So confirmando: posso consultar novos horarios") && isIdentityConfirmed(text)) {
+      await this.crm.cancelUpcomingMeeting({ leadId: lead.id });
+      await this.crm.setFunnelStage({ leadId: lead.id, funnelStage: "agendamento_em_andamento" });
+      const slots = await this.calendar.getAvailableSlots({ preferredHours: extractRequestedHours(text) });
+      return `Perfeito. Consultei a agenda e tenho ${formatSlotOptions(slots)}. Qual desses fica melhor?`;
+    }
+
+    if (isCancellationRequest(text)) {
+      return "So confirmando: posso cancelar sua reuniao agendada?";
+    }
+
+    if (isRescheduleRequest(text) || isAvailabilityRequest(text)) {
+      return "So confirmando: posso consultar novos horarios e substituir seu agendamento atual?";
+    }
+
+    const objectionResponse = getSchedulingObjectionResponse(text);
+    if (objectionResponse) return objectionResponse;
+
+    return "Sua reuniao segue confirmada. Se quiser remarcar ou cancelar, me avise por aqui que eu consulto a agenda.";
   }
 
   private async createConfirmedMeeting(lead: LeadRecord, selectedSlot: { startsAt: Date; endsAt: Date }) {

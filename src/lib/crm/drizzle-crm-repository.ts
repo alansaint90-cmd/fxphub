@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { appointments, conversationMessages, leadForms, leads, qualificationAnswers } from "@/lib/db/schema";
 import { env } from "@/lib/env";
@@ -229,6 +229,42 @@ export class DrizzleCrmRepository implements CrmRepository {
       .update(leads)
       .set({
         funnelStage: "reuniao_agendada",
+        updatedAt: new Date(),
+        modifiedBy,
+      })
+      .where(and(eq(leads.id, input.leadId), eq(leads.isDeleted, false)));
+  }
+
+  async cancelUpcomingMeeting(input: { leadId: string }): Promise<void> {
+    const [upcomingAppointment] = await db
+      .select({ id: appointments.id })
+      .from(appointments)
+      .where(
+        and(
+          eq(appointments.leadId, input.leadId),
+          eq(appointments.isDeleted, false),
+          inArray(appointments.status, ["scheduled", "rescheduled"]),
+          gt(appointments.startsAt, new Date()),
+        ),
+      )
+      .orderBy(asc(appointments.startsAt))
+      .limit(1);
+
+    if (upcomingAppointment) {
+      await db
+        .update(appointments)
+        .set({
+          status: "cancelled",
+          updatedAt: new Date(),
+          modifiedBy,
+        })
+        .where(and(eq(appointments.id, upcomingAppointment.id), eq(appointments.isDeleted, false)));
+    }
+
+    await db
+      .update(leads)
+      .set({
+        funnelStage: "qualificado",
         updatedAt: new Date(),
         modifiedBy,
       })
