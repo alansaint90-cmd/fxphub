@@ -58,7 +58,7 @@ function getKnowledgeBaseResponse(normalizedText: string) {
     return "Nao seria responsavel garantir uma quantidade especifica de matriculas, porque a venda depende de oferta, preco, atendimento, velocidade de resposta e capacidade comercial. Nosso trabalho e gerar demanda e melhorar o processo para aumentar as chances de conversao.";
   }
 
-  if (/\b(leads sao bons|qualidade dos leads|lead bom|leads bons)\b/.test(normalizedText)) {
+  if (/\b(leads?|contatos?|oportunidades?)\b.*\b(bom|bons|boms|boa|boas|qualidade|qualificados|qualificado|vem|chegam|chega)\b/.test(normalizedText)) {
     return "A qualidade dos leads e avaliada e otimizada durante a campanha. Analisamos comportamento dos contatos, ajustamos publico, anuncios e estrategia conforme os dados aparecem.";
   }
 
@@ -186,9 +186,15 @@ function getKnowledgeBaseResponse(normalizedText: string) {
     return "Sem problema. Se o processo manual ainda atende bem, ele pode continuar. O ponto e acompanhar se existem oportunidades sendo perdidas por demora, falta de follow-up ou sobrecarga.";
   }
 
-  if (/\b(nao|tenho duvida|duvida|depende|como funciona|explica|me explica|nao entendi)\b/.test(normalizedText)) {
+  if (isQuestionLike(normalizedText)) {
     return "Claro. Qual e a sua duvida? Te respondo de forma objetiva para vermos se faz sentido continuar.";
   }
 
   return null;
+}
+
+function isQuestionLike(normalizedText: string) {
+  return /\b(o que|como|qual|quais|quando|quanto|quantos|quantas|quem|onde|porque|por que|duvida|explica|me explica|nao entendi|entendi nao|sera que|funciona|vale a pena)\b/.test(
+    normalizedText,
+  );
 }

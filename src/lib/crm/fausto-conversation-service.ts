@@ -289,6 +289,10 @@ export class FaustoConversationService {
         return objectionResponse;
       }
 
+      if (isQuestionLike(text)) {
+        return "Entendi sua pergunta. Me diga exatamente qual ponto voce quer esclarecer que eu respondo de forma objetiva antes de seguir para a agenda.";
+      }
+
       return `Consultei a agenda e tenho ${formatSlotOptions(slots)}. Qual desses fica melhor?`;
     }
 
@@ -388,6 +392,16 @@ function isConversationClosed(text: string) {
 function isGreetingOnly(text: string) {
   const normalizedText = normalizeForIntent(text);
   return /^(oi|ola|olá|bom dia|boa tarde|boa noite|opa|e ai|eai|tudo bem|td bem)[!.? ]*$/.test(normalizedText);
+}
+
+function isQuestionLike(text: string) {
+  const normalizedText = normalizeForIntent(text);
+  return (
+    text.includes("?") ||
+    /\b(o que|como|qual|quais|quando|quanto|quantos|quantas|quem|onde|porque|por que|duvida|explica|me explica|nao entendi|entendi nao|sera que|funciona|vale a pena)\b/.test(
+      normalizedText,
+    )
+  );
 }
 
 function buildOpenHelpResponse(lead: LeadRecord) {
