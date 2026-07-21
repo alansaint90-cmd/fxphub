@@ -50,10 +50,6 @@ function getKnowledgeBaseResponse(normalizedText: string) {
     return "O investimento dos anuncios e separado do valor da gestao da FXP. Assim o cliente sabe quanto esta pagando pela assessoria e quanto esta indo diretamente para as plataformas de anuncios.";
   }
 
-  if (/\b(quanto tempo|em quanto tempo|primeiros contatos|comeco a receber)\b/.test(normalizedText)) {
-    return "Depois que a campanha entra no ar, os primeiros contatos podem comecar a chegar nas primeiras 48 horas. Esse prazo pode variar conforme aprovacao dos anuncios, regiao, publico e comportamento da campanha.";
-  }
-
   if (/\b(garantem matriculas|garantia|garante resultado|garantem resultado)\b/.test(normalizedText)) {
     return "Nao seria responsavel garantir uma quantidade especifica de matriculas, porque a venda depende de oferta, preco, atendimento, velocidade de resposta e capacidade comercial. Nosso trabalho e gerar demanda e melhorar o processo para aumentar as chances de conversao.";
   }
@@ -114,16 +110,20 @@ function getKnowledgeBaseResponse(normalizedText: string) {
     return "A estrategia pode ser adaptada para autoescolas com vendedores, poucos atendentes ou atendimento manual. Primeiro analisamos o que ja funciona e depois melhoramos pontos como velocidade, qualificacao, follow-up e organizacao.";
   }
 
-  if (/\b(o que sera mostrado|o que vai ser mostrado|mostrar na reuniao|mostrado na reuniao|o que acontece na reuniao)\b/.test(normalizedText)) {
+  if (/\b(o que sera mostrado|o que vai ser mostrado|mostrar na reuniao|mostrado na reuniao|o que acontece na reuniao|demonstracao|apresentacao)\b/.test(normalizedText)) {
     return "Na reuniao vamos entender o momento atual da sua autoescola, seus principais desafios e objetivos. Depois mostramos como nossas estrategias e solucoes podem ser aplicadas a sua realidade.";
   }
 
-  if (/\b(quanto tempo dura|dura a reuniao|tempo da reuniao)\b/.test(normalizedText)) {
-    return "Normalmente e uma conversa rapida e objetiva. O tempo pode variar conforme as duvidas e necessidades da autoescola.";
+  if (/\b(reuniao|demonstracao|apresentacao|call|meet|videochamada)\b.*\b(quanto tempo|demora|dura|tempo)\b|\b(quanto tempo|demora|dura|tempo)\b.*\b(reuniao|demonstracao|apresentacao|call|meet|videochamada)\b/.test(normalizedText)) {
+    return "A reuniao e rapida, online pelo Google Meet, e normalmente dura de 15 a 20 minutos. A ideia e entender seu cenario e mostrar o caminho de forma objetiva.";
   }
 
   if (/\b(whatsapp ou video|videochamada|chamada de video|pelo whatsapp)\b/.test(normalizedText)) {
     return "O primeiro atendimento pode acontecer pelo WhatsApp e, quando necessario, podemos realizar uma reuniao por videochamada.";
+  }
+
+  if (/\b(quanto tempo|em quanto tempo|primeiros contatos|comeco a receber)\b/.test(normalizedText)) {
+    return "Depois que a campanha entra no ar, os primeiros contatos podem comecar a chegar nas primeiras 48 horas. Esse prazo pode variar conforme aprovacao dos anuncios, regiao, publico e comportamento da campanha.";
   }
 
   if (/\b(quem vai me atender|quem atende|consultor|profissional)\b/.test(normalizedText)) {
