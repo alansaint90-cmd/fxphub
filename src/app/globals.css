@@ -4822,8 +4822,8 @@ textarea.quiz-input {
 
   .fxp-diagnostic-shell:has(.fxp-intro) {
     background:
-      linear-gradient(180deg, rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0.5)),
-      url("/assets/diagnostic-hero-background-mobile.png") center top / cover no-repeat,
+      linear-gradient(180deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.34)),
+      url("/assets/diagnostic-hero-background-mobile-v2.png") center top / cover no-repeat,
       linear-gradient(180deg, #050505 0%, #010101 100%);
     background-attachment: scroll;
   }
