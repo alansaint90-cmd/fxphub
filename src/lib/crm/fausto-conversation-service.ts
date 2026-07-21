@@ -56,7 +56,9 @@ export class FaustoConversationService {
       return { response: "", shouldSend: false };
     }
 
-    if (isDiagnosticFormTrigger(input.text)) {
+    const diagnosticFormTrigger = isDiagnosticFormTrigger(input.text);
+
+    if (diagnosticFormTrigger) {
       const context = await this.crm.getLatestLeadFormContextByPhone(input.phone);
       if (!context) {
         const response = [
@@ -73,6 +75,10 @@ export class FaustoConversationService {
         messages.map((message) => this.crm.saveOutboundMessage({ leadId: contextualizedLead.id, body: message.text })),
       );
       return { response: messages.map((message) => message.text).join("\n\n"), shouldSend: true, messages };
+    }
+
+    if (shouldKeepHumanOnly(lead)) {
+      return { response: "", shouldSend: false };
     }
 
     const shouldSplitIdentityConfirmation = shouldConfirmDiagnosticIdentity(lead) && isIdentityConfirmed(input.text);
@@ -397,6 +403,10 @@ function shouldConfirmDiagnosticIdentity(lead: LeadRecord) {
     Boolean(lead.responsibleName || lead.pushName) &&
     Boolean(lead.drivingSchoolName)
   );
+}
+
+function shouldKeepHumanOnly(lead: LeadRecord) {
+  return !lead.qualificationStarted && lead.funnelStage === "ia_atendendo";
 }
 
 function isIdentityConfirmed(text: string) {
