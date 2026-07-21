@@ -83,7 +83,10 @@ export class FaustoConversationService {
     }
 
     const shouldSplitIdentityConfirmation = shouldConfirmDiagnosticIdentity(lead) && isIdentityConfirmed(input.text);
-    const shouldUseStrictDraft = lead.funnelStage === "agendamento_em_andamento" || shouldConfirmDiagnosticIdentity(lead);
+    const shouldUseStrictDraft =
+      lead.funnelStage === "agendamento_em_andamento" ||
+      lead.funnelStage === "reuniao_agendada" ||
+      shouldConfirmDiagnosticIdentity(lead);
     const draft = await this.buildDraftResponse(lead, input.text);
     const response = shouldUseStrictDraft
       ? draft
@@ -313,19 +316,18 @@ export class FaustoConversationService {
       return buildOpenHelpResponse(lead);
     }
 
-    if (latestOutbound?.startsWith("So confirmando: posso cancelar sua reuniao") && isIdentityConfirmed(text)) {
+    if (startsWithNormalized(latestOutbound, "So confirmando: posso cancelar sua reuniao") && isIdentityConfirmed(text)) {
       await this.crm.cancelUpcomingMeeting({ leadId: lead.id });
       return "Reuniao cancelada. Reagende a qualquer momento entrando em contato por aqui. A FXP agradece!";
     }
 
-    if (latestOutbound?.startsWith("So confirmando: posso consultar novos horarios") && isIdentityConfirmed(text)) {
-      await this.crm.cancelUpcomingMeeting({ leadId: lead.id });
+    if (startsWithNormalized(latestOutbound, "So confirmando: posso consultar novos horarios") && isIdentityConfirmed(text)) {
       await this.crm.setFunnelStage({ leadId: lead.id, funnelStage: "agendamento_em_andamento" });
       const slots = await this.calendar.getAvailableSlots({
         preferredHours: extractRequestedHours(text),
         preferredWeekdays: extractRequestedWeekdays(text),
       });
-      return `Perfeito. Consultei a agenda e tenho ${formatSlotOptions(slots, { preserveOrder: true })}. Qual desses fica melhor?`;
+      return `Certo. Consultei a agenda e tenho ${formatSlotOptions(slots, { preserveOrder: true })}. Qual desses fica melhor?`;
     }
 
     if (isCancellationRequest(text)) {
@@ -333,7 +335,12 @@ export class FaustoConversationService {
     }
 
     if (isRescheduleRequest(text) || isAvailabilityRequest(text)) {
-      return "So confirmando: posso consultar novos horarios e substituir seu agendamento atual?";
+      await this.crm.setFunnelStage({ leadId: lead.id, funnelStage: "agendamento_em_andamento" });
+      const slots = await this.calendar.getAvailableSlots({
+        preferredHours: extractRequestedHours(text),
+        preferredWeekdays: extractRequestedWeekdays(text),
+      });
+      return `Certo. Vou consultar novos horarios para substituir seu agendamento atual. Tenho ${formatSlotOptions(slots, { preserveOrder: true })}. Qual desses fica melhor?`;
     }
 
     const objectionResponse = getSchedulingObjectionResponse(text);
@@ -478,6 +485,11 @@ function isIdentityDenied(text: string) {
 
 function isDiagnosticFormTrigger(text: string) {
   return normalizeForIntent(text) === normalizeForIntent(leadCaptureWhatsappStartMessage);
+}
+
+function startsWithNormalized(value: string | null | undefined, prefix: string) {
+  if (!value) return false;
+  return normalizeForIntent(value).startsWith(normalizeForIntent(prefix));
 }
 
 function normalizeForIntent(text: string) {

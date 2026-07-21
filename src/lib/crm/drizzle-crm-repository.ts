@@ -216,6 +216,22 @@ export class DrizzleCrmRepository implements CrmRepository {
     endsAt: Date;
     externalEventId?: string;
   }): Promise<void> {
+    await db
+      .update(appointments)
+      .set({
+        status: "cancelled",
+        updatedAt: new Date(),
+        modifiedBy,
+      })
+      .where(
+        and(
+          eq(appointments.leadId, input.leadId),
+          eq(appointments.isDeleted, false),
+          inArray(appointments.status, ["scheduled", "rescheduled"]),
+          gt(appointments.startsAt, new Date()),
+        ),
+      );
+
     await db.insert(appointments).values({
       leadId: input.leadId,
       startsAt: input.startsAt,
