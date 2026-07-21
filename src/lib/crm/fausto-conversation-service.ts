@@ -94,8 +94,9 @@ export class FaustoConversationService {
         });
 
     const shouldSplitMeetingConfirmation = response.startsWith("Reuniao confirmada.");
+    const shouldSplitObjectionResponse = response.includes("\n\nFicou claro?");
     const messages =
-      shouldSplitIdentityConfirmation || shouldSplitMeetingConfirmation
+      shouldSplitIdentityConfirmation || shouldSplitMeetingConfirmation || shouldSplitObjectionResponse
         ? splitIntoWhatsAppMessages(response)
         : [{ text: response }];
     await Promise.all(messages.map((message) => this.crm.saveOutboundMessage({ leadId: lead.id, body: message.text })));
@@ -358,7 +359,7 @@ export class FaustoConversationService {
 
     return [
       "Reuniao confirmada.",
-      "Na demonstracao vamos mostrar como resolver o desejo urgente com trafego pago.",
+      "Na demonstracao, vamos mostrar como sua autoescola pode usar o trafego pago para gerar uma entrada constante de novos interessados em tirar a CNH e aumentar as oportunidades de matricula.",
       "2 horas antes mandaremos a mensagem de lembrete da reuniao. Ate breve!",
     ].join("\n");
   }
