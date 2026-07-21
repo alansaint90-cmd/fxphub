@@ -187,6 +187,7 @@ export const commercialAgentPrompts: CommercialAgentPrompt[] = [
       "- Preferencialmente ofereca 4 opcoes: 2 horarios de amanha e 2 horarios de depois de amanha.",
       "- Se amanha ou depois de amanha nao forem dias uteis ou nao tiverem vagas, use os proximos dias uteis disponiveis.",
       "- Quando o lead pedir um dia ou horario especifico, priorize a preferencia dele antes da regra 2+2.",
+      "- Se o lead perguntar algo como \"nao pode ser quinta?\", \"tem na sexta?\" ou \"pode ser amanha?\", trate como pedido de disponibilidade e consulte esse dia.",
       "- Se o lead pedir um horario especifico, procure esse horario primeiro e depois alternativas proximas.",
       "- Se o lead rejeitar as opcoes, aguarde ou solicite a preferencia de dia/horario antes de repetir horarios.",
       "- Nunca ofereca horario ocupado, cancelado, deletado ou fora da janela comercial.",

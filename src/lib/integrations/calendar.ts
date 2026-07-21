@@ -1,7 +1,7 @@
 import { and, gt, inArray, lt, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { appointments } from "@/lib/db/schema";
-import { getSaoPauloHour } from "@/lib/crm/scheduling";
+import { getSaoPauloHour, getSaoPauloWeekdayNumber } from "@/lib/crm/scheduling";
 
 export interface CalendarSlot {
   startsAt: Date;
@@ -11,6 +11,7 @@ export interface CalendarSlot {
 
 export interface CalendarSlotQuery {
   preferredHours?: number[];
+  preferredWeekdays?: number[];
 }
 
 export interface CalendarGateway {
@@ -55,11 +56,17 @@ export class InternalCalendarGateway implements CalendarGateway {
       );
 
     const preferredHours = new Set(query.preferredHours ?? []);
-    if (preferredHours.size === 0) return availableSlots.slice(0, 5);
+    const preferredWeekdays = new Set(query.preferredWeekdays ?? []);
+    if (preferredHours.size === 0 && preferredWeekdays.size === 0) return availableSlots.slice(0, 10);
 
-    const preferredSlots = availableSlots.filter((slot) => preferredHours.has(getSaoPauloHour(slot.startsAt)));
-    const fallbackSlots = availableSlots.filter((slot) => !preferredHours.has(getSaoPauloHour(slot.startsAt)));
-    return [...preferredSlots, ...fallbackSlots].slice(0, 5);
+    const preferredSlots = availableSlots.filter((slot) => {
+      const matchesHour = preferredHours.size === 0 || preferredHours.has(getSaoPauloHour(slot.startsAt));
+      const matchesWeekday =
+        preferredWeekdays.size === 0 || preferredWeekdays.has(getSaoPauloWeekdayNumber(slot.startsAt));
+      return matchesHour && matchesWeekday;
+    });
+    const fallbackSlots = availableSlots.filter((slot) => !preferredSlots.includes(slot));
+    return [...preferredSlots, ...fallbackSlots].slice(0, 10);
   }
 
   async createEvent(): Promise<{ eventId: string }> {

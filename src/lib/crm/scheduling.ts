@@ -23,11 +23,12 @@ export function matchesSlot(text: string, slot: { startsAt: Date; label: string 
 export function isAvailabilityRequest(text: string) {
   const normalizedText = normalizeScheduleText(text);
   const requestedHours = extractRequestedHours(normalizedText);
-  if (requestedHours.length === 0) return false;
+  const requestedWeekdays = extractRequestedWeekdays(normalizedText);
+  if (requestedHours.length === 0 && requestedWeekdays.length === 0) return false;
 
   return /\b(nao tem|tem|teria|consegue|conseguem|disponivel|livre|outro horario|outros horarios)\b/.test(
     normalizedText,
-  );
+  ) || requestedWeekdays.length > 0;
 }
 
 export function isScheduleRejection(text: string) {
@@ -73,6 +74,24 @@ export function extractRequestedHours(text: string) {
   return [...requestedHours];
 }
 
+export function extractRequestedWeekdays(text: string) {
+  const normalizedText = normalizeScheduleText(text);
+  const weekdays = new Set<number>();
+  const weekdayMap: Array<[number, RegExp]> = [
+    [1, /\b(segunda|seg)\b/],
+    [2, /\b(terca|terça|ter)\b/],
+    [3, /\b(quarta|qua)\b/],
+    [4, /\b(quinta|qui)\b/],
+    [5, /\b(sexta|sex)\b/],
+  ];
+
+  for (const [weekday, pattern] of weekdayMap) {
+    if (pattern.test(normalizedText)) weekdays.add(weekday);
+  }
+
+  return [...weekdays];
+}
+
 export function normalizeScheduleText(value: string) {
   return value
     .toLowerCase()
@@ -90,4 +109,13 @@ export function getSaoPauloHour(date: Date) {
       timeZone: "America/Sao_Paulo",
     }).format(date),
   );
+}
+
+export function getSaoPauloWeekdayNumber(date: Date) {
+  const weekday = new Intl.DateTimeFormat("en-US", {
+    weekday: "short",
+    timeZone: "America/Sao_Paulo",
+  }).format(date);
+
+  return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(weekday);
 }

@@ -9,6 +9,7 @@ import type { QualificationAnswerSet, QualificationQuestionId } from "@/lib/qual
 import { getSchedulingObjectionResponse } from "./objections";
 import {
   extractRequestedHours,
+  extractRequestedWeekdays,
   isAvailabilityRequest,
   isCancellationRequest,
   isRescheduleRequest,
@@ -248,9 +249,13 @@ export class FaustoConversationService {
 
   private async tryScheduleMeeting(lead: LeadRecord, text: string): Promise<string> {
     const requestedHours = extractRequestedHours(text);
-    const slots = await this.calendar.getAvailableSlots({ preferredHours: requestedHours });
+    const requestedWeekdays = extractRequestedWeekdays(text);
+    const slots = await this.calendar.getAvailableSlots({
+      preferredHours: requestedHours,
+      preferredWeekdays: requestedWeekdays,
+    });
     const availabilityRequest = isAvailabilityRequest(text);
-    const hasPreferredHours = requestedHours.length > 0;
+    const hasPreferredSchedule = requestedHours.length > 0 || requestedWeekdays.length > 0;
     const latestOutbound = await this.crm.getLatestOutboundMessage(lead.id);
     const pendingConfirmationSlot = findPendingConfirmationSlot(latestOutbound, slots);
 
@@ -271,7 +276,7 @@ export class FaustoConversationService {
         return `Consultei a agenda e tenho ${formatSlotOptions(preferredSlots)}. Qual desses prefere?`;
       }
 
-      return `Nesse horario nao tenho vaga livre. Tenho ${formatSlotOptions(slots, { preserveOrder: hasPreferredHours })}. Algum desses funciona?`;
+      return `Nesse horario nao tenho vaga livre. Tenho ${formatSlotOptions(slots, { preserveOrder: hasPreferredSchedule })}. Algum desses funciona?`;
     }
 
     const selectedSlot = slots.find((slot) => matchesSlot(text, slot));
@@ -294,7 +299,7 @@ export class FaustoConversationService {
         return "Entendi sua pergunta. Me diga exatamente qual ponto voce quer esclarecer que eu respondo de forma objetiva antes de seguir para a agenda.";
       }
 
-      return `Consultei a agenda e tenho ${formatSlotOptions(slots, { preserveOrder: hasPreferredHours })}. Qual desses fica melhor?`;
+      return `Consultei a agenda e tenho ${formatSlotOptions(slots, { preserveOrder: hasPreferredSchedule })}. Qual desses fica melhor?`;
     }
 
     return `So confirmando: posso marcar sua reuniao para ${selectedSlot.label}?`;
@@ -315,8 +320,11 @@ export class FaustoConversationService {
     if (latestOutbound?.startsWith("So confirmando: posso consultar novos horarios") && isIdentityConfirmed(text)) {
       await this.crm.cancelUpcomingMeeting({ leadId: lead.id });
       await this.crm.setFunnelStage({ leadId: lead.id, funnelStage: "agendamento_em_andamento" });
-      const slots = await this.calendar.getAvailableSlots({ preferredHours: extractRequestedHours(text) });
-      return `Perfeito. Consultei a agenda e tenho ${formatSlotOptions(slots)}. Qual desses fica melhor?`;
+      const slots = await this.calendar.getAvailableSlots({
+        preferredHours: extractRequestedHours(text),
+        preferredWeekdays: extractRequestedWeekdays(text),
+      });
+      return `Perfeito. Consultei a agenda e tenho ${formatSlotOptions(slots, { preserveOrder: true })}. Qual desses fica melhor?`;
     }
 
     if (isCancellationRequest(text)) {
