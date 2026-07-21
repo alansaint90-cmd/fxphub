@@ -238,7 +238,7 @@ export class FaustoConversationService {
     }
 
     const slots = await this.calendar.getAvailableSlots();
-    const options = slots.slice(0, 3).map((slot) => slot.label).join(", ");
+    const options = formatSlotOptions(slots);
     const pain = answers.mainPain ? `Pelo que voce comentou sobre ${answers.mainPain},` : "Pelo seu contexto,";
     return [
       `${pain} vale te mostrar isso de forma pratica.`,
@@ -250,6 +250,7 @@ export class FaustoConversationService {
     const requestedHours = extractRequestedHours(text);
     const slots = await this.calendar.getAvailableSlots({ preferredHours: requestedHours });
     const availabilityRequest = isAvailabilityRequest(text);
+    const hasPreferredHours = requestedHours.length > 0;
     const latestOutbound = await this.crm.getLatestOutboundMessage(lead.id);
     const pendingConfirmationSlot = findPendingConfirmationSlot(latestOutbound, slots);
 
@@ -270,7 +271,7 @@ export class FaustoConversationService {
         return `Consultei a agenda e tenho ${formatSlotOptions(preferredSlots)}. Qual desses prefere?`;
       }
 
-      return `Nesse horario nao tenho vaga livre. Tenho ${formatSlotOptions(slots)}. Algum desses funciona?`;
+      return `Nesse horario nao tenho vaga livre. Tenho ${formatSlotOptions(slots, { preserveOrder: hasPreferredHours })}. Algum desses funciona?`;
     }
 
     const selectedSlot = slots.find((slot) => matchesSlot(text, slot));
@@ -293,7 +294,7 @@ export class FaustoConversationService {
         return "Entendi sua pergunta. Me diga exatamente qual ponto voce quer esclarecer que eu respondo de forma objetiva antes de seguir para a agenda.";
       }
 
-      return `Consultei a agenda e tenho ${formatSlotOptions(slots)}. Qual desses fica melhor?`;
+      return `Consultei a agenda e tenho ${formatSlotOptions(slots, { preserveOrder: hasPreferredHours })}. Qual desses fica melhor?`;
     }
 
     return `So confirmando: posso marcar sua reuniao para ${selectedSlot.label}?`;
@@ -355,10 +356,41 @@ export class FaustoConversationService {
   }
 }
 
-function formatSlotOptions(slots: { label: string }[]) {
-  const options = slots.slice(0, 3).map((slot) => slot.label);
-  if (options.length === 0) return "nenhum horario livre no momento";
-  return options.join(", ");
+function formatSlotOptions(slots: { startsAt?: Date; label: string }[], options: { preserveOrder?: boolean } = {}) {
+  const selectedSlots = options.preserveOrder ? slots.slice(0, 4) : selectBalancedDaySlots(slots);
+  const labels = selectedSlots.map((slot) => slot.label);
+  if (labels.length === 0) return "nenhum horario livre no momento";
+  return labels.join(", ");
+}
+
+function selectBalancedDaySlots(slots: { startsAt?: Date; label: string }[]) {
+  const datedSlots = slots.filter((slot): slot is { startsAt: Date; label: string } => slot.startsAt instanceof Date);
+  if (datedSlots.length === 0) return slots.slice(0, 4);
+
+  const todayKey = formatSaoPauloDateKey(new Date());
+  const groups = new Map<string, { startsAt: Date; label: string }[]>();
+  for (const slot of datedSlots) {
+    const dayKey = formatSaoPauloDateKey(slot.startsAt);
+    if (dayKey === todayKey) continue;
+    groups.set(dayKey, [...(groups.get(dayKey) ?? []), slot]);
+  }
+
+  const selected: { startsAt: Date; label: string }[] = [];
+  for (const daySlots of groups.values()) {
+    selected.push(...daySlots.slice(0, 2));
+    if (selected.length >= 4) break;
+  }
+
+  return selected.length > 0 ? selected.slice(0, 4) : slots.slice(0, 4);
+}
+
+function formatSaoPauloDateKey(date: Date) {
+  return new Intl.DateTimeFormat("en-CA", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    timeZone: "America/Sao_Paulo",
+  }).format(date);
 }
 
 function findPendingConfirmationSlot(
