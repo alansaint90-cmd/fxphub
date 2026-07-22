@@ -75,9 +75,9 @@ export class FaustoConversationService {
 
       const contextualizedLead = await this.crm.applyLeadFormContextToLead({ leadId: lead.id, context });
       const messages = this.startPaidTrafficIdentityFlow(contextualizedLead);
-      await Promise.all(
-        messages.map((message) => this.crm.saveOutboundMessage({ leadId: contextualizedLead.id, body: message.text })),
-      );
+      for (const message of messages) {
+        await this.crm.saveOutboundMessage({ leadId: contextualizedLead.id, body: message.text });
+      }
       return { response: messages.map((message) => message.text).join("\n\n"), shouldSend: true, messages };
     }
 
@@ -105,7 +105,9 @@ export class FaustoConversationService {
       shouldSplitIdentityConfirmation || shouldSplitMeetingConfirmation || shouldSplitObjectionResponse
         ? splitIntoWhatsAppMessages(response)
         : [{ text: response }];
-    await Promise.all(messages.map((message) => this.crm.saveOutboundMessage({ leadId: lead.id, body: message.text })));
+    for (const message of messages) {
+      await this.crm.saveOutboundMessage({ leadId: lead.id, body: message.text });
+    }
     return { response, shouldSend: true, messages: messages.length > 1 ? messages : undefined };
   }
 
@@ -268,7 +270,7 @@ export class FaustoConversationService {
     let pendingConfirmationSlot = findPendingConfirmationSlot(latestOutbound, slots);
     if (
       !pendingConfirmationSlot &&
-      isIdentityConfirmed(text) &&
+      isScheduleConfirmation(text) &&
       startsWithNormalized(latestOutbound, "So confirmando: posso marcar sua reuniao para")
     ) {
       const confirmationSlots = await this.calendar.getAvailableSlots({
@@ -282,7 +284,7 @@ export class FaustoConversationService {
       return "Sem problema. Qual dia e horario voce prefere que eu consulte na agenda?";
     }
 
-    if (pendingConfirmationSlot && (isIdentityConfirmed(text) || matchesSlot(text, pendingConfirmationSlot))) {
+    if (pendingConfirmationSlot && (isScheduleConfirmation(text) || matchesSlot(text, pendingConfirmationSlot))) {
       return this.createConfirmedMeeting(lead, pendingConfirmationSlot);
     }
 
@@ -367,7 +369,11 @@ export class FaustoConversationService {
     const objectionResponse = getSchedulingObjectionResponse(text);
     if (objectionResponse) return objectionResponse;
 
-    return "Sua reuniao segue confirmada. Se quiser remarcar ou cancelar, me avise por aqui que eu consulto a agenda.";
+    if (isQuestionLike(text)) {
+      return "Claro. Me diga qual ponto voce quer esclarecer que eu respondo de forma objetiva.";
+    }
+
+    return "Claro. Posso tirar alguma duvida, remarcar ou cancelar seu agendamento. Como posso ajudar?";
   }
 
   private async createConfirmedMeeting(lead: LeadRecord, selectedSlot: { startsAt: Date; endsAt: Date }) {
@@ -434,8 +440,8 @@ function findPendingConfirmationSlot(
   latestOutbound: string | null,
   slots: { startsAt: Date; endsAt: Date; label: string }[],
 ) {
-  if (!latestOutbound?.startsWith("So confirmando: posso marcar sua reuniao para ")) return null;
-  return slots.find((slot) => latestOutbound.includes(slot.label)) ?? null;
+  if (!startsWithNormalized(latestOutbound, "So confirmando: posso marcar sua reuniao para")) return null;
+  return slots.find((slot) => latestOutbound?.includes(slot.label)) ?? null;
 }
 
 function splitIntoWhatsAppMessages(response: string): OutboundMessage[] {
@@ -499,13 +505,36 @@ function isIdentityConfirmed(text: string) {
   );
 }
 
+function isScheduleConfirmation(text: string) {
+  const normalizedText = normalizeForIntent(text);
+  return /^(s|sim|pode|pode sim|sim pode|pode marcar|pode agendar|confirmo|confirmado|ok|certo|isso|fechado|ta certo|esta certo)[!. ]*$/.test(
+    normalizedText,
+  );
+}
+
 function isIdentityDenied(text: string) {
   const normalizedText = normalizeForIntent(text);
   return /\b(nao|errado|incorreto|nao sou|nao e|esta errado|ta errado)\b/.test(normalizedText);
 }
 
 function isDiagnosticFormTrigger(text: string) {
-  return normalizeForIntent(text) === normalizeForIntent(leadCaptureWhatsappStartMessage);
+  const normalizedText = normalizeForIntent(text);
+  const expectedText = normalizeForIntent(leadCaptureWhatsappStartMessage);
+
+  if (normalizedText === expectedText) return true;
+
+  const cameFromFxpDiagnostic =
+    normalizedText.includes("acabei de concluir o diagnostico da fxp") ||
+    normalizedText.includes("concluir o diagnostico da fxp") ||
+    normalizedText.includes("diagnostico da fxp");
+  const wantsApplication =
+    normalizedText.includes("aplicar a estrategia") ||
+    normalizedText.includes("usar estrategia") ||
+    normalizedText.includes("usar a estrategia") ||
+    normalizedText.includes("estrategia na minha autoescola") ||
+    normalizedText.includes("minha autoescola");
+
+  return cameFromFxpDiagnostic && wantsApplication;
 }
 
 function startsWithNormalized(value: string | null | undefined, prefix: string) {

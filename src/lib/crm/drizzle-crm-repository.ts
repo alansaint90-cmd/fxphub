@@ -249,6 +249,35 @@ export class DrizzleCrmRepository implements CrmRepository {
         modifiedBy,
       })
       .where(and(eq(leads.id, input.leadId), eq(leads.isDeleted, false)));
+
+    const [lead] = await db
+      .select({ phone: leads.phone })
+      .from(leads)
+      .where(and(eq(leads.id, input.leadId), eq(leads.isDeleted, false)))
+      .limit(1);
+
+    if (lead?.phone) {
+      const [leadForm] = await db
+        .select({ id: leadForms.id, tags: leadForms.tags })
+        .from(leadForms)
+        .where(and(inArray(leadForms.phone, getPhoneLookupVariants(lead.phone)), eq(leadForms.isDeleted, false)))
+        .orderBy(desc(leadForms.createdAt))
+        .limit(1);
+
+      if (leadForm) {
+        await db
+          .update(leadForms)
+          .set({
+            meetingScheduled: true,
+            meetingDate: input.startsAt,
+            leadStatus: "Reuniao agendada",
+            tags: mergeTags(leadForm.tags, ["reuniao_agendada", "reuniao_confirmada"]),
+            updatedAt: new Date(),
+            modifiedBy,
+          })
+          .where(and(eq(leadForms.id, leadForm.id), eq(leadForms.isDeleted, false)));
+      }
+    }
   }
 
   async cancelUpcomingMeeting(input: { leadId: string }): Promise<void> {
@@ -301,6 +330,10 @@ function getPhoneLookupVariants(phone: string) {
   if (digits.length > 10) variants.add(digits.slice(-10));
 
   return [...variants];
+}
+
+function mergeTags(currentTags: string[] | null, nextTags: string[]) {
+  return [...new Set([...(currentTags ?? []), ...nextTags])];
 }
 
 async function getLatestClickedLeadForm() {
