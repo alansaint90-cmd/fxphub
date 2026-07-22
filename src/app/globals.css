@@ -2408,6 +2408,9 @@ h2 {
 
 .commercial-ai-hero > span,
 .agent-prompt-card b {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: #f8fafc;
@@ -2449,6 +2452,7 @@ h2 {
 
 .agent-prompt-card header {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 14px;
 }
