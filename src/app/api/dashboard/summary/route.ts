@@ -3,13 +3,15 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { appointments, conversationMessages, leadForms, leads } from "@/lib/db/schema";
 
+const DASHBOARD_RESET_AT = new Date("2026-07-22T00:30:14-03:00");
+
 export async function GET() {
   try {
     const now = new Date();
     const todayStart = startOfSaoPauloDay(now);
+    const dashboardStart = maxDate(todayStart, DASHBOARD_RESET_AT);
     const tomorrowStart = addDays(todayStart, 1);
-    const sevenDaysAgo = new Date(now);
-    sevenDaysAgo.setDate(now.getDate() - 7);
+    const sevenDaysAgo = maxDate(addDays(now, -7), DASHBOARD_RESET_AT);
 
     const [
       allLeads,
@@ -37,21 +39,39 @@ export async function GET() {
           updatedAt: leads.updatedAt,
         })
         .from(leads)
-        .where(eq(leads.isDeleted, false))
+        .where(and(eq(leads.isDeleted, false), gte(leads.createdAt, DASHBOARD_RESET_AT)))
         .orderBy(desc(leads.score), desc(leads.updatedAt))
         .limit(80),
       db
         .select({ id: leadForms.id })
         .from(leadForms)
-        .where(and(eq(leadForms.isDeleted, false), gte(leadForms.createdAt, todayStart), lt(leadForms.createdAt, tomorrowStart))),
+        .where(
+          and(
+            eq(leadForms.isDeleted, false),
+            gte(leadForms.createdAt, dashboardStart),
+            lt(leadForms.createdAt, tomorrowStart),
+          ),
+        ),
       db
         .select({ id: leadForms.id })
         .from(leadForms)
-        .where(and(eq(leadForms.isDeleted, false), eq(leadForms.qualificationStatus, "qualified"))),
+        .where(
+          and(
+            eq(leadForms.isDeleted, false),
+            eq(leadForms.qualificationStatus, "qualified"),
+            gte(leadForms.createdAt, DASHBOARD_RESET_AT),
+          ),
+        ),
       db
         .select({ id: leadForms.id })
         .from(leadForms)
-        .where(and(eq(leadForms.isDeleted, false), eq(leadForms.meetingScheduled, true))),
+        .where(
+          and(
+            eq(leadForms.isDeleted, false),
+            eq(leadForms.meetingScheduled, true),
+            gte(leadForms.updatedAt, DASHBOARD_RESET_AT),
+          ),
+        ),
       db
         .select({ id: appointments.id })
         .from(appointments)
@@ -59,7 +79,8 @@ export async function GET() {
           and(
             eq(appointments.isDeleted, false),
             inArray(appointments.status, ["scheduled", "rescheduled"]),
-            gte(appointments.startsAt, todayStart),
+            gte(appointments.createdAt, DASHBOARD_RESET_AT),
+            gte(appointments.startsAt, dashboardStart),
             lt(appointments.startsAt, tomorrowStart),
           ),
         ),
@@ -72,6 +93,7 @@ export async function GET() {
           and(
             eq(appointments.isDeleted, false),
             inArray(appointments.status, ["scheduled", "rescheduled"]),
+            gte(appointments.createdAt, DASHBOARD_RESET_AT),
             gte(appointments.startsAt, now),
           ),
         )
@@ -150,6 +172,10 @@ function addDays(date: Date, days: number) {
   const nextDate = new Date(date);
   nextDate.setDate(nextDate.getDate() + days);
   return nextDate;
+}
+
+function maxDate(firstDate: Date, secondDate: Date) {
+  return firstDate > secondDate ? firstDate : secondDate;
 }
 
 function formatHour(date: Date) {
