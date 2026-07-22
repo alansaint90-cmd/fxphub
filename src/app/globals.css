@@ -3497,9 +3497,15 @@ button.danger {
 
 .lead-capture-panel {
   grid-column: 1 / -1;
-  width: 100%;
-  max-width: 1260px;
-  margin: 18px auto;
+  width: min(100%, 100vw - 32px);
+  max-width: none;
+  min-height: calc(100vh - 118px);
+  margin: 0 auto;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(109, 93, 252, 0.08), transparent 28rem),
+    radial-gradient(circle at 92% 10%, rgba(6, 182, 212, 0.08), transparent 30rem),
+    #ffffff;
 }
 
 .lead-capture-header,
@@ -3514,6 +3520,8 @@ button.danger {
 .lead-capture-header {
   justify-content: space-between;
   margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
 }
 
 .lead-capture-search {
@@ -3540,6 +3548,82 @@ button.danger {
   margin-bottom: 16px;
 }
 
+.lead-capture-command {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.95fr) minmax(0, 2fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.capture-command-main,
+.capture-command-grid > div,
+.capture-live-panel {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: var(--shadow);
+}
+
+.capture-command-main {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  overflow: hidden;
+  padding: 18px;
+  color: #ffffff;
+  background:
+    linear-gradient(135deg, rgba(6, 182, 212, 0.24), transparent 58%),
+    linear-gradient(135deg, #08111f, #111827);
+}
+
+.capture-command-main::after {
+  content: "";
+  position: absolute;
+  right: -52px;
+  bottom: -52px;
+  width: 150px;
+  height: 150px;
+  border: 1px solid rgba(6, 182, 212, 0.28);
+  border-radius: 999px;
+}
+
+.capture-command-main span,
+.capture-command-main small,
+.capture-command-grid span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.capture-command-main span,
+.capture-command-main small {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.capture-command-main strong {
+  font-size: clamp(38px, 5vw, 64px);
+  line-height: 0.92;
+}
+
+.capture-command-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.capture-command-grid > div {
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  min-height: 116px;
+  padding: 16px;
+}
+
+.capture-command-grid strong {
+  font-size: 28px;
+  line-height: 1;
+}
+
 .lead-capture-tabs button,
 .capture-row-actions button,
 .capture-actions a {
@@ -3558,10 +3642,84 @@ button.danger {
   color: #ffffff;
 }
 
+.capture-overview-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2.2fr) minmax(320px, 0.9fr);
+  gap: 14px;
+}
+
 .capture-overview {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
+  align-content: start;
+}
+
+.capture-overview .executive-metric {
+  min-height: 104px;
+  background:
+    linear-gradient(135deg, rgba(248, 250, 252, 0.94), #ffffff);
+}
+
+.capture-live-panel {
+  align-self: stretch;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 12px;
+  padding: 16px;
+}
+
+.capture-live-panel h3 {
+  margin: 4px 0 0;
+  font-size: 18px;
+}
+
+.capture-live-list {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  max-height: 390px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.capture-live-list article {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fbfbfb;
+  padding: 12px;
+}
+
+.capture-live-list article div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.capture-live-list strong,
+.capture-live-list span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.capture-live-list span,
+.capture-live-list p {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.capture-live-list b {
+  border-radius: 999px;
+  background: rgba(6, 182, 212, 0.1);
+  color: #0369a1;
+  padding: 6px 8px;
+  font-size: 11px;
 }
 
 .capture-table {
@@ -5077,8 +5235,20 @@ textarea.quiz-input {
 
   .client-header-card,
   .split-panel,
+  .lead-capture-command,
+  .capture-overview-layout,
   .capture-config-grid {
     grid-template-columns: 1fr;
+  }
+
+  .lead-capture-panel {
+    width: 100%;
+    min-height: auto;
+    margin: 0;
+  }
+
+  .capture-command-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .capture-overview {
@@ -5217,6 +5387,24 @@ textarea.quiz-input {
 
   .lead-capture-search {
     min-width: 0;
+  }
+
+  .lead-capture-command,
+  .capture-overview-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .capture-command-grid,
+  .capture-overview {
+    grid-template-columns: 1fr;
+  }
+
+  .capture-command-grid > div {
+    min-height: 86px;
+  }
+
+  .capture-live-list {
+    max-height: 260px;
   }
 
   .quiz-options {

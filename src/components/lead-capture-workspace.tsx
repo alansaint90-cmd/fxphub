@@ -94,6 +94,11 @@ export function LeadCaptureWorkspace() {
   const publicUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/formulario/${defaultSlug}`;
   const todayCount = leads.filter((lead) => new Date(lead.createdAt).toDateString() === new Date().toDateString()).length;
   const qualificationRate = leads.length ? Math.round((leads.filter((lead) => lead.qualificationStatus === "qualified").length / leads.length) * 100) : 0;
+  const whatsappClickedCount = leads.filter((lead) => lead.whatsappClicked).length;
+  const scheduledCount = leads.filter((lead) => lead.meetingScheduled).length;
+  const lastSevenDaysCount = leads.filter((lead) => daysAgo(lead.createdAt) <= 7).length;
+  const lastThirtyDaysCount = leads.filter((lead) => daysAgo(lead.createdAt) <= 30).length;
+  const recentLeads = filtered.slice(0, 6);
 
   return (
     <article className="panel lead-capture-panel">
@@ -107,6 +112,32 @@ export function LeadCaptureWorkspace() {
           <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nome, telefone, campanha..." />
         </label>
       </header>
+
+      <section className="lead-capture-command">
+        <div className="capture-command-main">
+          <span>Pipeline dos formularios</span>
+          <strong>{leads.length}</strong>
+          <small>leads recebidos no diagnostico</small>
+        </div>
+        <div className="capture-command-grid">
+          <div>
+            <span>Qualificados</span>
+            <strong>{qualified.length}</strong>
+          </div>
+          <div>
+            <span>WhatsApp</span>
+            <strong>{whatsappClickedCount}</strong>
+          </div>
+          <div>
+            <span>Reunioes</span>
+            <strong>{scheduledCount}</strong>
+          </div>
+          <div>
+            <span>Hoje</span>
+            <strong>{todayCount}</strong>
+          </div>
+        </div>
+      </section>
 
       <nav className="lead-capture-tabs">
         {[
@@ -127,25 +158,47 @@ export function LeadCaptureWorkspace() {
       {status ? <p className="integration-status">{status}</p> : null}
 
       {activeTab === "overview" ? (
-        <section className="capture-overview">
-          {[
-            ["Total iniciados", leads.length],
-            ["Formularios concluidos", leads.length],
-            ["Qualificados", qualified.length],
-            ["Nao qualificados", unqualified.length],
-            ["Taxa qualificacao", `${qualificationRate}%`],
-            ["Clicaram WhatsApp", leads.filter((lead) => lead.whatsappClicked).length],
-            ["Nao clicaram WhatsApp", leads.filter((lead) => !lead.whatsappClicked).length],
-            ["Reuniao agendada", leads.filter((lead) => lead.meetingScheduled).length],
-            ["Captados hoje", todayCount],
-            ["Ultimos 7 dias", leads.filter((lead) => daysAgo(lead.createdAt) <= 7).length],
-            ["Ultimos 30 dias", leads.filter((lead) => daysAgo(lead.createdAt) <= 30).length],
-          ].map(([label, value]) => (
-            <div className="executive-metric" key={label}>
-              <span>{label}</span>
-              <strong>{value}</strong>
+        <section className="capture-overview-layout">
+          <div className="capture-overview">
+            {[
+              ["Total iniciados", leads.length],
+              ["Formularios concluidos", leads.length],
+              ["Qualificados", qualified.length],
+              ["Nao qualificados", unqualified.length],
+              ["Taxa qualificacao", `${qualificationRate}%`],
+              ["Clicaram WhatsApp", whatsappClickedCount],
+              ["Nao clicaram WhatsApp", leads.length - whatsappClickedCount],
+              ["Reuniao agendada", scheduledCount],
+              ["Captados hoje", todayCount],
+              ["Ultimos 7 dias", lastSevenDaysCount],
+              ["Ultimos 30 dias", lastThirtyDaysCount],
+              ["Campanhas ativas", settings?.isActive ? 1 : 0],
+            ].map(([label, value]) => (
+              <div className="executive-metric" key={label}>
+                <span>{label}</span>
+                <strong>{value}</strong>
+              </div>
+            ))}
+          </div>
+
+          <aside className="capture-live-panel">
+            <header>
+              <span className="eyebrow">Entrada recente</span>
+              <h3>Novos diagnosticos</h3>
+            </header>
+            <div className="capture-live-list">
+              {recentLeads.map((lead) => (
+                <article key={lead.id}>
+                  <div>
+                    <strong>{lead.businessName}</strong>
+                    <span>{lead.name} | {lead.city || "Cidade nao informada"}</span>
+                  </div>
+                  <b>{lead.qualificationStatus === "qualified" ? "Qualificado" : "Nao qualificado"}</b>
+                </article>
+              ))}
+              {recentLeads.length === 0 ? <p>Nenhum lead recebido ainda.</p> : null}
             </div>
-          ))}
+          </aside>
         </section>
       ) : null}
 
