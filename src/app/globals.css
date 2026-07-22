@@ -305,8 +305,15 @@ a {
 }
 
 .lead-capture-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   min-height: 100vh;
   padding: 18px clamp(14px, 2vw, 28px);
+}
+
+.lead-capture-page {
+  width: 100%;
+  min-width: 0;
 }
 
 .lead-capture-workspace .topbar {
@@ -3519,6 +3526,7 @@ button.danger {
   min-height: calc(100vh - 108px);
   margin: 0 auto;
   overflow: auto;
+  padding: clamp(18px, 2.2vw, 30px);
   background:
     radial-gradient(circle at 10% 0%, rgba(109, 93, 252, 0.08), transparent 28rem),
     radial-gradient(circle at 92% 10%, rgba(6, 182, 212, 0.08), transparent 30rem),
@@ -3535,7 +3543,9 @@ button.danger {
 }
 
 .lead-capture-header {
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.38fr);
+  justify-content: initial;
   margin-bottom: 14px;
   padding-bottom: 14px;
   border-bottom: 1px solid var(--line);
@@ -3567,7 +3577,7 @@ button.danger {
 
 .lead-capture-command {
   display: grid;
-  grid-template-columns: minmax(260px, 0.7fr) minmax(0, 2.3fr);
+  grid-template-columns: minmax(320px, 0.8fr) minmax(0, 2.2fr);
   gap: 12px;
   margin-bottom: 16px;
 }
@@ -3790,17 +3800,18 @@ button.danger {
 
 .capture-tracking-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.9fr);
+  grid-template-columns: minmax(360px, 0.85fr) minmax(0, 1.35fr);
   gap: 14px;
 }
 
 .capture-config-card {
   display: grid;
+  align-content: start;
   gap: 10px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: #ffffff;
-  padding: 16px;
+  padding: clamp(18px, 2vw, 26px);
 }
 
 .capture-public-preview {
@@ -5473,6 +5484,7 @@ textarea.quiz-input {
   .lead-capture-header {
     align-items: stretch;
     flex-direction: column;
+    grid-template-columns: 1fr;
   }
 
   .lead-capture-search {

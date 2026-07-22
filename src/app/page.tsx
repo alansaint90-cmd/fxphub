@@ -1745,7 +1745,7 @@ export default function HomePage() {
             </section>
           </article>
 
-          <div className={activePage === "captacaoLeads" ? "" : "page-hidden"}>
+          <div className={`lead-capture-page ${activePage === "captacaoLeads" ? "" : "page-hidden"}`}>
             <LeadCaptureWorkspace />
           </div>
 
