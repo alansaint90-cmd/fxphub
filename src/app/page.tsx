@@ -1052,11 +1052,7 @@ export default function HomePage() {
       <main className="login-screen">
         <section className="login-panel" aria-label="Acesso ao fxphub">
           <div className="brand login-brand">
-            <div className="brand-mark">fx</div>
-            <div>
-              <strong>fxphub</strong>
-              <span>AI Commercial Hub</span>
-            </div>
+            <img className="login-brand-logo" src="/assets/fxp-hub-logo.png" alt="FXP Hub" />
           </div>
 
           <div className="login-copy">

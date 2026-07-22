@@ -106,6 +106,13 @@ a {
   text-align: left;
 }
 
+.login-brand-logo {
+  width: 128px;
+  max-width: 60%;
+  height: auto;
+  object-fit: contain;
+}
+
 .login-copy {
   display: grid;
   gap: 12px;
