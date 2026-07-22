@@ -18,10 +18,22 @@ export async function GET() {
       db.select().from(leadForms).where(eq(leadForms.isDeleted, false)).orderBy(desc(leadForms.createdAt)).limit(300),
       db.select().from(leadFormSettings).orderBy(desc(leadFormSettings.createdAt)).limit(1),
     ]);
+    const events = await db
+      .select({
+        eventName: leadFormEvents.eventName,
+        createdAt: leadFormEvents.createdAt,
+      })
+      .from(leadFormEvents)
+      .orderBy(desc(leadFormEvents.createdAt))
+      .limit(1000);
 
     return NextResponse.json({
       ok: true,
       settings: settings[0] ? toSettings(settings[0]) : null,
+      events: events.map((event) => ({
+        eventName: event.eventName,
+        createdAt: event.createdAt.toISOString(),
+      })),
       leads: leads.map((lead) => ({
         id: lead.id,
         name: lead.name,
@@ -56,6 +68,7 @@ export async function GET() {
         adId: lead.adId,
         tags: lead.tags,
         notes: lead.notes,
+        diagnosticAnswers: lead.diagnosticAnswers,
         createdAt: lead.createdAt.toISOString(),
       })),
     });

@@ -31,6 +31,7 @@ interface CaptureLead {
   utmCampaign?: string | null;
   tags: string[];
   notes?: string | null;
+  diagnosticAnswers: Record<string, unknown>;
   createdAt: string;
 }
 
@@ -44,11 +45,30 @@ interface CaptureSettings {
   metaPixelId?: string | null;
 }
 
+interface CaptureEvent {
+  eventName: string;
+  createdAt: string;
+}
+
 const LEAD_CAPTURE_RESET_AT = new Date("2026-07-22T01:22:21-03:00").getTime();
+const funnelQuestions = [
+  { key: "nome", label: "Nome do responsavel" },
+  { key: "empresa", label: "Nome da autoescola" },
+  { key: "cargo", label: "Cargo na empresa" },
+  { key: "trafegoPago", label: "Uso de trafego pago" },
+  { key: "leadsAtuais", label: "Leads atuais" },
+  { key: "leadsDesejados", label: "Meta de leads" },
+  { key: "estruturaAtendimento", label: "Estrutura de atendimento" },
+  { key: "tempoResposta", label: "Tempo de resposta" },
+  { key: "principalDesafio", label: "Principal desafio" },
+  { key: "aberturaNovaEstrategia", label: "Abertura para estrategia" },
+  { key: "interesseReuniao", label: "Interesse em reuniao" },
+];
 
 export function LeadCaptureWorkspace() {
   const [activeTab, setActiveTab] = useState<CaptureTab>("overview");
   const [leads, setLeads] = useState<CaptureLead[]>([]);
+  const [events, setEvents] = useState<CaptureEvent[]>([]);
   const [settings, setSettings] = useState<CaptureSettings | null>(null);
   const [status, setStatus] = useState("Carregando captacao...");
   const [search, setSearch] = useState("");
@@ -60,12 +80,13 @@ export function LeadCaptureWorkspace() {
   async function loadLeads() {
     try {
       const response = await fetch("/api/lead-capture/leads", { cache: "no-store" });
-      const result = (await response.json()) as { ok?: boolean; leads?: CaptureLead[]; settings?: CaptureSettings | null; error?: string };
+      const result = (await response.json()) as { ok?: boolean; leads?: CaptureLead[]; events?: CaptureEvent[]; settings?: CaptureSettings | null; error?: string };
       if (!result.ok) {
         setStatus(result.error ?? "Nao foi possivel carregar.");
         return;
       }
       setLeads(result.leads ?? []);
+      setEvents(result.events ?? []);
       setSettings(result.settings ?? null);
       setStatus("");
     } catch {
@@ -91,6 +112,7 @@ export function LeadCaptureWorkspace() {
       .includes(query));
   }, [leads, search]);
   const visibleLeads = leads.filter((lead) => new Date(lead.createdAt).getTime() >= LEAD_CAPTURE_RESET_AT);
+  const visibleEvents = events.filter((event) => new Date(event.createdAt).getTime() >= LEAD_CAPTURE_RESET_AT);
   const filteredVisible = filtered.filter((lead) => new Date(lead.createdAt).getTime() >= LEAD_CAPTURE_RESET_AT);
   const qualified = filteredVisible.filter((lead) => lead.qualificationStatus === "qualified");
   const unqualified = filteredVisible.filter((lead) => lead.qualificationStatus === "unqualified");
@@ -103,6 +125,16 @@ export function LeadCaptureWorkspace() {
   const lastSevenDaysCount = visibleLeads.filter((lead) => daysAgo(lead.createdAt) <= 7).length;
   const lastThirtyDaysCount = visibleLeads.filter((lead) => daysAgo(lead.createdAt) <= 30).length;
   const recentLeads = filteredVisible.slice(0, 6);
+  const formEntryCount = Math.max(visibleEvents.filter((event) => event.eventName === "PageView").length, visibleLeads.length);
+  const funnelSteps = [
+    { label: "Entraram no formulario", value: formEntryCount },
+    ...funnelQuestions.map((question) => ({
+      label: question.label,
+      value: visibleLeads.filter((lead) => hasDiagnosticAnswer(lead, question.key)).length,
+    })),
+    { label: "Formulario concluido", value: visibleLeads.length },
+    { label: "Clicaram no WhatsApp", value: whatsappClickedCount },
+  ];
 
   return (
     <article className="panel lead-capture-panel">
@@ -246,10 +278,32 @@ export function LeadCaptureWorkspace() {
       ) : null}
 
       {activeTab === "tracking" ? (
-        <section className="capture-config-card">
-          <h3>Meta Pixel e rastreamento</h3>
-          <p>Pixel ID: {settings?.metaPixelId || "Nao configurado"}</p>
-          <p>Eventos preparados: PageView, Lead, QualifiedLead, UnqualifiedLead e Contact.</p>
+        <section className="capture-tracking-layout">
+          <div className="capture-config-card">
+            <h3>Meta Pixel e rastreamento</h3>
+            <p>Pixel ID: {settings?.metaPixelId || "Nao configurado"}</p>
+            <p>Eventos preparados: PageView, Lead, QualifiedLead, UnqualifiedLead e Contact.</p>
+          </div>
+          <aside className="capture-funnel-card">
+            <header>
+              <span className="eyebrow">Funil do formulario</span>
+              <h3>Passagem por pergunta</h3>
+            </header>
+            <div className="capture-funnel-list">
+              {funnelSteps.map((step) => (
+                <div className="capture-funnel-step" key={step.label}>
+                  <div>
+                    <span>{step.label}</span>
+                    <strong>{step.value}</strong>
+                  </div>
+                  <i>
+                    <b style={{ width: `${toPercent(step.value, formEntryCount)}%` }} />
+                  </i>
+                  <small>{toPercent(step.value, formEntryCount)}%</small>
+                </div>
+              ))}
+            </div>
+          </aside>
         </section>
       ) : null}
     </article>
@@ -285,4 +339,14 @@ function LeadTable({ leads, onAction }: { leads: CaptureLead[]; onAction: (id: s
 
 function daysAgo(value: string) {
   return Math.floor((Date.now() - new Date(value).getTime()) / 86400000);
+}
+
+function hasDiagnosticAnswer(lead: CaptureLead, key: string) {
+  const value = lead.diagnosticAnswers?.[key];
+  return value !== undefined && value !== null && String(value).trim().length > 0;
+}
+
+function toPercent(value: number, total: number) {
+  if (total <= 0) return 0;
+  return Math.min(100, Math.round((value / total) * 100));
 }
