@@ -105,6 +105,8 @@ interface ConversationContact {
   preview: string;
   time: string;
   channel: string;
+  status?: string;
+  aiPaused?: boolean;
   unread?: number;
 }
 
@@ -114,6 +116,10 @@ interface ConversationMessage {
   sender?: string;
   text: string;
   time: string;
+}
+
+interface ConversationRecord extends ConversationContact {
+  messages: ConversationMessage[];
 }
 
 interface IntegrationField {
@@ -349,135 +355,6 @@ const financeMetrics = [
   { label: "Novos clientes", value: "4" },
 ];
 
-const conversationContacts: ConversationContact[] = [
-  {
-    id: "marcio",
-    name: "Marcio",
-    initials: "M",
-    preview: "Fechando comigo, consigo um desconto espe...",
-    time: "5 h",
-    channel: "Facebook Ads",
-    unread: 2,
-  },
-  {
-    id: "roanderson",
-    name: "Roanderson Leite",
-    initials: "RL",
-    preview: "Gostaria de saber se ja conseguiu marcar a pro...",
-    time: "5 h",
-    channel: "Instagram Ads",
-  },
-  {
-    id: "xandy",
-    name: "Xandy",
-    initials: "X",
-    preview: "[imagem recebida]",
-    time: "5 h",
-    channel: "WhatsApp",
-    unread: 1,
-  },
-  {
-    id: "soldado",
-    name: "Soldado",
-    initials: "S",
-    preview: "Ta ok obrigado.",
-    time: "6 h",
-    channel: "WhatsApp",
-  },
-  {
-    id: "coracoes",
-    name: "Lead ativo",
-    initials: "LA",
-    preview: "Estou cobrando todos os dias e nada",
-    time: "6 h",
-    channel: "WhatsApp",
-  },
-  {
-    id: "bruno",
-    name: "Bruno",
-    initials: "B",
-    preview: "Aqui no br",
-    time: "6 h",
-    channel: "Google Ads",
-  },
-  {
-    id: "denilson",
-    name: "Denilson Rabelo",
-    initials: "DR",
-    preview: "Mas uns dias ?",
-    time: "6 h",
-    channel: "WhatsApp",
-  },
-];
-
-const conversationThread: Record<string, ConversationMessage[]> = {
-  soldado: [
-    {
-      id: "msg-1",
-      author: "lead",
-      text: "Ola, boa tarde !",
-      time: "9 h",
-    },
-    {
-      id: "msg-2",
-      author: "lead",
-      text: "Devo estar ai na escola que horas ?",
-      time: "9 h",
-    },
-    {
-      id: "msg-3",
-      author: "operator",
-      sender: "Superadmin - Super Admin",
-      text: "Ola, bom dia!",
-      time: "6 h",
-    },
-    {
-      id: "msg-4",
-      author: "operator",
-      sender: "Superadmin - Super Admin",
-      text: "o exame e no Detran, precisa estar la as 08:00 Caso queira ir na carona do veiculo, precisa esta aqui na auto escola as 07:00, o carro sai daqui nesse horario",
-      time: "6 h",
-    },
-    {
-      id: "msg-5",
-      author: "lead",
-      text: "Ta ok obrigado.",
-      time: "6 h",
-    },
-  ],
-  marcio: [
-    {
-      id: "msg-marcio-1",
-      author: "lead",
-      text: "Fechando comigo, consigo um desconto especial?",
-      time: "5 h",
-    },
-    {
-      id: "msg-marcio-2",
-      author: "operator",
-      sender: "fxphub IA",
-      text: "Consigo verificar as condicoes para sua autoescola. Quantas matriculas voces fazem por mes?",
-      time: "5 h",
-    },
-  ],
-};
-
-const defaultConversationMessages: ConversationMessage[] = [
-  {
-    id: "default-1",
-    author: "lead",
-    text: "Tenho interesse em organizar melhor meu atendimento pelo WhatsApp.",
-    time: "6 h",
-  },
-  {
-    id: "default-2",
-    author: "operator",
-    sender: "fxphub IA",
-    text: "Perfeito. Vou registrar seu contexto e manter o historico completo para o comercial.",
-    time: "6 h",
-  },
-];
-
 const pains = [
   "Falta de CRM",
   "Leads perdidos",
@@ -627,7 +504,10 @@ export default function HomePage() {
   const [kanbanStatus, setKanbanStatus] = useState("Carregando funil operacional...");
   const [draggingLeadId, setDraggingLeadId] = useState<string | null>(null);
   const [activePage, setActivePage] = useState<AppPage>("dashboard");
-  const [selectedConversationId, setSelectedConversationId] = useState("soldado");
+  const [conversations, setConversations] = useState<ConversationRecord[]>([]);
+  const [conversationStatus, setConversationStatus] = useState("Carregando conversas reais...");
+  const [conversationSearch, setConversationSearch] = useState("");
+  const [selectedConversationId, setSelectedConversationId] = useState("");
   const [integrationValues, setIntegrationValues] = useState(initialIntegrationValues);
   const [integrationSaved, setIntegrationSaved] = useState(false);
   const [savedIntegrationSecrets, setSavedIntegrationSecrets] = useState<Record<string, boolean>>({});
@@ -670,6 +550,12 @@ export default function HomePage() {
     return () => window.clearInterval(intervalId);
   }, []);
 
+  useEffect(() => {
+    loadConversations();
+    const intervalId = window.setInterval(loadConversations, 5000);
+    return () => window.clearInterval(intervalId);
+  }, []);
+
   async function loadKanbanLeads() {
     try {
       const response = await fetch("/api/funnel/leads", { cache: "no-store" });
@@ -688,6 +574,35 @@ export default function HomePage() {
       setKanbanStatus("Funil conectado ao banco. Atualiza conforme o Fausto muda as etapas.");
     } catch {
       setKanbanStatus("Nao foi possivel consultar o funil operacional.");
+    }
+  }
+
+  async function loadConversations() {
+    try {
+      const response = await fetch("/api/conversations", { cache: "no-store" });
+      const result = (await response.json()) as {
+        ok?: boolean;
+        conversations?: ConversationRecord[];
+        error?: string;
+      };
+
+      if (!result.ok || !result.conversations) {
+        setConversationStatus(result.error ?? "Nao foi possivel carregar conversas reais.");
+        return;
+      }
+
+      setConversations(result.conversations);
+      setConversationStatus(
+        result.conversations.length > 0
+          ? "Conversas conectadas ao WhatsApp. Atualizacao automatica ativa."
+          : "Nenhuma conversa real recebida ainda.",
+      );
+      setSelectedConversationId((currentId) => {
+        if (currentId && result.conversations?.some((conversation) => conversation.id === currentId)) return currentId;
+        return result.conversations?.[0]?.id ?? "";
+      });
+    } catch {
+      setConversationStatus("Nao foi possivel consultar as conversas do WhatsApp.");
     }
   }
 
@@ -1062,10 +977,22 @@ export default function HomePage() {
       .join("\n\n");
   }
 
+  const filteredConversations = conversations.filter((conversation) => {
+    const search = conversationSearch.trim().toLowerCase();
+    if (!search) return true;
+    return (
+      conversation.name.toLowerCase().includes(search) ||
+      conversation.preview.toLowerCase().includes(search) ||
+      conversation.channel.toLowerCase().includes(search)
+    );
+  });
   const selectedConversation =
-    conversationContacts.find((contact) => contact.id === selectedConversationId) ?? conversationContacts[0];
-  const activeConversationMessages =
-    conversationThread[selectedConversation?.id ?? ""] ?? defaultConversationMessages;
+    filteredConversations.find((contact) => contact.id === selectedConversationId) ??
+    conversations.find((contact) => contact.id === selectedConversationId) ??
+    filteredConversations[0] ??
+    conversations[0] ??
+    null;
+  const activeConversationMessages = selectedConversation?.messages ?? [];
   const integrationFields = integrationGroups.flatMap((group) => group.fields);
   const filledIntegrationCount = integrationFields.filter(
     (field) => integrationValues[field.key].trim() || savedIntegrationSecrets[field.key],
@@ -1330,7 +1257,7 @@ export default function HomePage() {
                 Status da IA <strong>Ativo</strong>
               </button>
               <button className="icon-button" type="button" aria-label="Notificacoes">
-                1
+                {conversations.length}
               </button>
               <div className="support-logo">fx</div>
             </div>
@@ -1340,11 +1267,16 @@ export default function HomePage() {
             <aside className="inbox-panel" aria-label="Caixa de entrada">
               <div className="inbox-heading">
                 <strong>Caixa de entrada</strong>
+                <span>{conversations.length} reais</span>
               </div>
 
               <label className="inbox-search">
                 <span>Q</span>
-                <input placeholder="Buscar conversa..." />
+                <input
+                  placeholder="Buscar conversa..."
+                  value={conversationSearch}
+                  onChange={(event) => setConversationSearch(event.target.value)}
+                />
               </label>
 
               <div className="inbox-filters">
@@ -1356,9 +1288,9 @@ export default function HomePage() {
               </div>
 
               <div className="conversation-list">
-                {conversationContacts.map((contact) => (
+                {filteredConversations.map((contact) => (
                   <button
-                    className={`conversation-contact ${selectedConversation.id === contact.id ? "active" : ""}`}
+                    className={`conversation-contact ${selectedConversation?.id === contact.id ? "active" : ""}`}
                     key={contact.id}
                     type="button"
                     onClick={() => setSelectedConversationId(contact.id)}
@@ -1374,18 +1306,34 @@ export default function HomePage() {
                     </span>
                   </button>
                 ))}
+                {filteredConversations.length === 0 ? (
+                  <div className="kanban-empty">{conversationStatus}</div>
+                ) : null}
               </div>
             </aside>
 
-            <article className="chat-panel" aria-label={`Conversa com ${selectedConversation.name}`}>
+            <article className="chat-panel" aria-label={selectedConversation ? `Conversa com ${selectedConversation.name}` : "Conversa"}>
               <header className="chat-header">
-                <div className="chat-person">
-                  <span className="contact-avatar large">{selectedConversation.initials}</span>
-                  <div>
-                    <strong>{selectedConversation.name}</strong>
-                    <small>{selectedConversation.channel}</small>
+                {selectedConversation ? (
+                  <div className="chat-person">
+                    <span className="contact-avatar large">{selectedConversation.initials}</span>
+                    <div>
+                      <strong>{selectedConversation.name}</strong>
+                      <small>
+                        {selectedConversation.channel}
+                        {selectedConversation.status ? ` - ${selectedConversation.status.replaceAll("_", " ")}` : ""}
+                      </small>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="chat-person">
+                    <span className="contact-avatar large">FX</span>
+                    <div>
+                      <strong>Nenhuma conversa selecionada</strong>
+                      <small>{conversationStatus}</small>
+                    </div>
+                  </div>
+                )}
 
                 <div className="chat-actions">
                   <button className="pilot" type="button">Piloto: Superadmin</button>
@@ -1402,6 +1350,9 @@ export default function HomePage() {
                     <span>{message.time}</span>
                   </div>
                 ))}
+                {activeConversationMessages.length === 0 ? (
+                  <div className="kanban-empty">{conversationStatus}</div>
+                ) : null}
               </div>
 
               <form className="message-composer">
