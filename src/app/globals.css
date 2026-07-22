@@ -297,6 +297,16 @@ a {
   padding: 24px clamp(18px, 3vw, 42px);
 }
 
+.conversation-workspace {
+  height: 100vh;
+  overflow: hidden;
+  padding: 0;
+}
+
+.conversation-workspace > .topbar {
+  display: none;
+}
+
 .page-hidden {
   display: none !important;
 }
@@ -1556,6 +1566,7 @@ h2 {
 }
 
 .support-console {
+  height: 100%;
   min-height: calc(100vh - 132px);
   overflow: hidden;
   border: 1px solid var(--line);
@@ -1565,6 +1576,15 @@ h2 {
   max-width: 1260px;
   margin: 0 auto;
   box-shadow: var(--shadow);
+}
+
+.conversation-workspace .support-console {
+  width: 100%;
+  max-width: none;
+  min-height: 0;
+  margin: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .support-topbar {
@@ -1681,20 +1701,30 @@ h2 {
 }
 
 .support-body {
+  height: calc(100% - 74px);
   min-height: calc(100vh - 206px);
   display: grid;
   grid-template-columns: minmax(340px, 360px) minmax(0, 1fr);
+}
+
+.conversation-workspace .support-body {
+  min-height: 0;
 }
 
 .inbox-panel {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  height: 100%;
   max-height: calc(100vh - 206px);
   overflow: hidden;
   border-right: 1px solid var(--line);
   background: #fbfbfb;
   padding: 12px;
+}
+
+.conversation-workspace .inbox-panel {
+  max-height: none;
 }
 
 .inbox-heading {
@@ -1854,8 +1884,10 @@ h2 {
 
 .chat-panel {
   min-width: 0;
+  height: 100%;
+  min-height: 0;
   display: grid;
-  grid-template-rows: 72px minmax(430px, 1fr) 78px;
+  grid-template-rows: 72px minmax(0, 1fr) 78px;
   background:
     linear-gradient(180deg, rgba(79, 124, 255, 0.06), transparent 28%),
     linear-gradient(90deg, rgba(231, 231, 233, 0.62) 1px, transparent 1px) 0 0 / 44px 44px,
@@ -1908,10 +1940,12 @@ h2 {
 }
 
 .chat-messages {
+  min-height: 0;
   display: grid;
   align-content: start;
   gap: 14px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 26px 18px 34px;
 }
 
@@ -5074,6 +5108,10 @@ textarea.quiz-input {
   .workspace,
   .sidebar {
     padding: 16px;
+  }
+
+  .conversation-workspace {
+    padding: 0;
   }
 
   .topbar,

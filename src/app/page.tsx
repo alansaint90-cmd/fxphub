@@ -1106,7 +1106,7 @@ export default function HomePage() {
         </div>
       </aside>
 
-      <section className="workspace">
+      <section className={`workspace ${activePage === "conversas" ? "conversation-workspace" : ""}`}>
         <header className="topbar">
           <div>
             <span className="eyebrow">fxphub workspace</span>
