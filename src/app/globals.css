@@ -1266,6 +1266,33 @@ h2 {
   cursor: pointer;
 }
 
+.client-row-actions .client-delete-button {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  min-width: 34px;
+  padding: 0;
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.22);
+  background: #fff7f7;
+}
+
+.client-delete-button svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.client-delete-button:hover {
+  color: #ffffff;
+  border-color: #ef4444;
+  background: #ef4444;
+}
+
 .client-stage-badge {
   width: fit-content;
   border-radius: 999px;

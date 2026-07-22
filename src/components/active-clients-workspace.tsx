@@ -292,6 +292,21 @@ export function ActiveClientsWorkspace() {
                   <div className="client-row-actions">
                     <button type="button" onClick={() => router.push(`/clientes/${client.id}`)}>Detalhes</button>
                     <button type="button" onClick={() => { setSelectedClientId(client.id); setModalMode("edit"); }}>Editar</button>
+                    <button
+                      className="client-delete-button"
+                      type="button"
+                      aria-label={`Excluir cliente ${client.companyName}`}
+                      title="Excluir cliente"
+                      onClick={() => handleDeleteClient(client.id)}
+                    >
+                      <svg aria-hidden="true" viewBox="0 0 24 24">
+                        <path d="M4 7h16" />
+                        <path d="M10 11v6" />
+                        <path d="M14 11v6" />
+                        <path d="M6 7l1 14h10l1-14" />
+                        <path d="M9 7V4h6v3" />
+                      </svg>
+                    </button>
                   </div>
                 </article>
               ))}
