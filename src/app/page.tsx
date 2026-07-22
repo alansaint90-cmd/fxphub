@@ -78,6 +78,27 @@ interface KanbanLead {
   stage: KanbanStageId;
 }
 
+interface DashboardLead {
+  id: string;
+  name: string;
+  city: string;
+  score: number;
+  className: "A" | "B" | "C";
+  status: string;
+  pain: string;
+}
+
+interface DashboardSummary {
+  overview: {
+    leadsToday: number;
+    qualified: number;
+    nextAgenda: string;
+  };
+  scoreCard: DashboardLead | null;
+  executiveMetrics: { label: string; value: string }[];
+  prioritizedLeads: DashboardLead[];
+}
+
 interface CalendarAppointment {
   id: string;
   leadId: string;
@@ -142,46 +163,6 @@ interface SavedIntegrationSetting {
   isSecret: boolean;
   hasValue: boolean;
 }
-
-const leads = [
-  {
-    name: "CFC Catuense",
-    city: "Catu",
-    score: 91,
-    className: "A",
-    status: "Reuniao pronta",
-    pain: "Sem CRM, trafego pago ativo",
-  },
-  {
-    name: "Autoescola Liberdade",
-    city: "Salvador",
-    score: 68,
-    className: "B",
-    status: "Aguardando horario",
-    pain: "Equipe pequena, leads perdidos",
-  },
-  {
-    name: "Direcao Norte",
-    city: "Feira de Santana",
-    score: 42,
-    className: "C",
-    status: "Nutrir no CRM",
-    pain: "Baixo volume mensal",
-  },
-];
-
-const executiveMetrics = [
-  { label: "Receita recorrente", value: "R$ 28.400" },
-  { label: "Clientes ativos", value: "18" },
-  { label: "Implantacoes em andamento", value: "6" },
-  { label: "Reunioes hoje", value: "4" },
-  { label: "Follow-ups pendentes", value: "12" },
-  { label: "Sem contato +7 dias", value: "3" },
-  { label: "Chamados em aberto", value: "5" },
-  { label: "Clientes para renovacao", value: "2" },
-  { label: "Taxa de conversao", value: "31%" },
-  { label: "MRR", value: "R$ 28.400" },
-];
 
 const customerSuccessClients = [
   {
@@ -500,6 +481,8 @@ function isSameAgendaDay(left: Date, right: Date) {
 export default function HomePage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginError, setLoginError] = useState("");
+  const [dashboardSummary, setDashboardSummary] = useState<DashboardSummary | null>(null);
+  const [dashboardStatus, setDashboardStatus] = useState("Carregando dados reais dos leads...");
   const [kanbanLeads, setKanbanLeads] = useState<KanbanLead[]>([]);
   const [kanbanStatus, setKanbanStatus] = useState("Carregando funil operacional...");
   const [draggingLeadId, setDraggingLeadId] = useState<string | null>(null);
@@ -551,6 +534,12 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
+    loadDashboardSummary();
+    const intervalId = window.setInterval(loadDashboardSummary, 10000);
+    return () => window.clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
     loadConversations();
     const intervalId = window.setInterval(loadConversations, 5000);
     return () => window.clearInterval(intervalId);
@@ -574,6 +563,31 @@ export default function HomePage() {
       setKanbanStatus("Funil conectado ao banco. Atualiza conforme o Fausto muda as etapas.");
     } catch {
       setKanbanStatus("Nao foi possivel consultar o funil operacional.");
+    }
+  }
+
+  async function loadDashboardSummary() {
+    try {
+      const response = await fetch("/api/dashboard/summary", { cache: "no-store" });
+      const result = (await response.json()) as {
+        ok?: boolean;
+        error?: string;
+      } & Partial<DashboardSummary>;
+
+      if (!result.ok || !result.overview || !result.executiveMetrics || !result.prioritizedLeads) {
+        setDashboardStatus(result.error ?? "Nao foi possivel carregar os dados reais dos leads.");
+        return;
+      }
+
+      setDashboardSummary({
+        overview: result.overview,
+        scoreCard: result.scoreCard ?? null,
+        executiveMetrics: result.executiveMetrics,
+        prioritizedLeads: result.prioritizedLeads,
+      });
+      setDashboardStatus("Dashboard conectado aos dados reais dos leads.");
+    } catch {
+      setDashboardStatus("Nao foi possivel consultar o dashboard real.");
     }
   }
 
@@ -1133,22 +1147,22 @@ export default function HomePage() {
             <div className="metric-grid">
               <div className="metric">
                 <span>Leads hoje</span>
-                <strong>77</strong>
+                <strong>{dashboardSummary?.overview.leadsToday ?? 0}</strong>
               </div>
               <div className="metric">
                 <span>Qualificados</span>
-                <strong>23</strong>
+                <strong>{dashboardSummary?.overview.qualified ?? 0}</strong>
               </div>
               <div className="metric">
                 <span>Proxima agenda</span>
-                <strong>14h</strong>
+                <strong>{dashboardSummary?.overview.nextAgenda ?? "Sem agenda"}</strong>
               </div>
             </div>
 
             <div className="growth-chart" aria-label="Evolucao mensal de qualificacao">
               <div className="chart-toolbar">
                 <span>Performance anual</span>
-                <b>+24.8%</b>
+                <b>{dashboardStatus}</b>
               </div>
               <div className="chart-line">
                 {["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"].map(
@@ -1168,13 +1182,13 @@ export default function HomePage() {
 
           <article className="score-panel">
             <div className="score-ring">
-              <span>91</span>
-              <small>Score A</small>
+              <span>{dashboardSummary?.scoreCard?.score ?? 0}</span>
+              <small>Score {dashboardSummary?.scoreCard?.className ?? "-"}</small>
             </div>
-            <h2>CFC Catuense</h2>
+            <h2>{dashboardSummary?.scoreCard?.name ?? "Aguardando lead real"}</h2>
             <div className="tag-row">
-              <span>Cliente ideal</span>
-              <span>Agendar</span>
+              <span>{dashboardSummary?.scoreCard?.status ?? "Sem dados"}</span>
+              <span>{dashboardSummary?.scoreCard?.pain ?? "Recebendo novos leads"}</span>
             </div>
           </article>
         </section>
@@ -1372,12 +1386,13 @@ export default function HomePage() {
               <h2>Indicadores em tempo real</h2>
             </div>
             <div className="executive-grid">
-              {executiveMetrics.map((metric) => (
+              {(dashboardSummary?.executiveMetrics ?? []).map((metric) => (
                 <div className="executive-metric" key={metric.label}>
                   <span>{metric.label}</span>
                   <strong>{metric.value}</strong>
                 </div>
               ))}
+              {!dashboardSummary?.executiveMetrics.length ? <div className="kanban-empty">{dashboardStatus}</div> : null}
             </div>
           </article>
 
@@ -1391,8 +1406,8 @@ export default function HomePage() {
               <span>Score</span>
               <span>Status</span>
             </div>
-            {leads.map((lead) => (
-              <div className="lead-row" key={lead.name}>
+            {(dashboardSummary?.prioritizedLeads ?? []).map((lead) => (
+              <div className="lead-row" key={lead.id}>
                 <div>
                   <strong>{lead.name}</strong>
                   <span>{lead.city} - {lead.pain}</span>
@@ -1401,6 +1416,7 @@ export default function HomePage() {
                 <span>{lead.status}</span>
               </div>
             ))}
+            {!dashboardSummary?.prioritizedLeads.length ? <div className="kanban-empty">{dashboardStatus}</div> : null}
           </article>
 
           <article className={`panel diagnostic ${activePage === "dashboard" ? "" : "page-hidden"}`}>
