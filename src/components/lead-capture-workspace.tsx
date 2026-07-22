@@ -44,6 +44,8 @@ interface CaptureSettings {
   metaPixelId?: string | null;
 }
 
+const LEAD_CAPTURE_RESET_AT = new Date("2026-07-22T01:22:21-03:00").getTime();
+
 export function LeadCaptureWorkspace() {
   const [activeTab, setActiveTab] = useState<CaptureTab>("overview");
   const [leads, setLeads] = useState<CaptureLead[]>([]);
@@ -88,17 +90,19 @@ export function LeadCaptureWorkspace() {
       .toLowerCase()
       .includes(query));
   }, [leads, search]);
-  const qualified = filtered.filter((lead) => lead.qualificationStatus === "qualified");
-  const unqualified = filtered.filter((lead) => lead.qualificationStatus === "unqualified");
+  const visibleLeads = leads.filter((lead) => new Date(lead.createdAt).getTime() >= LEAD_CAPTURE_RESET_AT);
+  const filteredVisible = filtered.filter((lead) => new Date(lead.createdAt).getTime() >= LEAD_CAPTURE_RESET_AT);
+  const qualified = filteredVisible.filter((lead) => lead.qualificationStatus === "qualified");
+  const unqualified = filteredVisible.filter((lead) => lead.qualificationStatus === "unqualified");
   const defaultSlug = settings?.slug || "diagnostico-autoescola";
   const publicUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/formulario/${defaultSlug}`;
-  const todayCount = leads.filter((lead) => new Date(lead.createdAt).toDateString() === new Date().toDateString()).length;
-  const qualificationRate = leads.length ? Math.round((leads.filter((lead) => lead.qualificationStatus === "qualified").length / leads.length) * 100) : 0;
-  const whatsappClickedCount = leads.filter((lead) => lead.whatsappClicked).length;
-  const scheduledCount = leads.filter((lead) => lead.meetingScheduled).length;
-  const lastSevenDaysCount = leads.filter((lead) => daysAgo(lead.createdAt) <= 7).length;
-  const lastThirtyDaysCount = leads.filter((lead) => daysAgo(lead.createdAt) <= 30).length;
-  const recentLeads = filtered.slice(0, 6);
+  const todayCount = visibleLeads.filter((lead) => new Date(lead.createdAt).toDateString() === new Date().toDateString()).length;
+  const qualificationRate = visibleLeads.length ? Math.round((visibleLeads.filter((lead) => lead.qualificationStatus === "qualified").length / visibleLeads.length) * 100) : 0;
+  const whatsappClickedCount = visibleLeads.filter((lead) => lead.whatsappClicked).length;
+  const scheduledCount = visibleLeads.filter((lead) => lead.meetingScheduled).length;
+  const lastSevenDaysCount = visibleLeads.filter((lead) => daysAgo(lead.createdAt) <= 7).length;
+  const lastThirtyDaysCount = visibleLeads.filter((lead) => daysAgo(lead.createdAt) <= 30).length;
+  const recentLeads = filteredVisible.slice(0, 6);
 
   return (
     <article className="panel lead-capture-panel">
@@ -116,7 +120,7 @@ export function LeadCaptureWorkspace() {
       <section className="lead-capture-command">
         <div className="capture-command-main">
           <span>Pipeline dos formularios</span>
-          <strong>{leads.length}</strong>
+          <strong>{visibleLeads.length}</strong>
           <small>leads recebidos no diagnostico</small>
         </div>
         <div className="capture-command-grid">
@@ -161,13 +165,13 @@ export function LeadCaptureWorkspace() {
         <section className="capture-overview-layout">
           <div className="capture-overview">
             {[
-              ["Total iniciados", leads.length],
-              ["Formularios concluidos", leads.length],
+              ["Total iniciados", visibleLeads.length],
+              ["Formularios concluidos", visibleLeads.length],
               ["Qualificados", qualified.length],
               ["Nao qualificados", unqualified.length],
               ["Taxa qualificacao", `${qualificationRate}%`],
               ["Clicaram WhatsApp", whatsappClickedCount],
-              ["Nao clicaram WhatsApp", leads.length - whatsappClickedCount],
+              ["Nao clicaram WhatsApp", visibleLeads.length - whatsappClickedCount],
               ["Reuniao agendada", scheduledCount],
               ["Captados hoje", todayCount],
               ["Ultimos 7 dias", lastSevenDaysCount],
@@ -204,7 +208,7 @@ export function LeadCaptureWorkspace() {
 
       {activeTab === "qualified" ? <LeadTable leads={qualified} onAction={updateLead} /> : null}
       {activeTab === "unqualified" ? <LeadTable leads={unqualified} onAction={updateLead} /> : null}
-      {activeTab === "all" ? <LeadTable leads={filtered} onAction={updateLead} /> : null}
+      {activeTab === "all" ? <LeadTable leads={filteredVisible} onAction={updateLead} /> : null}
 
       {activeTab === "form" ? (
         <section className="capture-config-grid">
