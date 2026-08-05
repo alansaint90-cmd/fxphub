@@ -6,6 +6,7 @@ import {
   encodeProposalData,
   FxpProposalData,
   onlyDigits,
+  PROPOSAL_TEMPLATE_REFERENCE_IMAGE,
   PROPOSAL_TEMPLATE_ID,
 } from "@/lib/proposals/fxp-proposal";
 
@@ -55,6 +56,9 @@ export function FxpProposalWorkspace() {
           <span className="eyebrow">Gerador de Propostas FXP</span>
           <h2>Template oficial: {PROPOSAL_TEMPLATE_ID}</h2>
           <p>Preencha os dados do cliente e gere uma proposta comercial personalizada preservando o modelo visual da FXP.</p>
+          <a className="proposal-reference-link" href={PROPOSAL_TEMPLATE_REFERENCE_IMAGE} target="_blank">
+            Ver referencia visual do template
+          </a>
         </header>
 
         <form className="proposal-builder-form" onSubmit={handleSubmit}>

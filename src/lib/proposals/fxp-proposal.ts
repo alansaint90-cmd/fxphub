@@ -1,4 +1,5 @@
 export const PROPOSAL_TEMPLATE_ID = "proposta-comercial-fxp";
+export const PROPOSAL_TEMPLATE_REFERENCE_IMAGE = "/assets/proposta-comercial-fxp-reference.png";
 
 export interface FxpProposalData {
   companyName: string;
