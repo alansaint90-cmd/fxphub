@@ -3934,6 +3934,7 @@ button.danger {
 }
 
 .proposal-builder-panel,
+.proposal-template-review,
 .fxp-proposal-template {
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -4038,6 +4039,43 @@ button.danger {
   font-weight: 900;
 }
 
+.proposal-template-review {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 16px;
+}
+
+.proposal-template-review header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.proposal-template-review h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.proposal-template-scroll {
+  width: min(100%, 760px);
+  aspect-ratio: 1 / 1;
+  justify-self: center;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #f8f8fb;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+}
+
+.proposal-template-scroll .fxp-proposal-template {
+  min-width: 960px;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
 .proposal-loading {
   min-height: 100vh;
   display: grid;
@@ -4066,8 +4104,8 @@ button.danger {
 }
 
 .fxp-proposal-template.preview {
-  max-height: calc(100vh - 130px);
-  overflow: auto;
+  max-height: none;
+  overflow: visible;
 }
 
 .proposal-hero {
@@ -4484,6 +4522,10 @@ button.danger {
     position: static;
   }
 
+  .proposal-template-scroll {
+    width: min(100%, 680px);
+  }
+
   .proposal-feature-grid,
   .proposal-step-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4506,6 +4548,10 @@ button.danger {
 
   .proposal-preview-stack {
     grid-template-columns: 1fr;
+  }
+
+  .proposal-template-scroll {
+    aspect-ratio: 1 / 1;
   }
 
   .proposal-demo-card {

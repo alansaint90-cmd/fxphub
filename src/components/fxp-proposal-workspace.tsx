@@ -94,7 +94,15 @@ export function FxpProposalWorkspace() {
         ) : null}
       </section>
 
-      <FxpProposalTemplate data={data} previewMode />
+      <section className="proposal-template-review">
+        <header>
+          <span className="eyebrow">Previa do template</span>
+          <h3>Revise a proposta</h3>
+        </header>
+        <div className="proposal-template-scroll">
+          <FxpProposalTemplate data={data} previewMode />
+        </div>
+      </section>
     </article>
   );
 }
