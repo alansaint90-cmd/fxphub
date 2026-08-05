@@ -1,6 +1,6 @@
 "use client";
 
-import { CSSProperties, FormEvent, useMemo, useState } from "react";
+import { CSSProperties, ChangeEvent, FormEvent, useMemo, useState } from "react";
 import {
   defaultProposalData,
   encodeProposalData,
@@ -50,6 +50,20 @@ export function FxpProposalWorkspace() {
     setData((current) => ({ ...current, [field]: value }));
   }
 
+  function uploadImage(field: keyof FxpProposalData, event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        updateField(field, reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+    event.target.value = "";
+  }
+
   function changePreviewZoom(direction: "in" | "out") {
     setPreviewZoom((current) => {
       const next = direction === "in" ? current + 0.08 : current - 0.08;
@@ -73,14 +87,14 @@ export function FxpProposalWorkspace() {
           <div className="proposal-form-grid">
             <ProposalInput label="Nome da empresa" value={data.companyName} onChange={(value) => updateField("companyName", value)} />
             <ProposalInput label="Segmento" value={data.segment} onChange={(value) => updateField("segment", value)} />
-            <ProposalInput label="Logo da empresa (URL)" value={data.companyLogoUrl} onChange={(value) => updateField("companyLogoUrl", value)} />
+            <ProposalImageInput label="Logo da empresa" value={data.companyLogoUrl} onChange={(value) => updateField("companyLogoUrl", value)} onUpload={(event) => uploadImage("companyLogoUrl", event)} />
             <ProposalInput label="WhatsApp" value={data.whatsapp} onChange={(value) => updateField("whatsapp", onlyDigits(value))} />
             <ProposalInput label="Instagram" value={data.instagram} onChange={(value) => updateField("instagram", value)} />
             <ProposalInput label="Google Maps" value={data.googleMapsUrl} onChange={(value) => updateField("googleMapsUrl", value)} />
             <ProposalInput label="Link da demonstracao" value={data.demoUrl} onChange={(value) => updateField("demoUrl", value)} />
-            <ProposalInput label="Print desktop do site" value={data.desktopImageUrl} onChange={(value) => updateField("desktopImageUrl", value)} />
-            <ProposalInput label="Imagem mobile do site" value={data.mobileImageUrl} onChange={(value) => updateField("mobileImageUrl", value)} />
-            <ProposalInput label="Antes/depois no Google" value={data.googleBeforeAfterImageUrl} onChange={(value) => updateField("googleBeforeAfterImageUrl", value)} />
+            <ProposalImageInput label="Print desktop do site" value={data.desktopImageUrl} onChange={(value) => updateField("desktopImageUrl", value)} onUpload={(event) => uploadImage("desktopImageUrl", event)} />
+            <ProposalImageInput label="Imagem mobile do site" value={data.mobileImageUrl} onChange={(value) => updateField("mobileImageUrl", value)} onUpload={(event) => uploadImage("mobileImageUrl", event)} />
+            <ProposalImageInput label="Antes/depois no Google" value={data.googleBeforeAfterImageUrl} onChange={(value) => updateField("googleBeforeAfterImageUrl", value)} onUpload={(event) => uploadImage("googleBeforeAfterImageUrl", event)} />
             <ProposalInput label="Valor original" value={data.originalImplementationValue} onChange={(value) => updateField("originalImplementationValue", value)} />
             <ProposalInput label="Valor promocional" value={data.promotionalImplementationValue} onChange={(value) => updateField("promotionalImplementationValue", value)} />
             <ProposalInput label="Infraestrutura mensal" value={data.monthlyInfrastructureValue} onChange={(value) => updateField("monthlyInfrastructureValue", value)} />
@@ -138,6 +152,32 @@ function ProposalInput({ label, value, onChange }: { label: string; value: strin
     <label>
       <span>{label}</span>
       <input value={value} onChange={(event) => onChange(event.target.value)} />
+    </label>
+  );
+}
+
+function ProposalImageInput({
+  label,
+  value,
+  onChange,
+  onUpload,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  onUpload: (event: ChangeEvent<HTMLInputElement>) => void;
+}) {
+  return (
+    <label className="proposal-image-input">
+      <span>{label}</span>
+      <input placeholder="Cole a URL ou carregue uma imagem" value={value.startsWith("data:") ? "Imagem carregada no sistema" : value} onChange={(event) => onChange(event.target.value)} />
+      <div>
+        <input accept="image/*" id={`proposal-upload-${label}`} type="file" onChange={onUpload} />
+        <button type="button" onClick={(event) => event.currentTarget.previousElementSibling instanceof HTMLInputElement && event.currentTarget.previousElementSibling.click()}>
+          Carregar imagem
+        </button>
+        {value ? <small>{value.startsWith("data:") ? "Arquivo carregado" : "URL configurada"}</small> : null}
+      </div>
     </label>
   );
 }

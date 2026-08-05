@@ -4017,6 +4017,34 @@ button.danger {
   resize: vertical;
 }
 
+.proposal-image-input > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.proposal-image-input input[type="file"] {
+  display: none;
+}
+
+.proposal-image-input button {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #f8fafc;
+  color: var(--ink);
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.proposal-image-input small {
+  color: var(--muted-strong);
+  font-size: 11px;
+}
+
 .proposal-builder-form button,
 .proposal-generated-link button,
 .proposal-generated-link a {
