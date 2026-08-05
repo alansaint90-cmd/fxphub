@@ -4047,7 +4047,9 @@ button.danger {
   gap: 12px;
   min-width: 0;
   width: 100%;
-  min-height: calc(100vh - 116px);
+  height: calc(100vh - 138px);
+  max-height: calc(100vh - 138px);
+  overflow: hidden;
   padding: 16px;
 }
 
@@ -4067,7 +4069,7 @@ button.danger {
   width: 100%;
   max-width: none;
   height: 100%;
-  min-height: 680px;
+  min-height: 0;
   justify-self: stretch;
   overflow: auto;
   border: 1px solid var(--line);
@@ -4531,7 +4533,7 @@ button.danger {
 
   .proposal-template-scroll {
     width: 100%;
-    min-height: 580px;
+    min-height: 0;
   }
 
   .proposal-feature-grid,
@@ -4560,6 +4562,7 @@ button.danger {
 
   .proposal-template-scroll {
     aspect-ratio: 1 / 1;
+    height: auto;
     min-height: auto;
   }
 
