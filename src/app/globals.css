@@ -4079,6 +4079,45 @@ button.danger {
   font-size: 18px;
 }
 
+.proposal-preview-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.proposal-zoom-controls {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #f8fafc;
+}
+
+.proposal-zoom-controls button {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.proposal-zoom-controls span {
+  min-width: 48px;
+  border-inline: 1px solid var(--line);
+  padding: 0 10px;
+  color: var(--muted-strong);
+  font-size: 12px;
+  font-weight: 900;
+  text-align: center;
+}
+
 .proposal-template-scroll {
   width: 100%;
   max-width: none;
@@ -4094,6 +4133,7 @@ button.danger {
 
 .proposal-template-scroll .fxp-proposal-template {
   min-width: 1180px;
+  zoom: var(--proposal-preview-zoom, 1);
   border: 0;
   border-radius: 0;
   box-shadow: none;

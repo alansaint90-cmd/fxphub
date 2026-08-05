@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { CSSProperties, FormEvent, useMemo, useState } from "react";
 import {
   defaultProposalData,
   encodeProposalData,
@@ -38,6 +38,7 @@ const implementationSteps = ["Aprovacao", "Envio das informacoes", "Personalizac
 export function FxpProposalWorkspace() {
   const [data, setData] = useState<FxpProposalData>(defaultProposalData);
   const [generatedLink, setGeneratedLink] = useState("");
+  const [previewZoom, setPreviewZoom] = useState(0.82);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -47,6 +48,13 @@ export function FxpProposalWorkspace() {
 
   function updateField(field: keyof FxpProposalData, value: string) {
     setData((current) => ({ ...current, [field]: value }));
+  }
+
+  function changePreviewZoom(direction: "in" | "out") {
+    setPreviewZoom((current) => {
+      const next = direction === "in" ? current + 0.08 : current - 0.08;
+      return Math.min(1.4, Math.max(0.5, Number(next.toFixed(2))));
+    });
   }
 
   return (
@@ -101,9 +109,19 @@ export function FxpProposalWorkspace() {
       <section className="proposal-template-review">
         <header>
           <span className="eyebrow">Previa do template</span>
-          <h3>Revise a proposta</h3>
+          <div className="proposal-preview-actions">
+            <h3>Revise a proposta</h3>
+            <div className="proposal-zoom-controls" aria-label="Controles de zoom da proposta">
+              <button type="button" onClick={() => changePreviewZoom("out")} aria-label="Diminuir zoom">-</button>
+              <span>{Math.round(previewZoom * 100)}%</span>
+              <button type="button" onClick={() => changePreviewZoom("in")} aria-label="Aumentar zoom">+</button>
+            </div>
+          </div>
         </header>
-        <div className="proposal-template-scroll">
+        <div
+          className="proposal-template-scroll"
+          style={{ "--proposal-preview-zoom": previewZoom } as CSSProperties}
+        >
           <FxpProposalTemplate data={data} previewMode />
         </div>
       </section>
