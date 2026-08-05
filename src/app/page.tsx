@@ -3,6 +3,7 @@
 import type { CSSProperties, DragEvent, FormEvent } from "react";
 import { useEffect, useState } from "react";
 import { ActiveClientsWorkspace } from "@/components/active-clients-workspace";
+import { FxpProposalWorkspace } from "@/components/fxp-proposal-workspace";
 import { LeadCaptureWorkspace } from "@/components/lead-capture-workspace";
 import {
   commercialAgentPrompts,
@@ -27,6 +28,7 @@ type AppPage =
   | "agenda"
   | "iaComercial"
   | "captacaoLeads"
+  | "propostas"
   | "customerSuccess"
   | "implantacoes"
   | "tarefas"
@@ -46,6 +48,7 @@ const navSections: { title: string; pages: { id: AppPage; label: string; badge?:
       { id: "agenda", label: "Agenda" },
       { id: "iaComercial", label: "IA Comercial" },
       { id: "captacaoLeads", label: "Captacao de Leads" },
+      { id: "propostas", label: "Propostas" },
     ],
   },
   {
@@ -1747,6 +1750,10 @@ export default function HomePage() {
 
           <div className={`lead-capture-page ${activePage === "captacaoLeads" ? "" : "page-hidden"}`}>
             <LeadCaptureWorkspace />
+          </div>
+
+          <div className={`proposal-page ${activePage === "propostas" ? "" : "page-hidden"}`}>
+            <FxpProposalWorkspace />
           </div>
 
           <article className={`panel ops-panel ${activePage === "customerSuccess" ? "" : "page-hidden"}`}>
