@@ -15,6 +15,7 @@ export type ConversationQuestionId =
   | "tiagoMaterials"
   | "tiagoNeedsInstagram"
   | "tiagoNeedsGoogle"
+  | "tiagoAwaitingConfirmation"
   | "tiagoProduction";
 
 export type LeadClassification = "A" | "B" | "C";

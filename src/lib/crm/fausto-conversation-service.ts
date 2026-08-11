@@ -296,6 +296,18 @@ export class FaustoConversationService {
   private async handleTiagoSiteCampaign(lead: LeadRecord, text: string, messageType: string): Promise<string> {
     const currentState = lead.currentQualificationQuestion;
 
+    if (currentState === "tiagoAwaitingConfirmation") {
+      if (isIdentityConfirmed(text)) {
+        return this.confirmTiagoMaterialsComplete(lead);
+      }
+
+      if (isIdentityDenied(text)) {
+        return "Sem problema. Me envie por escrito o nome da empresa e os links do Instagram e do Perfil da Empresa no Google, se tiver.";
+      }
+
+      return "So para confirmar: os materiais recebidos sao o print do Instagram e o print do Perfil da Empresa no Google. E isso mesmo?";
+    }
+
     if (currentState === "tiagoProduction") {
       if (isHowLongQuestion(text)) {
         return "Ja colocamos sua demonstracao em producao. Assim que estiver pronta, enviaremos o video por aqui para voce avaliar.";
@@ -308,13 +320,55 @@ export class FaustoConversationService {
       return "Sua demonstracao esta em producao. Assim que estiver pronta, enviaremos o video por aqui para voce avaliar.";
     }
 
-    const receivedMaterial = detectTiagoMaterial(text, messageType);
-
-    if (receivedMaterial === "unknown_file") {
-      return "Recebi o arquivo. Ele e o print do Instagram ou do Perfil da Empresa no Google?";
+    if ((currentState === "tiagoNeedsGoogle" || currentState === "tiagoNeedsInstagram") && isIdentityDenied(text)) {
+      return "Sem problema. Me envie por escrito o nome da empresa e os links do Instagram e do Perfil da Empresa no Google, se tiver.";
     }
 
-    if (receivedMaterial === "instagram") {
+    if (currentState === "tiagoMaterials" && countReceivedMediaMarkers(text) >= 2) {
+      await this.crm.saveQualificationAnswer({
+        leadId: lead.id,
+        questionId: "tiagoNeedsGoogle",
+        rawAnswer: text || messageType,
+        parsedValue: "instagram_recebido",
+      });
+      await this.crm.saveQualificationAnswer({
+        leadId: lead.id,
+        questionId: "tiagoNeedsInstagram",
+        rawAnswer: text || messageType,
+        parsedValue: "google_recebido",
+      });
+      return this.confirmTiagoMaterialsForReview(lead);
+    }
+
+    const receivedMaterial = detectTiagoMaterial(text, messageType);
+    const material =
+      receivedMaterial === "unknown_file" && currentState === "tiagoNeedsGoogle"
+        ? "google"
+        : receivedMaterial === "unknown_file" && currentState === "tiagoNeedsInstagram"
+          ? "instagram"
+          : receivedMaterial;
+
+    if (material === "unknown_file") {
+      if (currentState === "tiagoMaterials") {
+        await this.crm.saveQualificationAnswer({
+          leadId: lead.id,
+          questionId: "tiagoNeedsGoogle",
+          rawAnswer: text || messageType,
+          parsedValue: "instagram_recebido_sem_legenda",
+        });
+        await this.crm.setQualificationProgress({
+          leadId: lead.id,
+          currentQualificationQuestion: "tiagoNeedsGoogle",
+          qualificationStarted: true,
+        });
+
+        return "Recebi o print e organizei como Instagram da empresa. E isso mesmo?\n\nAgora so preciso do print do Perfil da Empresa no Google.";
+      }
+
+      return "Recebi o print. Para eu organizar certo, ele e do Instagram ou do Perfil da Empresa no Google?";
+    }
+
+    if (material === "instagram") {
       await this.crm.saveQualificationAnswer({
         leadId: lead.id,
         questionId: "tiagoNeedsGoogle",
@@ -323,7 +377,7 @@ export class FaustoConversationService {
       });
 
       if (currentState === "tiagoNeedsInstagram") {
-        return this.confirmTiagoMaterialsComplete(lead);
+        return this.confirmTiagoMaterialsForReview(lead);
       }
 
       await this.crm.setQualificationProgress({
@@ -335,7 +389,7 @@ export class FaustoConversationService {
       return "Perfeito! Ja recebi o Instagram.\n\nAgora so preciso do print do seu Perfil da Empresa no Google para conseguirmos preparar a demonstracao.";
     }
 
-    if (receivedMaterial === "google") {
+    if (material === "google") {
       await this.crm.saveQualificationAnswer({
         leadId: lead.id,
         questionId: "tiagoNeedsInstagram",
@@ -344,7 +398,7 @@ export class FaustoConversationService {
       });
 
       if (currentState === "tiagoNeedsGoogle") {
-        return this.confirmTiagoMaterialsComplete(lead);
+        return this.confirmTiagoMaterialsForReview(lead);
       }
 
       await this.crm.setQualificationProgress({
@@ -367,6 +421,22 @@ export class FaustoConversationService {
     return "Para eu seguir com sua demonstracao, preciso dos dois materiais: um print do Instagram da empresa e um print do Perfil da Empresa no Google.";
   }
 
+  private async confirmTiagoMaterialsForReview(lead: LeadRecord): Promise<string> {
+    await this.crm.setQualificationProgress({
+      leadId: lead.id,
+      currentQualificationQuestion: "tiagoAwaitingConfirmation",
+      qualificationStarted: true,
+    });
+
+    return [
+      "Recebi os prints e organizei assim:",
+      "Instagram da empresa: recebido.",
+      "Perfil da Empresa no Google: recebido.",
+      "Vou usar esses materiais para preparar a demonstracao do site.",
+      "E isso mesmo?",
+    ].join("\n");
+  }
+
   private async confirmTiagoMaterialsComplete(lead: LeadRecord): Promise<string> {
     await this.crm.setQualificationProgress({
       leadId: lead.id,
@@ -375,8 +445,7 @@ export class FaustoConversationService {
     });
 
     return [
-      "Perfeito! Recebi tudo.",
-      "Seu site ja esta em producao.",
+      "Pronto, ja encaminhei para nosso especialista que vai estar criando o modelo do seu site para eu te enviar.",
       "Vamos utilizar essas informacoes para preparar uma versao demonstrativa do site da sua empresa.",
       "Daqui a pouco enviaremos aqui no WhatsApp um video mostrando como ficou a proposta do seu novo site.",
       "E como voce veio atraves do Tiago Cesar, voce tem acesso a condicao especial da campanha:",
@@ -755,7 +824,7 @@ function detectTiagoMaterial(text: string, messageType: string): "instagram" | "
   const normalizedText = normalizeForIntent(text);
   const normalizedType = normalizeForIntent(messageType);
   const hasMedia =
-    /\b(image|imagem|video|document|documento|media|sticker|arquivo)\b/.test(normalizedType) ||
+    /image|imagem|video|document|documento|media|sticker|arquivo|audio/.test(normalizedType) ||
     /\b(print|screenshot|foto|imagem|arquivo|anexo)\b/.test(normalizedText);
 
   if (/\b(instagram|insta|perfil do instagram|print do instagram)\b/.test(normalizedText)) return "instagram";
@@ -764,6 +833,10 @@ function detectTiagoMaterial(text: string, messageType: string): "instagram" | "
   }
 
   return hasMedia ? "unknown_file" : null;
+}
+
+function countReceivedMediaMarkers(text: string) {
+  return (text.match(/\[(?:image|video|document|audio|sticker|media)[^\]]*recebido\]/gi) ?? []).length;
 }
 
 function isHowLongQuestion(text: string) {

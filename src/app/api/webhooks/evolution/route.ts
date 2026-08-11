@@ -64,7 +64,9 @@ export async function POST(request: Request) {
 
     stage = "extract_text";
     const text = normalizeEvolutionText(payload);
-    if (!text.trim()) {
+    const messageType = payload.body.data.messageType;
+    const messageBody = text.trim() || (isMediaMessageType(messageType) ? `[${messageType} recebido]` : "");
+    if (!messageBody.trim()) {
       return NextResponse.json({ ok: true, ignored: "empty_text" });
     }
 
@@ -72,7 +74,7 @@ export async function POST(request: Request) {
     const buffer = new ConversationBuffer();
     const buffered = await buffer.appendAndCollect(
       payload.body.data.key.remoteJid,
-      text,
+      messageBody,
       payload.body.data.key.id,
     );
 
@@ -91,7 +93,7 @@ export async function POST(request: Request) {
       phone: normalizePhone(payload.body.data.key.remoteJid),
       pushName: payload.body.data.pushName,
       text: buffered.text,
-      messageType: payload.body.data.messageType,
+      messageType,
       providerMessageId: payload.body.data.key.id,
     });
 
@@ -118,4 +120,8 @@ export async function POST(request: Request) {
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isMediaMessageType(messageType: string) {
+  return /image|video|document|audio|sticker|media/i.test(messageType);
 }

@@ -12,6 +12,7 @@ export function parseAnswer(questionId: ConversationQuestionId, rawAnswer: strin
     questionId === "tiagoMaterials" ||
     questionId === "tiagoNeedsInstagram" ||
     questionId === "tiagoNeedsGoogle" ||
+    questionId === "tiagoAwaitingConfirmation" ||
     questionId === "tiagoProduction"
   ) {
     if (text.length < 1) {
