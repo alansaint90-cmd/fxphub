@@ -7,17 +7,17 @@ export const qualificationQuestions: QualificationQuestion[] = [
   },
   {
     id: "drivingSchoolName",
-    prompt: "Prazer! Como e o nome da sua autoescola?",
+    prompt: "Prazer! Como é o nome da sua autoescola?",
   },
   {
     id: "demoConsent",
     prompt:
-      "Perfeito. Agora vou te conduzir para um teste rapido. A partir daqui, faca perguntas como se voce fosse um cliente entrando em contato com a sua autoescola. Certo?",
+      "Perfeito. Agora vou te conduzir para um teste rápido. A partir daqui, faça perguntas como se você fosse um cliente entrando em contato com a sua autoescola. Certo?",
   },
   {
     id: "demoQuestion",
     prompt:
-      "Otimo! Pode mandar um texto, um audio ou qualquer pergunta que um cliente normalmente faria para sua autoescola. Vou te mostrar como o agente poderia se comportar no seu WhatsApp.",
+      "Ótimo! Pode mandar um texto, um áudio ou qualquer pergunta que um cliente normalmente faria para sua autoescola. Vou te mostrar como o agente poderia se comportar no seu WhatsApp.",
   },
 ];
 

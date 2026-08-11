@@ -110,13 +110,15 @@ export class FaustoConversationService {
     const shouldSplitTiagoMaterialsReview = response.startsWith(
       "Recebi os prints e já organizei as suas informações.",
     );
+    const shouldSplitDemoQuestion = lead.currentQualificationQuestion === "demoQuestion" && response.includes("\n");
     const messages =
       shouldSplitIdentityConfirmation ||
       shouldSplitMeetingConfirmation ||
       shouldSplitObjectionResponse ||
       shouldSplitTiagoInterestQuestion ||
       shouldSplitTiagoProductionConfirmation ||
-      shouldSplitTiagoMaterialsReview
+      shouldSplitTiagoMaterialsReview ||
+      shouldSplitDemoQuestion
         ? splitIntoWhatsAppMessages(response)
         : [{ text: response }];
     for (const message of messages) {
@@ -293,6 +295,10 @@ export class FaustoConversationService {
       return `Perfeito. Consultei a agenda e tenho ${formatSlotOptions(slots)}. Qual desses fica melhor para uma demonstração de aproximadamente 15 minutos?`;
     }
 
+    if (isNoMoreDemoDoubt(text, latestOutbound)) {
+      return buildDemoInvite(lead);
+    }
+
     await this.crm.saveQualificationAnswer({
       leadId: lead.id,
       questionId: "demoQuestion",
@@ -305,7 +311,7 @@ export class FaustoConversationService {
     }
 
     if (isQuestionLike(text) || text.trim().length > 0) {
-      return `${buildAutoSchoolDemoResponse(text)}\n\n${buildDemoInvite(lead)}`;
+      return `${buildAutoSchoolDemoResponse(text)}\n\nFicou claro? Tem alguma dúvida sobre como isso funcionaria na sua autoescola?`;
     }
 
     return "Pode mandar uma pergunta que um aluno normalmente faria para sua autoescola no WhatsApp.";
@@ -735,48 +741,126 @@ function splitIntoWhatsAppMessages(response: string): OutboundMessage[] {
 function buildAutoSchoolDemoResponse(text: string) {
   const normalizedText = normalizeForIntent(text);
 
+  if (/\b(o que voce faz|o que vc faz|voce faz o que|qual sua funcao|para que serve)\b/.test(normalizedText)) {
+    return [
+      "Eu consigo atender os clientes da autoescola pelo WhatsApp 24 horas por dia.",
+      "Respondo dúvidas, envio informações, identifico o interesse do cliente e ajudo a conduzir o atendimento até a matrícula.",
+      "Também consigo entender mensagens de texto, áudios e imagens.",
+    ].join("\n");
+  }
+
+  if (/\b(voce e uma ia|vc e uma ia|e ia|inteligencia artificial|robo|bot|chatbot)\b/.test(normalizedText)) {
+    return [
+      "Sim. Nesta demonstração eu sou uma Inteligência Artificial especializada em atendimento para autoescolas.",
+      "A ideia é você testar comigo exatamente como seus clientes conversariam no WhatsApp.",
+      "Pode tentar me fazer uma pergunta de cliente agora.",
+    ].join("\n");
+  }
+
+  if (/\b(como funciona|na minha autoescola|minha autoescola|personalizar|configurar)\b/.test(normalizedText)) {
+    return [
+      "O agente é configurado com as informações da sua própria autoescola.",
+      "Valores, categorias, horários, formas de pagamento, serviços, regras e principais dúvidas dos seus clientes ficam cadastrados na base de atendimento.",
+      "Assim, ele responde usando as informações reais do seu negócio.",
+    ].join("\n");
+  }
+
+  if (/\b(24 horas|fora do horario|final de semana|domingo|madrugada|noite)\b/.test(normalizedText)) {
+    return [
+      "Sim. O atendimento pode continuar mesmo fora do horário comercial.",
+      "Se alguém chamar à noite, no final de semana ou em um momento em que sua equipe não está disponível, o lead não precisa ficar esperando.",
+      "Isso ajuda a manter a velocidade de resposta e evita perder oportunidades por demora.",
+    ].join("\n");
+  }
+
+  if (/\b(audio|áudio|voz|mandar audio|responde audio)\b/.test(normalizedText)) {
+    return [
+      "Sim. Pode inclusive mandar um áudio aqui para testar.",
+      "O sistema consegue interpretar o conteúdo e responder de acordo com o que a pessoa perguntou.",
+    ].join("\n");
+  }
+
+  if (/\b(foto|imagem|print)\b/.test(normalizedText)) {
+    return [
+      "Sim. Dependendo da configuração, o agente consegue interpretar imagens relacionadas ao atendimento.",
+      "Por exemplo: prints, documentos, propostas ou outras imagens que façam parte do processo definido pela autoescola.",
+    ].join("\n");
+  }
+
   if (/\b(valor|preco|quanto custa|categoria a|categoria b|habilitacao|cnh)\b/.test(normalizedText)) {
     return [
-      "Exemplo de resposta do agente:",
-      "Claro! Para te orientar certinho, você busca primeira habilitação, adição de categoria ou mudança de categoria?",
-      "Com essa informação eu já te direciono para o plano mais adequado e posso chamar a equipe se precisar.",
+      "Claro! Para a Categoria AB, que é carro + moto, temos dois exemplos de plano.",
+      "Plano Básico: 2 aulas de carro + 2 aulas de moto. À vista: R$ 640,00. A prazo: R$ 715,00.",
+      "Plano Intermediário: 4 aulas de carro + 4 aulas de moto. À vista: R$ 1.280,00. A prazo: R$ 1.415,00.",
+      "Na sua autoescola, eu responderia com os valores reais cadastrados na sua base.",
     ].join("\n");
   }
 
   if (/\b(parcel|cartao|pix|entrada|forma de pagamento|pagar)\b/.test(normalizedText)) {
     return [
-      "Exemplo de resposta do agente:",
       "Sim, a autoescola pode trabalhar com opções de pagamento. Me diga qual categoria você quer fazer para eu te passar a melhor orientação.",
+      "Na implantação real, eu seguiria exatamente as formas de pagamento definidas pela sua autoescola.",
     ].join("\n");
   }
 
-  if (/\b(documento|documentos|preciso levar|matricula)\b/.test(normalizedText)) {
+  if (/\b(documento|documentos|preciso levar)\b/.test(normalizedText)) {
     return [
-      "Exemplo de resposta do agente:",
-      "Para iniciar, normalmente sao solicitados documento com foto, CPF, comprovante de residencia e dados de contato.",
+      "Para iniciar, normalmente são solicitados documento com foto, CPF, comprovante de residência e dados de contato.",
+      "Na sua autoescola, eu usaria exatamente a lista de documentos e regras que vocês definirem.",
+      "Se faltar alguma informação, eu posso encaminhar para confirmação da equipe.",
+    ].join("\n");
+  }
+
+  if (/\b(matricula|inscricao|inscrever|fechar)\b/.test(normalizedText)) {
+    return [
+      "Eu posso conduzir o cliente até a etapa definida pela sua operação.",
+      "Por exemplo: coletar nome, categoria desejada, bairro, turno e dados de contato.",
       "Posso te encaminhar para a equipe confirmar os detalhes e próximos passos.",
     ].join("\n");
   }
 
   if (/\b(horario|funciona|abre|fecha|atendimento|onde|endereco|localizacao|fica)\b/.test(normalizedText)) {
     return [
-      "Exemplo de resposta do agente:",
       "Posso te ajudar com isso. Me informe seu bairro ou melhor horário de atendimento que eu direciono a conversa para a unidade responsável.",
+      "Em uma implantação real, eu usaria o endereço, horário e regras comerciais da sua própria autoescola.",
     ].join("\n");
   }
 
   if (/\b(quanto tempo|demora|prazo|aulas|prova|exame)\b/.test(normalizedText)) {
     return [
-      "Exemplo de resposta do agente:",
       "O prazo pode variar conforme categoria, agenda de aulas e etapas do Detran.",
       "Me diga se é primeira habilitação ou adição de categoria para eu te orientar melhor.",
     ].join("\n");
   }
 
+  if (/\b(humano|atendente|funcionaria|funcionario|assumir|responder pessoalmente)\b/.test(normalizedText)) {
+    return [
+      "A ideia não é impedir sua equipe de atender.",
+      "O agente pode cuidar do primeiro contato e das dúvidas repetitivas, principalmente fora do horário.",
+      "Quando precisar de uma pessoa, o atendimento pode seguir para sua equipe.",
+    ].join("\n");
+  }
+
+  if (/\b(errar|responder errado|medo|informacao errada|nao sabe)\b/.test(normalizedText)) {
+    return [
+      "Essa é justamente uma parte importante da configuração.",
+      "O agente recebe uma base com as informações e regras específicas da sua autoescola.",
+      "Quando não tiver informação suficiente, a orientação é não inventar e encaminhar para confirmação humana.",
+    ].join("\n");
+  }
+
+  if (/\b(caro|preco alto|sem dinheiro|vou pensar|tenho agencia|nao preciso|prefiro humano)\b/.test(normalizedText)) {
+    return [
+      "Entendo. A proposta não é empurrar uma ferramenta, e sim mostrar onde ela pode economizar tempo e organizar o atendimento.",
+      "Principalmente em dúvidas repetitivas, velocidade de resposta e oportunidades que poderiam ficar sem acompanhamento.",
+      "Se quiser, você pode testar aqui uma situação real que acontece no WhatsApp da sua autoescola.",
+    ].join("\n");
+  }
+
   return [
-    "Exemplo de resposta do agente:",
     "Entendi. Para te ajudar melhor, me diga se você quer tirar a primeira CNH, adicionar uma categoria ou apenas tirar uma dúvida sobre o processo.",
-    "Assim eu organizo seu atendimento e encaminho para o proximo passo.",
+    "Assim eu organizo seu atendimento e encaminho para o próximo passo.",
+    "Na implantação real, essa resposta seria ajustada com as informações da sua autoescola.",
   ].join("\n");
 }
 
@@ -788,7 +872,7 @@ function buildPersonalizationExplanation(lead: LeadRecord) {
   return [
     `${namePrefix} Aqui estamos usando apenas um exemplo para você testar o comportamento do agente.`,
     `Quando implementamos na ${schoolName}, o agente é treinado com as informações reais da sua empresa: preços, endereço, horários, categorias, formas de pagamento, documentos, promoções e demais detalhes do atendimento.`,
-    "Ou seja, ele passa a responder usando o contexto da sua propria autoescola.",
+    "Ou seja, ele passa a responder usando o contexto da sua própria autoescola.",
     buildDemoInvite(lead),
   ].join("\n");
 }
@@ -813,6 +897,19 @@ function isDemoInviteAccepted(text: string, latestOutbound: string | null) {
     normalizedLatest.includes("posso te mostrar");
 
   return inviteWasSent && isScheduleConfirmation(text);
+}
+
+function isNoMoreDemoDoubt(text: string, latestOutbound: string | null) {
+  const normalizedText = normalizeForIntent(text);
+  const normalizedLatest = normalizeForIntent(latestOutbound ?? "");
+  const wasAskedForDoubt =
+    normalizedLatest.includes("tem alguma duvida") ||
+    normalizedLatest.includes("ficou claro");
+
+  return (
+    wasAskedForDoubt &&
+    /\b(nao|sem duvida|ficou claro|claro|entendi|ok|certo|pode seguir)\b/.test(normalizedText)
+  );
 }
 
 function isTiagoSiteCampaignState(value: ConversationQuestionId | null) {
