@@ -732,12 +732,17 @@ function isTiagoSiteCampaignState(value: ConversationQuestionId | null) {
 
 function isTiagoSiteCampaignTrigger(text: string) {
   const normalizedText = normalizeForIntent(text);
+  const mentionsTiago = /\btiago (cesar|cezar)\b/.test(normalizedText);
+  const mentionsInstagram = /\b(instagram|insta)\b/.test(normalizedText);
+  const mentionsSite = /\b(site|pagina|landing page|presenca digital)\b/.test(normalizedText);
+
   return (
-    normalizedText.includes("vim pelo instagram do tiago cesar") &&
-    (normalizedText.includes("criar um site") ||
-      normalizedText.includes("site para minha empresa") ||
-      normalizedText.includes("quero um site") ||
-      normalizedText.includes("gostaria de criar um site"))
+    mentionsTiago &&
+    mentionsInstagram &&
+    (mentionsSite ||
+      normalizedText.includes("criar para minha empresa") ||
+      normalizedText.includes("gostaria de criar") ||
+      normalizedText.includes("vim pela campanha"))
   );
 }
 
@@ -835,10 +840,8 @@ function isIdentityDenied(text: string) {
 
 function isAgentTestTrigger(text: string) {
   const normalizedText = normalizeForIntent(text);
-  return (
-    normalizedText === "quero testar o agente de ia no whats app" ||
-    normalizedText === "quero testar o agente de ia no whatsapp"
-  );
+  const compactText = normalizedText.replace(/[^\p{L}\p{N}]+/gu, " ");
+  return /\bquero testar\b/.test(compactText) && /\bagente de ia\b/.test(compactText) && /\bwhats ?app\b/.test(compactText);
 }
 
 function startsWithNormalized(value: string | null | undefined, prefix: string) {
@@ -851,6 +854,7 @@ function normalizeForIntent(text: string) {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[“”"']/g, "")
     .replace(/\s+/g, " ")
     .trim();
 }
