@@ -143,6 +143,7 @@ export class FaustoConversationService {
         "1. Um print do seu Instagram",
         "2. Um print do seu Perfil da Empresa no Google",
         "Com essas informacoes conseguimos entender melhor sua empresa e preparar a demonstracao.",
+        "Pode mandar agora 👇",
       ].join("\n"),
     );
   }

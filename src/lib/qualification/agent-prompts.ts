@@ -94,6 +94,7 @@ const tiagoSitesPrompt = [
   "- Informe que criamos uma versao demonstrativa do site sem compromisso para ele avaliar.",
   "- Reforce: o cliente so paga depois de aprovar.",
   "- Solicite dois materiais: print do Instagram e print do Perfil da Empresa no Google.",
+  "- Depois de explicar os dois materiais, envie: \"Pode mandar agora 👇\".",
   "",
   "Controle dos materiais:",
   "- Controle individualmente instagram_recebido e google_recebido.",
