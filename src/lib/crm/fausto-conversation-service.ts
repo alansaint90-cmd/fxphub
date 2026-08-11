@@ -106,7 +106,7 @@ export class FaustoConversationService {
     });
 
     return [
-      { text: "Ola! Eu sou o Fausto, agente comercial da FXP para autoescolas." },
+      { text: "Ola! Eu sou Allan Nascimento, agente comercial da FXP para autoescolas." },
       {
         text: "Vou fazer algumas perguntas rapidas para entender seu cenario e, se fizer sentido, te conduzir para uma demonstracao.",
         delayMs: 1200,
@@ -215,7 +215,7 @@ export class FaustoConversationService {
     const greeting = firstName ? `Perfeito, ${firstName}.` : "Perfeito.";
 
     return [
-      `${greeting} Eu sou o Fausto, da assessoria FXP. Somos um hub de solucoes digitais e de IA para autoescolas.`,
+      `${greeting} Eu sou Allan Nascimento, da assessoria FXP. Somos um hub de solucoes digitais e de IA para autoescolas.`,
       `Ajudamos autoescolas a atrair mais interessados pelo WhatsApp e transformar oportunidades em matriculas.`,
       "Posso te agendar com o nosso time para uma demonstracao rapida sobre como a gestao de trafego pago, com apoio de IA, pode ser aplicada em sua autoescola.",
       "Seria interessante pra voce?",
@@ -518,8 +518,10 @@ function isAgentTestTrigger(text: string) {
     /\bquero testa o agente de ia\b/.test(normalizedText) ||
     /\btestar? agente de ia\b/.test(normalizedText) ||
     /\bteste do agente de ia\b/.test(normalizedText) ||
-    /\btestar? o fausto\b/.test(normalizedText) ||
-    /\bquero testar? o fausto\b/.test(normalizedText)
+    /\btestar? o allan\b/.test(normalizedText) ||
+    /\bquero testar? o allan\b/.test(normalizedText) ||
+    /\btestar? allan nascimento\b/.test(normalizedText) ||
+    /\bquero testar? allan nascimento\b/.test(normalizedText)
   );
 }
 

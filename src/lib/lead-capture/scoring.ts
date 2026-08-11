@@ -34,7 +34,7 @@ export interface PersonalizedDiagnostic {
   pontos_criticos: [string, string, string];
   oportunidades: [string, string, string];
   solucao_recomendada: string;
-  cta_sugestao: "Falar com Fausto e receber minha analise gratuita";
+  cta_sugestao: "Falar com Allan Nascimento e receber minha analise gratuita";
 }
 
 const roleScores: Record<string, number> = {
@@ -167,7 +167,7 @@ export function buildPersonalizedDiagnostic(input: LeadCaptureScoringInput): Per
         "Usar IA para qualificar rapidamente os contatos que chegarem pelas campanhas",
       ],
       solucao_recomendada: solutionRecommendation,
-      cta_sugestao: "Falar com Fausto e receber minha analise gratuita",
+      cta_sugestao: "Falar com Allan Nascimento e receber minha analise gratuita",
     };
   }
 
@@ -192,7 +192,7 @@ export function buildPersonalizedDiagnostic(input: LeadCaptureScoringInput): Per
         "Organizar follow-up para evitar que conversas quentes sejam esquecidas",
       ],
       solucao_recomendada: solutionRecommendation,
-      cta_sugestao: "Falar com Fausto e receber minha analise gratuita",
+      cta_sugestao: "Falar com Allan Nascimento e receber minha analise gratuita",
     };
   }
 
@@ -216,7 +216,7 @@ export function buildPersonalizedDiagnostic(input: LeadCaptureScoringInput): Per
       "Acompanhar melhor as oportunidades ate a decisao de matricula",
     ],
     solucao_recomendada: solutionRecommendation,
-    cta_sugestao: "Falar com Fausto e receber minha analise gratuita",
+    cta_sugestao: "Falar com Allan Nascimento e receber minha analise gratuita",
   };
 }
 
@@ -336,7 +336,7 @@ function classifyResultOpportunity(input: LeadCaptureScoringInput, perfil: Diagn
 }
 
 function reasonFor(status: DiagnosticLeadStatus, score: number) {
-  if (status === "HOT") return `Lead HOT com pontuacao ${score}. Perfil aprovado para falar com Fausto.`;
+  if (status === "HOT") return `Lead HOT com pontuacao ${score}. Perfil aprovado para falar com Allan Nascimento.`;
   if (status === "WARM") return `Lead WARM com pontuacao ${score}. Perfil compativel para analise gratuita.`;
   return `Pontuacao abaixo do minimo (${score}/7).`;
 }

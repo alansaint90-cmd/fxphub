@@ -64,7 +64,7 @@ export async function GET() {
         score: lead.score,
         className: lead.classification ?? "C",
         pain: lead.mainPain ?? formatPainPoints(lead.painPoints) ?? lead.qualificationSummary ?? "Qualificacao em andamento",
-        owner: lead.aiPaused ? "Humano" : "Fausto IA",
+        owner: lead.aiPaused ? "Humano" : "Allan Nascimento IA",
         stage: funnelToKanbanStage[lead.funnelStage],
         updatedAt: lead.updatedAt.toISOString(),
       })),

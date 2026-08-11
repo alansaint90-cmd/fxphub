@@ -166,7 +166,7 @@ const questions: QuizQuestion[] = [
     type: "choice",
     options: ["Sim, quero receber minha analise gratuita.", "Tenho interesse, mas preciso combinar outro momento.", "Nao tenho interesse em conversar."],
   },
-  { field: "phone", title: "Entraremos em contato utilizando as informacoes abaixo", subtitle: "Informe seu WhatsApp para continuar com Fausto.", type: "tel", placeholder: "Seu WhatsApp com DDD" },
+  { field: "phone", title: "Entraremos em contato utilizando as informacoes abaixo", subtitle: "Informe seu WhatsApp para continuar com Allan Nascimento.", type: "tel", placeholder: "Seu WhatsApp com DDD" },
   { field: "email", title: "Qual e o seu melhor e-mail?", subtitle: "Opcional, para receber materiais e confirmacoes.", type: "email", placeholder: "Digite seu melhor email" },
 ];
 

@@ -68,7 +68,7 @@ export async function GET() {
           messages: leadMessages.map((message) => ({
             id: message.id,
             author: message.direction === "inbound" ? "lead" : "operator",
-            sender: message.direction === "outbound" ? (message.author === "ia" ? "Fausto IA" : "Atendimento") : undefined,
+            sender: message.direction === "outbound" ? (message.author === "ia" ? "Allan Nascimento IA" : "Atendimento") : undefined,
             text: message.body,
             time: formatClock(message.createdAt),
             messageType: message.messageType,
