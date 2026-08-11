@@ -59,7 +59,10 @@ export class FaustoConversationService {
       return { response: "", shouldSend: false };
     }
 
-    if (isAgentTestTrigger(input.text)) {
+    const latestOutbound = await this.crm.getLatestOutboundMessage(lead.id);
+    const activeFlow = getActiveConversationFlow(lead, latestOutbound);
+
+    if (!activeFlow && isAgentTestTrigger(input.text)) {
       const messages = await this.startSdrTestFlow(lead);
       for (const message of messages) {
         await this.crm.saveOutboundMessage({ leadId: lead.id, body: message.text });
@@ -67,7 +70,7 @@ export class FaustoConversationService {
       return { response: messages.map((message) => message.text).join("\n\n"), shouldSend: true, messages };
     }
 
-    if (isTiagoSiteCampaignTrigger(input.text)) {
+    if (!activeFlow && isTiagoSiteCampaignTrigger(input.text)) {
       const messages = await this.startTiagoSiteCampaignFlow(lead);
       for (const message of messages) {
         await this.crm.saveOutboundMessage({ leadId: lead.id, body: message.text });
@@ -75,7 +78,7 @@ export class FaustoConversationService {
       return { response: messages.map((message) => message.text).join("\n\n"), shouldSend: true, messages };
     }
 
-    if (shouldKeepHumanOnly(lead)) {
+    if (!activeFlow && shouldKeepHumanOnly(lead)) {
       return { response: "", shouldSend: false };
     }
 
@@ -86,8 +89,10 @@ export class FaustoConversationService {
       lead.currentQualificationQuestion === "demoConsent" ||
       lead.currentQualificationQuestion === "demoQuestion" ||
       isTiagoSiteCampaignState(lead.currentQualificationQuestion) ||
+      activeFlow === "tiago_sites" ||
+      activeFlow === "sdr_test" ||
       shouldConfirmDiagnosticIdentity(lead);
-    const draft = await this.buildDraftResponse(lead, input.text, input.messageType);
+    const draft = await this.buildDraftResponse(lead, input.text, input.messageType, latestOutbound);
     const response = shouldUseStrictDraft
       ? draft
       : await this.ai.polishResponse({
@@ -152,7 +157,12 @@ export class FaustoConversationService {
     );
   }
 
-  private async buildDraftResponse(lead: LeadRecord, text: string, messageType = "text"): Promise<string> {
+  private async buildDraftResponse(
+    lead: LeadRecord,
+    text: string,
+    messageType = "text",
+    latestOutbound: string | null = null,
+  ): Promise<string> {
     if (lead.funnelStage === "reuniao_agendada") {
       return this.handleScheduledMeetingChange(lead, text);
     }
@@ -165,8 +175,8 @@ export class FaustoConversationService {
       return this.handleDiagnosticIdentityConfirmation(lead, text);
     }
 
-    if (isTiagoSiteCampaignState(lead.currentQualificationQuestion)) {
-      return this.handleTiagoSiteCampaign(lead, text, messageType);
+    if (isTiagoSiteCampaignState(lead.currentQualificationQuestion) || isTiagoLatestOutbound(latestOutbound)) {
+      return this.handleTiagoSiteCampaign(lead, text, messageType, latestOutbound);
     }
 
     const answers = getAnswerSet(lead);
@@ -293,8 +303,13 @@ export class FaustoConversationService {
     return "Pode mandar uma pergunta que um aluno normalmente faria para sua autoescola no WhatsApp.";
   }
 
-  private async handleTiagoSiteCampaign(lead: LeadRecord, text: string, messageType: string): Promise<string> {
-    const currentState = lead.currentQualificationQuestion;
+  private async handleTiagoSiteCampaign(
+    lead: LeadRecord,
+    text: string,
+    messageType: string,
+    latestOutbound: string | null,
+  ): Promise<string> {
+    const currentState = inferTiagoState(lead.currentQualificationQuestion, latestOutbound);
 
     if (currentState === "tiagoAwaitingConfirmation") {
       if (isIdentityConfirmed(text)) {
@@ -800,8 +815,47 @@ function isTiagoSiteCampaignState(value: ConversationQuestionId | null) {
     value === "tiagoMaterials" ||
     value === "tiagoNeedsInstagram" ||
     value === "tiagoNeedsGoogle" ||
+    value === "tiagoAwaitingConfirmation" ||
     value === "tiagoProduction"
   );
+}
+
+function getActiveConversationFlow(lead: LeadRecord, latestOutbound: string | null): "tiago_sites" | "sdr_test" | null {
+  if (isTiagoSiteCampaignState(lead.currentQualificationQuestion) || isTiagoLatestOutbound(latestOutbound)) {
+    return "tiago_sites";
+  }
+
+  if (
+    lead.currentQualificationQuestion === "responsibleName" ||
+    lead.currentQualificationQuestion === "drivingSchoolName" ||
+    lead.currentQualificationQuestion === "demoConsent" ||
+    lead.currentQualificationQuestion === "demoQuestion"
+  ) {
+    return "sdr_test";
+  }
+
+  return null;
+}
+
+function inferTiagoState(currentState: ConversationQuestionId | null, latestOutbound: string | null): ConversationQuestionId | null {
+  if (isTiagoSiteCampaignState(currentState)) return currentState;
+
+  const normalizedLatest = normalizeForIntent(latestOutbound ?? "");
+  if (!normalizedLatest) return currentState;
+
+  if (normalizedLatest.includes("e isso mesmo")) return "tiagoAwaitingConfirmation";
+  if (normalizedLatest.includes("site ja esta em producao") || normalizedLatest.includes("demonstracao esta em producao")) {
+    return "tiagoProduction";
+  }
+  if (normalizedLatest.includes("so preciso do print do seu perfil da empresa no google")) return "tiagoNeedsGoogle";
+  if (normalizedLatest.includes("so preciso do print do instagram")) return "tiagoNeedsInstagram";
+  if (normalizedLatest.includes("pode mandar agora") || normalizedLatest.includes("print do seu instagram")) return "tiagoMaterials";
+
+  return currentState;
+}
+
+function isTiagoLatestOutbound(latestOutbound: string | null) {
+  return isTiagoSiteCampaignState(inferTiagoState(null, latestOutbound));
 }
 
 function isTiagoSiteCampaignTrigger(text: string) {
