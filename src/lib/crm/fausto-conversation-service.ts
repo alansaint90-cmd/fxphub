@@ -101,11 +101,11 @@ export class FaustoConversationService {
           draft,
         });
 
-    const shouldSplitMeetingConfirmation = response.startsWith("Reuniao confirmada.");
+    const shouldSplitMeetingConfirmation = response.startsWith("Reunião confirmada.");
     const shouldSplitObjectionResponse = response.includes("\n\nFicou claro?");
-    const shouldSplitTiagoInterestQuestion = response.includes("\n\nIsso seria interessante para voce?");
+    const shouldSplitTiagoInterestQuestion = response.includes("\n\nIsso seria interessante para você?");
     const shouldSplitTiagoProductionConfirmation = response.startsWith(
-      "Pronto, ja encaminhei para nosso especialista",
+      "Pronto, já encaminhei para nosso especialista",
     );
     const messages =
       shouldSplitIdentityConfirmation ||
@@ -130,9 +130,9 @@ export class FaustoConversationService {
     });
 
     return [
-      { text: "Ola! Sou Allan Nascimento, agente comercial da Assessoria FXP para autoescolas." },
+      { text: "Olá! Sou Allan Nascimento, agente comercial da Assessoria FXP para autoescolas." },
       {
-        text: "Vou fazer algumas perguntas rapidas para entender seu cenario e, se fizer sentido, te conduzir para uma demonstracao.",
+        text: "Vou fazer algumas perguntas rápidas para entender seu cenário e, se fizer sentido, te conduzir para uma demonstração.",
         delayMs: 1200,
       },
       { text: firstQuestion.prompt, delayMs: 1200 },
@@ -148,14 +148,14 @@ export class FaustoConversationService {
 
     return splitIntoWhatsAppMessages(
       [
-        "Ola! Sou Alan Nascimento, assistente da Assessoria FXP.",
-        "Voce veio pela campanha do Tiago Cesar. Vou te explicar rapidinho como funciona.",
-        "Nos criamos uma versao demonstrativa do seu site sem compromisso e enviamos para voce avaliar.",
-        "Voce so paga depois de aprovar.",
-        "Para comecarmos, preciso que voce me envie aqui:",
+        "Olá! Sou Alan Nascimento, assistente da Assessoria FXP.",
+        "Você veio pela campanha do Tiago César. Vou te explicar rapidinho como funciona.",
+        "Nós criamos uma versão demonstrativa do seu site sem compromisso e enviamos para você avaliar.",
+        "Você só paga depois de aprovar.",
+        "Para começarmos, preciso que você me envie aqui:",
         "1. Um print do seu Instagram",
         "2. Um print do seu Perfil da Empresa no Google",
-        "Com essas informacoes conseguimos entender melhor sua empresa e preparar a demonstracao.",
+        "Com essas informações conseguimos entender melhor sua empresa e preparar a demonstração.",
         "Pode mandar agora 👇",
       ].join("\n"),
     );
@@ -199,7 +199,7 @@ export class FaustoConversationService {
       });
 
       return [
-        "Ola! Vou entender rapido se o fxphub faz sentido para sua autoescola.",
+        "Olá! Vou entender rápido se o fxphub faz sentido para sua autoescola.",
         firstQuestion.prompt,
       ].join("\n");
     }
@@ -251,7 +251,7 @@ export class FaustoConversationService {
 
       return this.finishQualification(lead, nextAnswers);
     } catch (error) {
-      const detail = error instanceof Error ? error.message : "Nao consegui registrar essa resposta.";
+      const detail = error instanceof Error ? error.message : "Não consegui registrar essa resposta.";
       return `${detail}\n\n${currentQuestion.prompt}`;
     }
   }
@@ -286,7 +286,7 @@ export class FaustoConversationService {
     if (isDemoInviteAccepted(text, latestOutbound)) {
       await this.crm.setFunnelStage({ leadId: lead.id, funnelStage: "agendamento_em_andamento" });
       const slots = await this.calendar.getAvailableSlots();
-      return `Perfeito. Consultei a agenda e tenho ${formatSlotOptions(slots)}. Qual desses fica melhor para uma demonstracao de aproximadamente 15 minutos?`;
+      return `Perfeito. Consultei a agenda e tenho ${formatSlotOptions(slots)}. Qual desses fica melhor para uma demonstração de aproximadamente 15 minutos?`;
     }
 
     await this.crm.saveQualificationAnswer({
@@ -324,19 +324,19 @@ export class FaustoConversationService {
         return "Sem problema. Me envie por escrito o nome da empresa e os links do Instagram e do Perfil da Empresa no Google, se tiver.";
       }
 
-      return "So para confirmar: os materiais recebidos sao o print do Instagram e o print do Perfil da Empresa no Google. E isso mesmo?";
+      return "Só para confirmar: os materiais recebidos são o print do Instagram e o print do Perfil da Empresa no Google. É isso mesmo?";
     }
 
     if (currentState === "tiagoProduction") {
       if (isHowLongQuestion(text)) {
-        return "Ja colocamos sua demonstracao em producao. Assim que estiver pronta, enviaremos o video por aqui para voce avaliar.";
+        return "Já colocamos sua demonstração em produção. Assim que estiver pronta, enviaremos o vídeo por aqui para você avaliar.";
       }
 
       if (isApprovalLike(text)) {
-        return "Perfeito. Vou avisar a equipe que voce aprovou a proposta para seguirmos com os proximos passos de publicacao.";
+        return "Perfeito. Vou avisar a equipe que você aprovou a proposta para seguirmos com os próximos passos de publicação.";
       }
 
-      return "Sua demonstracao esta em producao. Assim que estiver pronta, enviaremos o video por aqui para voce avaliar.";
+      return "Sua demonstração está em produção. Assim que estiver pronta, enviaremos o vídeo por aqui para você avaliar.";
     }
 
     if ((currentState === "tiagoNeedsGoogle" || currentState === "tiagoNeedsInstagram") && isIdentityDenied(text)) {
@@ -381,7 +381,7 @@ export class FaustoConversationService {
           qualificationStarted: true,
         });
 
-        return "Recebi o print e organizei como Instagram da empresa. E isso mesmo?\n\nAgora so preciso do print do Perfil da Empresa no Google.";
+        return "Recebi o print e organizei como Instagram da empresa. É isso mesmo?\n\nAgora só preciso do print do Perfil da Empresa no Google.";
       }
 
       return "Recebi o print. Para eu organizar certo, ele e do Instagram ou do Perfil da Empresa no Google?";
@@ -405,7 +405,7 @@ export class FaustoConversationService {
         qualificationStarted: true,
       });
 
-      return "Perfeito! Ja recebi o Instagram.\n\nAgora so preciso do print do seu Perfil da Empresa no Google para conseguirmos preparar a demonstracao.";
+      return "Perfeito! Já recebi o Instagram.\n\nAgora só preciso do print do seu Perfil da Empresa no Google para conseguirmos preparar a demonstração.";
     }
 
     if (material === "google") {
@@ -426,18 +426,18 @@ export class FaustoConversationService {
         qualificationStarted: true,
       });
 
-      return "Perfeito! Ja recebi o Google.\n\nAgora so preciso do print do Instagram da sua empresa.";
+      return "Perfeito! Já recebi o Google.\n\nAgora só preciso do print do Instagram da sua empresa.";
     }
 
     if (isHowLongQuestion(text)) {
-      return "Assim que recebermos os dois prints, colocamos sua demonstracao em producao e enviamos o video por aqui para voce avaliar.";
+      return "Assim que recebermos os dois prints, colocamos sua demonstração em produção e enviamos o vídeo por aqui para você avaliar.";
     }
 
     if (isTiagoPricingQuestion(text)) {
-      return "Pela campanha do Tiago Cesar, a criacao do site sai de R$ 497 por R$ 297. Voce so paga depois de ver e aprovar. A partir do segundo mes, fica R$ 49/mes para manutencao e estrutura.\n\nIsso seria interessante para voce?";
+      return "Pela campanha do Tiago César, a criação do site sai de R$ 497 por R$ 297. Você só paga depois de ver e aprovar. A partir do segundo mês, fica R$ 49/mês para manutenção e estrutura.\n\nIsso seria interessante para você?";
     }
 
-    return "Para eu seguir com sua demonstracao, preciso dos dois materiais: um print do Instagram da empresa e um print do Perfil da Empresa no Google.";
+    return "Para eu seguir com sua demonstração, preciso dos dois materiais: um print do Instagram da empresa e um print do Perfil da Empresa no Google.";
   }
 
   private async confirmTiagoMaterialsForReview(lead: LeadRecord): Promise<string> {
@@ -451,8 +451,8 @@ export class FaustoConversationService {
       "Recebi os prints e organizei assim:",
       "Instagram da empresa: recebido.",
       "Perfil da Empresa no Google: recebido.",
-      "Vou usar esses materiais para preparar a demonstracao do site.",
-      "E isso mesmo?",
+      "Vou usar esses materiais para preparar a demonstração do site.",
+      "É isso mesmo?",
     ].join("\n");
   }
 
@@ -464,14 +464,14 @@ export class FaustoConversationService {
     });
 
     return [
-      "Pronto, ja encaminhei para nosso especialista que vai estar criando o modelo do seu site para eu te enviar.",
-      "Vamos utilizar essas informacoes para preparar uma versao demonstrativa do site da sua empresa.",
-      "Daqui a pouco enviaremos aqui no WhatsApp um video mostrando como ficou a proposta do seu novo site.",
-      "E como voce veio atraves do Tiago Cesar, voce tem acesso a condicao especial da campanha:",
-      "Criacao do site de R$ 497 por R$ 297.",
-      "Voce so paga depois de ver e aprovar o site.",
-      "A partir do segundo mes, fica apenas R$ 49/mes para manutencao e estrutura do site.",
-      "Primeiro voce ve como ficou. Se gostar e aprovar, seguimos com a publicacao.",
+      "Pronto, já encaminhei para nosso especialista que vai criar o modelo do seu site para eu te enviar.",
+      "Vamos utilizar essas informações para preparar uma versão demonstrativa do site da sua empresa.",
+      "Daqui a pouco enviaremos aqui no WhatsApp um vídeo mostrando como ficou a proposta do seu novo site.",
+      "E como você veio através do Tiago César, você tem acesso à condição especial da campanha:",
+      "Criação do site de R$ 497 por R$ 297.",
+      "Você só paga depois de ver e aprovar o site.",
+      "A partir do segundo mês, fica apenas R$ 49/mês para manutenção e estrutura do site.",
+      "Primeiro você vê como ficou. Se gostar e aprovar, seguimos com a publicação.",
     ].join("\n");
   }
 
@@ -486,9 +486,9 @@ export class FaustoConversationService {
     }
 
     if (!isIdentityConfirmed(text)) {
-      const leadName = lead.responsibleName?.trim() || lead.pushName?.trim() || "voce";
+      const leadName = lead.responsibleName?.trim() || lead.pushName?.trim() || "você";
       const schoolName = lead.drivingSchoolName?.trim() || "sua autoescola";
-      return `So para confirmar: falo com ${leadName} da ${schoolName}, certo?`;
+      return `Só para confirmar: falo com ${leadName} da ${schoolName}, certo?`;
     }
 
     await this.crm.setFunnelStage({ leadId: lead.id, funnelStage: "agendamento_em_andamento" });
@@ -497,10 +497,10 @@ export class FaustoConversationService {
     const greeting = firstName ? `Perfeito, ${firstName}.` : "Perfeito.";
 
     return [
-      `${greeting} Eu sou Allan Nascimento, da assessoria FXP. Somos um hub de solucoes digitais e de IA para autoescolas.`,
-      `Ajudamos autoescolas a atrair mais interessados pelo WhatsApp e transformar oportunidades em matriculas.`,
-      "Posso te agendar com o nosso time para uma demonstracao rapida sobre como a gestao de trafego pago, com apoio de IA, pode ser aplicada em sua autoescola.",
-      "Seria interessante pra voce?",
+      `${greeting} Eu sou Allan Nascimento, da assessoria FXP. Somos um hub de soluções digitais e de IA para autoescolas.`,
+      `Ajudamos autoescolas a atrair mais interessados pelo WhatsApp e transformar oportunidades em matrículas.`,
+      "Posso te agendar com o nosso time para uma demonstração rápida sobre como a gestão de tráfego pago, com apoio de IA, pode ser aplicada em sua autoescola.",
+      "Seria interessante pra você?",
     ].join("\n");
   }
 
@@ -525,10 +525,10 @@ export class FaustoConversationService {
 
     const slots = await this.calendar.getAvailableSlots();
     const options = formatSlotOptions(slots);
-    const pain = answers.mainPain ? `Pelo que voce comentou sobre ${answers.mainPain},` : "Pelo seu contexto,";
+    const pain = answers.mainPain ? `Pelo que você comentou sobre ${answers.mainPain},` : "Pelo seu contexto,";
     return [
       `${pain} vale te mostrar isso de forma pratica.`,
-      `Tenho ${options}. Qual horario prefere para uma demonstracao rapida?`,
+      `Tenho ${options}. Qual horário prefere para uma demonstração rápida?`,
     ].join("\n");
   }
 
@@ -547,7 +547,7 @@ export class FaustoConversationService {
     if (
       !pendingConfirmationSlot &&
       isScheduleConfirmation(text) &&
-      startsWithNormalized(latestOutbound, "So confirmando: posso marcar sua reuniao para")
+      startsWithNormalized(latestOutbound, "Só confirmando: posso marcar sua reunião para")
     ) {
       const confirmationSlots = await this.calendar.getAvailableSlots({
         preferredHours: extractRequestedHours(latestOutbound ?? ""),
@@ -557,7 +557,7 @@ export class FaustoConversationService {
     }
 
     if (pendingConfirmationSlot && isIdentityDenied(text)) {
-      return "Sem problema. Qual dia e horario voce prefere que eu consulte na agenda?";
+      return "Sem problema. Qual dia e horário você prefere que eu consulte na agenda?";
     }
 
     if (pendingConfirmationSlot && (isScheduleConfirmation(text) || matchesSlot(text, pendingConfirmationSlot))) {
@@ -567,7 +567,7 @@ export class FaustoConversationService {
     const selectedSlot = slots.find((slot) => matchesSlot(text, slot));
 
     if (selectedSlot) {
-      return `So confirmando: posso marcar sua reuniao para ${selectedSlot.label}?`;
+      return `Só confirmando: posso marcar sua reunião para ${selectedSlot.label}?`;
     }
 
     if (availabilityRequest) {
@@ -585,7 +585,7 @@ export class FaustoConversationService {
         return `Consultei a agenda e tenho ${formatSlotOptions(preferredSlots)}. Qual desses prefere?`;
       }
 
-      return `Nesse horario nao tenho vaga livre. Tenho ${formatSlotOptions(slots, { preserveOrder: hasPreferredSchedule })}. Algum desses funciona?`;
+      return `Nesse horário não tenho vaga livre. Tenho ${formatSlotOptions(slots, { preserveOrder: hasPreferredSchedule })}. Algum desses funciona?`;
     }
 
     if (isScheduleRejection(text)) {
@@ -593,7 +593,7 @@ export class FaustoConversationService {
         return "Tudo bem. Vou deixar seu contato salvo para retomarmos em outro momento.";
       }
 
-      return "Sem problema. Me diga qual dia e horario voce prefere que eu consulto a agenda.";
+      return "Sem problema. Me diga qual dia e horário você prefere que eu consulto a agenda.";
     }
 
     const objectionResponse = getSchedulingObjectionResponse(text);
@@ -602,7 +602,7 @@ export class FaustoConversationService {
     }
 
     if (isQuestionLike(text)) {
-      return "Entendi sua pergunta. Me diga exatamente qual ponto voce quer esclarecer que eu respondo de forma objetiva antes de seguir para a agenda.";
+      return "Entendi sua pergunta. Me diga exatamente qual ponto você quer esclarecer que eu respondo de forma objetiva antes de seguir para a agenda.";
     }
 
     return `Consultei a agenda e tenho ${formatSlotOptions(slots, { preserveOrder: hasPreferredSchedule })}. Qual desses fica melhor?`;
@@ -615,12 +615,12 @@ export class FaustoConversationService {
       return buildOpenHelpResponse(lead);
     }
 
-    if (startsWithNormalized(latestOutbound, "So confirmando: posso cancelar sua reuniao") && isIdentityConfirmed(text)) {
+    if (startsWithNormalized(latestOutbound, "Só confirmando: posso cancelar sua reunião") && isIdentityConfirmed(text)) {
       await this.crm.cancelUpcomingMeeting({ leadId: lead.id });
       return "Reuniao cancelada. Reagende a qualquer momento entrando em contato por aqui. A FXP agradece!";
     }
 
-    if (startsWithNormalized(latestOutbound, "So confirmando: posso consultar novos horarios") && isIdentityConfirmed(text)) {
+    if (startsWithNormalized(latestOutbound, "Só confirmando: posso consultar novos horários") && isIdentityConfirmed(text)) {
       await this.crm.setFunnelStage({ leadId: lead.id, funnelStage: "agendamento_em_andamento" });
       const slots = await this.calendar.getAvailableSlots({
         preferredHours: extractRequestedHours(text),
@@ -630,7 +630,7 @@ export class FaustoConversationService {
     }
 
     if (isCancellationRequest(text)) {
-      return "So confirmando: posso cancelar sua reuniao agendada?";
+      return "Só confirmando: posso cancelar sua reunião agendada?";
     }
 
     if (isRescheduleRequest(text) || isAvailabilityRequest(text)) {
@@ -646,10 +646,10 @@ export class FaustoConversationService {
     if (objectionResponse) return objectionResponse;
 
     if (isQuestionLike(text)) {
-      return "Claro. Me diga qual ponto voce quer esclarecer que eu respondo de forma objetiva.";
+      return "Claro. Me diga qual ponto você quer esclarecer que eu respondo de forma objetiva.";
     }
 
-    return "Claro. Posso tirar alguma duvida, remarcar ou cancelar seu agendamento. Como posso ajudar?";
+    return "Claro. Posso tirar alguma dúvida, remarcar ou cancelar seu agendamento. Como posso ajudar?";
   }
 
   private async createConfirmedMeeting(lead: LeadRecord, selectedSlot: { startsAt: Date; endsAt: Date }) {
@@ -668,9 +668,9 @@ export class FaustoConversationService {
     });
 
     return [
-      "Reuniao confirmada.",
-      "Na demonstracao, vamos mostrar como sua autoescola pode usar o trafego pago para gerar uma entrada constante de novos interessados em tirar a CNH e aumentar as oportunidades de matricula.",
-      "2 horas antes mandaremos a mensagem de lembrete da reuniao. Ate breve!",
+      "Reunião confirmada.",
+      "Na demonstração, vamos mostrar como sua autoescola pode usar o tráfego pago para gerar uma entrada constante de novos interessados em tirar a CNH e aumentar as oportunidades de matrícula.",
+      "2 horas antes mandaremos a mensagem de lembrete da reunião. Até breve!",
     ].join("\n");
   }
 }
@@ -678,7 +678,7 @@ export class FaustoConversationService {
 function formatSlotOptions(slots: { startsAt?: Date; label: string }[], options: { preserveOrder?: boolean } = {}) {
   const selectedSlots = options.preserveOrder ? slots.slice(0, 4) : selectBalancedDaySlots(slots);
   const labels = selectedSlots.map((slot) => slot.label);
-  if (labels.length === 0) return "nenhum horario livre no momento";
+  if (labels.length === 0) return "nenhum horário livre no momento";
   return labels.join(", ");
 }
 
@@ -716,7 +716,7 @@ function findPendingConfirmationSlot(
   latestOutbound: string | null,
   slots: { startsAt: Date; endsAt: Date; label: string }[],
 ) {
-  if (!startsWithNormalized(latestOutbound, "So confirmando: posso marcar sua reuniao para")) return null;
+  if (!startsWithNormalized(latestOutbound, "Só confirmando: posso marcar sua reunião para")) return null;
   return slots.find((slot) => latestOutbound?.includes(slot.label)) ?? null;
 }
 
@@ -737,15 +737,15 @@ function buildAutoSchoolDemoResponse(text: string) {
   if (/\b(valor|preco|quanto custa|categoria a|categoria b|habilitacao|cnh)\b/.test(normalizedText)) {
     return [
       "Exemplo de resposta do agente:",
-      "Claro! Para te orientar certinho, voce busca primeira habilitacao, adicao de categoria ou mudanca de categoria?",
-      "Com essa informacao eu ja te direciono para o plano mais adequado e posso chamar a equipe se precisar.",
+      "Claro! Para te orientar certinho, você busca primeira habilitação, adição de categoria ou mudança de categoria?",
+      "Com essa informação eu já te direciono para o plano mais adequado e posso chamar a equipe se precisar.",
     ].join("\n");
   }
 
   if (/\b(parcel|cartao|pix|entrada|forma de pagamento|pagar)\b/.test(normalizedText)) {
     return [
       "Exemplo de resposta do agente:",
-      "Sim, a autoescola pode trabalhar com opcoes de pagamento. Me diga qual categoria voce quer fazer para eu te passar a melhor orientacao.",
+      "Sim, a autoescola pode trabalhar com opções de pagamento. Me diga qual categoria você quer fazer para eu te passar a melhor orientação.",
     ].join("\n");
   }
 
@@ -753,14 +753,14 @@ function buildAutoSchoolDemoResponse(text: string) {
     return [
       "Exemplo de resposta do agente:",
       "Para iniciar, normalmente sao solicitados documento com foto, CPF, comprovante de residencia e dados de contato.",
-      "Posso te encaminhar para a equipe confirmar os detalhes e proximos passos.",
+      "Posso te encaminhar para a equipe confirmar os detalhes e próximos passos.",
     ].join("\n");
   }
 
   if (/\b(horario|funciona|abre|fecha|atendimento|onde|endereco|localizacao|fica)\b/.test(normalizedText)) {
     return [
       "Exemplo de resposta do agente:",
-      "Posso te ajudar com isso. Me informe seu bairro ou melhor horario de atendimento que eu direciono a conversa para a unidade responsavel.",
+      "Posso te ajudar com isso. Me informe seu bairro ou melhor horário de atendimento que eu direciono a conversa para a unidade responsável.",
     ].join("\n");
   }
 
@@ -768,13 +768,13 @@ function buildAutoSchoolDemoResponse(text: string) {
     return [
       "Exemplo de resposta do agente:",
       "O prazo pode variar conforme categoria, agenda de aulas e etapas do Detran.",
-      "Me diga se e primeira habilitacao ou adicao de categoria para eu te orientar melhor.",
+      "Me diga se é primeira habilitação ou adição de categoria para eu te orientar melhor.",
     ].join("\n");
   }
 
   return [
     "Exemplo de resposta do agente:",
-    "Entendi. Para te ajudar melhor, me diga se voce quer tirar a primeira CNH, adicionar uma categoria ou apenas tirar uma duvida sobre o processo.",
+    "Entendi. Para te ajudar melhor, me diga se você quer tirar a primeira CNH, adicionar uma categoria ou apenas tirar uma dúvida sobre o processo.",
     "Assim eu organizo seu atendimento e encaminho para o proximo passo.",
   ].join("\n");
 }
@@ -785,8 +785,8 @@ function buildPersonalizationExplanation(lead: LeadRecord) {
   const namePrefix = firstName ? `Exatamente, ${firstName}.` : "Exatamente.";
 
   return [
-    `${namePrefix} Aqui estamos usando apenas um exemplo para voce testar o comportamento do agente.`,
-    `Quando implementamos na ${schoolName}, o agente e treinado com as informacoes reais da sua empresa: precos, endereco, horarios, categorias, formas de pagamento, documentos, promocoes e demais detalhes do atendimento.`,
+    `${namePrefix} Aqui estamos usando apenas um exemplo para você testar o comportamento do agente.`,
+    `Quando implementamos na ${schoolName}, o agente é treinado com as informações reais da sua empresa: preços, endereço, horários, categorias, formas de pagamento, documentos, promoções e demais detalhes do atendimento.`,
     "Ou seja, ele passa a responder usando o contexto da sua propria autoescola.",
     buildDemoInvite(lead),
   ].join("\n");
@@ -794,7 +794,7 @@ function buildPersonalizationExplanation(lead: LeadRecord) {
 
 function buildDemoInvite(lead: LeadRecord) {
   const schoolName = lead.drivingSchoolName?.trim() || "sua autoescola";
-  return `Posso te mostrar como podemos implementar isso no WhatsApp da ${schoolName} em uma demonstracao gratuita de aproximadamente 15 minutos?`;
+  return `Posso te mostrar como podemos implementar isso no WhatsApp da ${schoolName} em uma demonstração gratuita de aproximadamente 15 minutos?`;
 }
 
 function isPersonalizationObjection(text: string) {
@@ -939,7 +939,7 @@ function isQuestionLike(text: string) {
 function buildOpenHelpResponse(lead: LeadRecord) {
   const firstName = lead.responsibleName?.trim().split(/\s+/)[0] || lead.pushName?.trim().split(/\s+/)[0] || "";
   const greeting = firstName ? `Oi, ${firstName}.` : "Oi.";
-  return `${greeting} Como posso ajudar? Posso tirar alguma duvida, remarcar ou cancelar seu agendamento.`;
+  return `${greeting} Como posso ajudar? Posso tirar alguma dúvida, remarcar ou cancelar seu agendamento.`;
 }
 
 function shouldConfirmDiagnosticIdentity(lead: LeadRecord) {
