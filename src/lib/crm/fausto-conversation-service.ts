@@ -78,6 +78,10 @@ export class FaustoConversationService {
       return { response: messages.map((message) => message.text).join("\n\n"), shouldSend: true, messages };
     }
 
+    if (!activeFlow && isSdrConversationState(lead.currentQualificationQuestion)) {
+      return { response: "", shouldSend: false };
+    }
+
     if (!activeFlow && shouldKeepHumanOnly(lead)) {
       return { response: "", shouldSend: false };
     }
@@ -997,12 +1001,7 @@ function getActiveConversationFlow(lead: LeadRecord, latestOutbound: string | nu
     return "tiago_sites";
   }
 
-  if (
-    lead.currentQualificationQuestion === "responsibleName" ||
-    lead.currentQualificationQuestion === "drivingSchoolName" ||
-    lead.currentQualificationQuestion === "demoConsent" ||
-    lead.currentQualificationQuestion === "demoQuestion"
-  ) {
+  if (isSdrConversationState(lead.currentQualificationQuestion) && isSdrLatestOutbound(latestOutbound)) {
     return "sdr_test";
   }
 
@@ -1028,6 +1027,33 @@ function inferTiagoState(currentState: ConversationQuestionId | null, latestOutb
 
 function isTiagoLatestOutbound(latestOutbound: string | null) {
   return isTiagoSiteCampaignState(inferTiagoState(null, latestOutbound));
+}
+
+function isSdrConversationState(value: ConversationQuestionId | null) {
+  return (
+    value === "responsibleName" ||
+    value === "drivingSchoolName" ||
+    value === "demoConsent" ||
+    value === "demoQuestion"
+  );
+}
+
+function isSdrLatestOutbound(latestOutbound: string | null) {
+  const normalizedLatest = normalizeForIntent(latestOutbound ?? "");
+  if (!normalizedLatest) return false;
+
+  return (
+    normalizedLatest.includes("allan nascimento") ||
+    normalizedLatest.includes("com quem eu falo") ||
+    normalizedLatest.includes("como e o nome da sua autoescola") ||
+    normalizedLatest.includes("teste rapido") ||
+    normalizedLatest.includes("pode mandar um texto") ||
+    normalizedLatest.includes("como o agente poderia se comportar") ||
+    normalizedLatest.includes("tem alguma duvida sobre como isso funcionaria") ||
+    normalizedLatest.includes("voce e iniciante") ||
+    normalizedLatest.includes("alguma nocao de direcao") ||
+    normalizedLatest.includes("posso te mostrar como podemos implementar isso no whatsapp")
+  );
 }
 
 function isTiagoSiteCampaignTrigger(text: string) {
