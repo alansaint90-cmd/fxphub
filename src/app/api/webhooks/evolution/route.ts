@@ -7,7 +7,7 @@ import { OpenAiMessagePlanner } from "@/lib/integrations/openai";
 import { ConversationBuffer } from "@/lib/integrations/redis";
 import { getRuntimeIntegrationSettings } from "@/lib/integrations/settings";
 import {
-  evolutionWebhookSchema,
+  normalizeEvolutionWebhookPayload,
   normalizeEvolutionText,
   normalizePhone,
 } from "@/lib/validators/evolution";
@@ -47,17 +47,15 @@ export async function POST(request: Request) {
     stage = "parse_json";
     const json = await request.json();
     stage = "validate_payload";
-    const parsedPayload = evolutionWebhookSchema.safeParse({ body: json });
+    const payload = normalizeEvolutionWebhookPayload(json);
 
-    if (!parsedPayload.success) {
+    if (!payload) {
       return NextResponse.json({
         ok: true,
         ignored: "unsupported_evolution_event",
         event: typeof json?.event === "string" ? json.event : undefined,
       });
     }
-
-    const payload = parsedPayload.data;
 
     stage = "ignore_from_me";
     if (payload.body.data.key.fromMe) {
