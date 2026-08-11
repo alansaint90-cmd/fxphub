@@ -514,14 +514,8 @@ function isIdentityDenied(text: string) {
 function isAgentTestTrigger(text: string) {
   const normalizedText = normalizeForIntent(text);
   return (
-    /\bquero testar? o agente de ia\b/.test(normalizedText) ||
-    /\bquero testa o agente de ia\b/.test(normalizedText) ||
-    /\btestar? agente de ia\b/.test(normalizedText) ||
-    /\bteste do agente de ia\b/.test(normalizedText) ||
-    /\btestar? o allan\b/.test(normalizedText) ||
-    /\bquero testar? o allan\b/.test(normalizedText) ||
-    /\btestar? allan nascimento\b/.test(normalizedText) ||
-    /\bquero testar? allan nascimento\b/.test(normalizedText)
+    normalizedText === "quero testar o agente de ia no whats app" ||
+    normalizedText === "quero testar o agente de ia no whatsapp"
   );
 }
 
