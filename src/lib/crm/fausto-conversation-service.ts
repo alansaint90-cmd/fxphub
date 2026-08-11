@@ -81,6 +81,14 @@ export class FaustoConversationService {
       return { response: messages.map((message) => message.text).join("\n\n"), shouldSend: true, messages };
     }
 
+    if (isAgentTestTrigger(input.text)) {
+      const messages = await this.startSdrTestFlow(lead);
+      for (const message of messages) {
+        await this.crm.saveOutboundMessage({ leadId: lead.id, body: message.text });
+      }
+      return { response: messages.map((message) => message.text).join("\n\n"), shouldSend: true, messages };
+    }
+
     if (shouldKeepHumanOnly(lead)) {
       return { response: "", shouldSend: false };
     }
@@ -118,6 +126,24 @@ export class FaustoConversationService {
     return [
       { text: "Ja recebi o seu diagnostico por aqui." },
       { text: `Falo com ${leadName} da ${schoolName}, certo?`, delayMs: 5000 },
+    ];
+  }
+
+  private async startSdrTestFlow(lead: LeadRecord): Promise<OutboundMessage[]> {
+    const firstQuestion = qualificationQuestions[0];
+    await this.crm.setQualificationProgress({
+      leadId: lead.id,
+      currentQualificationQuestion: firstQuestion.id,
+      qualificationStarted: true,
+    });
+
+    return [
+      { text: "Ola! Eu sou o Fausto, agente comercial da FXP para autoescolas." },
+      {
+        text: "Vou fazer algumas perguntas rapidas para entender seu cenario e, se fizer sentido, te conduzir para uma demonstracao.",
+        delayMs: 1200,
+      },
+      { text: firstQuestion.prompt, delayMs: 1200 },
     ];
   }
 
@@ -535,6 +561,18 @@ function isDiagnosticFormTrigger(text: string) {
     normalizedText.includes("minha autoescola");
 
   return cameFromFxpDiagnostic && wantsApplication;
+}
+
+function isAgentTestTrigger(text: string) {
+  const normalizedText = normalizeForIntent(text);
+  return (
+    /\bquero testar? o agente de ia\b/.test(normalizedText) ||
+    /\bquero testa o agente de ia\b/.test(normalizedText) ||
+    /\btestar? agente de ia\b/.test(normalizedText) ||
+    /\bteste do agente de ia\b/.test(normalizedText) ||
+    /\btestar? o fausto\b/.test(normalizedText) ||
+    /\bquero testar? o fausto\b/.test(normalizedText)
+  );
 }
 
 function startsWithNormalized(value: string | null | undefined, prefix: string) {
