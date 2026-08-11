@@ -1,10 +1,17 @@
-import type { QualificationQuestionId } from "./types";
+import type { ConversationQuestionId } from "./types";
 
 const yesPattern = /\b(sim|uso|utilizo|tenho|invisto|fazemos|rodamos|ativo|claro|crm|sistema|automatico|automacao)\b/i;
 const noPattern = /\b(nao|não|nunca|ainda nao|ainda não|sem|nenhum)\b/i;
 
-export function parseAnswer(questionId: QualificationQuestionId, rawAnswer: string): string | number | boolean {
+export function parseAnswer(questionId: ConversationQuestionId, rawAnswer: string): string | number | boolean {
   const text = rawAnswer.trim();
+
+  if (questionId === "demoConsent" || questionId === "demoQuestion") {
+    if (text.length < 1) {
+      throw new Error("Me envie uma mensagem para eu continuar o teste.");
+    }
+    return text;
+  }
 
   if (questionId === "monthlyEnrollments" || questionId === "commercialAttendants") {
     const number = Number(text.match(/\d+/)?.[0]);

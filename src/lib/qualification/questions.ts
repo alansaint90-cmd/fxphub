@@ -7,27 +7,17 @@ export const qualificationQuestions: QualificationQuestion[] = [
   },
   {
     id: "drivingSchoolName",
-    prompt: "Qual o nome da sua autoescola?",
+    prompt: "Prazer! Como e o nome da sua autoescola?",
   },
   {
-    id: "city",
-    prompt: "Em qual cidade ela fica?",
+    id: "demoConsent",
+    prompt:
+      "Perfeito. Agora vou te conduzir para um teste rapido. A partir daqui, faca perguntas como se voce fosse um cliente entrando em contato com a sua autoescola. Certo?",
   },
   {
-    id: "monthlyEnrollments",
-    prompt: "Hoje chegam em media quantos leads ou atendimentos pelo WhatsApp por dia ou semana?",
-  },
-  {
-    id: "usesCrm",
-    prompt: "Voce ja usa CRM ou algum atendimento automatico?",
-  },
-  {
-    id: "runsPaidTraffic",
-    prompt: "Hoje voces ja fazem trafego pago para captar interessados?",
-  },
-  {
-    id: "mainPain",
-    prompt: "Qual e a maior dificuldade hoje: demora no atendimento, perder leads, falta de organizacao ou baixa conversao?",
+    id: "demoQuestion",
+    prompt:
+      "Otimo! Pode mandar um texto, um audio ou qualquer pergunta que um cliente normalmente faria para sua autoescola. Vou te mostrar como o agente poderia se comportar no seu WhatsApp.",
   },
 ];
 

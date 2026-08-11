@@ -8,6 +8,8 @@ export type QualificationQuestionId =
   | "city"
   | "mainPain";
 
+export type ConversationQuestionId = QualificationQuestionId | "demoConsent" | "demoQuestion";
+
 export type LeadClassification = "A" | "B" | "C";
 
 export type PainPoint =
@@ -40,7 +42,7 @@ export interface QualificationAnswerSet {
 }
 
 export interface QualificationQuestion {
-  id: QualificationQuestionId;
+  id: ConversationQuestionId;
   prompt: string;
 }
 

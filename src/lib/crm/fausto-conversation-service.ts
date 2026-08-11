@@ -4,7 +4,7 @@ import { faustoSystemPrompt } from "@/lib/qualification/fausto-prompt";
 import { parseAnswer } from "@/lib/qualification/parser";
 import { getNextQuestion, qualificationQuestions } from "@/lib/qualification/questions";
 import { calculateQualification } from "@/lib/qualification/scoring";
-import type { QualificationAnswerSet, QualificationQuestionId } from "@/lib/qualification/types";
+import type { ConversationQuestionId, QualificationAnswerSet, QualificationQuestionId } from "@/lib/qualification/types";
 import { getSchedulingObjectionResponse } from "./objections";
 import {
   extractRequestedHours,
@@ -75,6 +75,8 @@ export class FaustoConversationService {
     const shouldUseStrictDraft =
       lead.funnelStage === "agendamento_em_andamento" ||
       lead.funnelStage === "reuniao_agendada" ||
+      lead.currentQualificationQuestion === "demoConsent" ||
+      lead.currentQualificationQuestion === "demoQuestion" ||
       shouldConfirmDiagnosticIdentity(lead);
     const draft = await this.buildDraftResponse(lead, input.text);
     const response = shouldUseStrictDraft
@@ -106,7 +108,7 @@ export class FaustoConversationService {
     });
 
     return [
-      { text: "Ola! Eu sou Allan Nascimento, agente comercial da FXP para autoescolas." },
+      { text: "Ola! Sou Allan Nascimento, agente comercial da Assessoria FXP para autoescolas." },
       {
         text: "Vou fazer algumas perguntas rapidas para entender seu cenario e, se fizer sentido, te conduzir para uma demonstracao.",
         delayMs: 1200,
@@ -157,6 +159,14 @@ export class FaustoConversationService {
       return this.finishQualification(lead, answers);
     }
 
+    if (currentQuestion.id === "demoConsent") {
+      return this.handleDemoConsent(lead, text);
+    }
+
+    if (currentQuestion.id === "demoQuestion") {
+      return this.handleDemoQuestion(lead, text);
+    }
+
     const isFirstQuestion = answered.size === 0 && !text.trim();
     if (isFirstQuestion) return currentQuestion.prompt;
 
@@ -191,6 +201,57 @@ export class FaustoConversationService {
       const detail = error instanceof Error ? error.message : "Nao consegui registrar essa resposta.";
       return `${detail}\n\n${currentQuestion.prompt}`;
     }
+  }
+
+  private async handleDemoConsent(lead: LeadRecord, text: string): Promise<string> {
+    await this.crm.saveQualificationAnswer({
+      leadId: lead.id,
+      questionId: "demoConsent",
+      rawAnswer: text,
+      parsedValue: text,
+    });
+
+    if (isIdentityDenied(text)) {
+      return "Sem problema. Se preferir, posso te explicar em poucas linhas como o agente funciona antes do teste.";
+    }
+
+    await this.crm.setQualificationProgress({
+      leadId: lead.id,
+      currentQualificationQuestion: "demoQuestion",
+      qualificationStarted: true,
+    });
+
+    return (
+      qualificationQuestions.find((question) => question.id === "demoQuestion")?.prompt ??
+      "Pode mandar uma pergunta que um cliente faria no WhatsApp da sua autoescola."
+    );
+  }
+
+  private async handleDemoQuestion(lead: LeadRecord, text: string): Promise<string> {
+    const latestOutbound = await this.crm.getLatestOutboundMessage(lead.id);
+
+    if (isDemoInviteAccepted(text, latestOutbound)) {
+      await this.crm.setFunnelStage({ leadId: lead.id, funnelStage: "agendamento_em_andamento" });
+      const slots = await this.calendar.getAvailableSlots();
+      return `Perfeito. Consultei a agenda e tenho ${formatSlotOptions(slots)}. Qual desses fica melhor para uma demonstracao de aproximadamente 15 minutos?`;
+    }
+
+    await this.crm.saveQualificationAnswer({
+      leadId: lead.id,
+      questionId: "demoQuestion",
+      rawAnswer: text,
+      parsedValue: text,
+    });
+
+    if (isPersonalizationObjection(text)) {
+      return buildPersonalizationExplanation(lead);
+    }
+
+    if (isQuestionLike(text) || text.trim().length > 0) {
+      return `${buildAutoSchoolDemoResponse(text)}\n\n${buildDemoInvite(lead)}`;
+    }
+
+    return "Pode mandar uma pergunta que um aluno normalmente faria para sua autoescola no WhatsApp.";
   }
 
   private async handleDiagnosticIdentityConfirmation(lead: LeadRecord, text: string): Promise<string> {
@@ -447,6 +508,89 @@ function splitIntoWhatsAppMessages(response: string): OutboundMessage[] {
       text,
       delayMs: index === 0 ? undefined : text.startsWith("Seria interessante") ? 2000 : 1200,
     }));
+}
+
+function buildAutoSchoolDemoResponse(text: string) {
+  const normalizedText = normalizeForIntent(text);
+
+  if (/\b(valor|preco|quanto custa|categoria a|categoria b|habilitacao|cnh)\b/.test(normalizedText)) {
+    return [
+      "Exemplo de resposta do agente:",
+      "Claro! Para te orientar certinho, voce busca primeira habilitacao, adicao de categoria ou mudanca de categoria?",
+      "Com essa informacao eu ja te direciono para o plano mais adequado e posso chamar a equipe se precisar.",
+    ].join("\n");
+  }
+
+  if (/\b(parcel|cartao|pix|entrada|forma de pagamento|pagar)\b/.test(normalizedText)) {
+    return [
+      "Exemplo de resposta do agente:",
+      "Sim, a autoescola pode trabalhar com opcoes de pagamento. Me diga qual categoria voce quer fazer para eu te passar a melhor orientacao.",
+    ].join("\n");
+  }
+
+  if (/\b(documento|documentos|preciso levar|matricula)\b/.test(normalizedText)) {
+    return [
+      "Exemplo de resposta do agente:",
+      "Para iniciar, normalmente sao solicitados documento com foto, CPF, comprovante de residencia e dados de contato.",
+      "Posso te encaminhar para a equipe confirmar os detalhes e proximos passos.",
+    ].join("\n");
+  }
+
+  if (/\b(horario|funciona|abre|fecha|atendimento|onde|endereco|localizacao|fica)\b/.test(normalizedText)) {
+    return [
+      "Exemplo de resposta do agente:",
+      "Posso te ajudar com isso. Me informe seu bairro ou melhor horario de atendimento que eu direciono a conversa para a unidade responsavel.",
+    ].join("\n");
+  }
+
+  if (/\b(quanto tempo|demora|prazo|aulas|prova|exame)\b/.test(normalizedText)) {
+    return [
+      "Exemplo de resposta do agente:",
+      "O prazo pode variar conforme categoria, agenda de aulas e etapas do Detran.",
+      "Me diga se e primeira habilitacao ou adicao de categoria para eu te orientar melhor.",
+    ].join("\n");
+  }
+
+  return [
+    "Exemplo de resposta do agente:",
+    "Entendi. Para te ajudar melhor, me diga se voce quer tirar a primeira CNH, adicionar uma categoria ou apenas tirar uma duvida sobre o processo.",
+    "Assim eu organizo seu atendimento e encaminho para o proximo passo.",
+  ].join("\n");
+}
+
+function buildPersonalizationExplanation(lead: LeadRecord) {
+  const firstName = lead.responsibleName?.trim().split(/\s+/)[0] || lead.pushName?.trim().split(/\s+/)[0] || "";
+  const schoolName = lead.drivingSchoolName?.trim() || "sua autoescola";
+  const namePrefix = firstName ? `Exatamente, ${firstName}.` : "Exatamente.";
+
+  return [
+    `${namePrefix} Aqui estamos usando apenas um exemplo para voce testar o comportamento do agente.`,
+    `Quando implementamos na ${schoolName}, o agente e treinado com as informacoes reais da sua empresa: precos, endereco, horarios, categorias, formas de pagamento, documentos, promocoes e demais detalhes do atendimento.`,
+    "Ou seja, ele passa a responder usando o contexto da sua propria autoescola.",
+    buildDemoInvite(lead),
+  ].join("\n");
+}
+
+function buildDemoInvite(lead: LeadRecord) {
+  const schoolName = lead.drivingSchoolName?.trim() || "sua autoescola";
+  return `Posso te mostrar como podemos implementar isso no WhatsApp da ${schoolName} em uma demonstracao gratuita de aproximadamente 15 minutos?`;
+}
+
+function isPersonalizationObjection(text: string) {
+  const normalizedText = normalizeForIntent(text);
+  return /\b(meu preco nao|preco nao|valor errado|nao e esse|nao funciona assim|endereco e outro|horario diferente|dados errados|informacao errada)\b/.test(
+    normalizedText,
+  );
+}
+
+function isDemoInviteAccepted(text: string, latestOutbound: string | null) {
+  const normalizedLatest = normalizeForIntent(latestOutbound ?? "");
+  const inviteWasSent =
+    normalizedLatest.includes("demonstracao gratuita") ||
+    normalizedLatest.includes("implementar isso no whatsapp") ||
+    normalizedLatest.includes("posso te mostrar");
+
+  return inviteWasSent && isScheduleConfirmation(text);
 }
 
 function isConversationClosed(text: string) {

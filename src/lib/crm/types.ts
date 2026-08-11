@@ -2,6 +2,7 @@ import type {
   FunnelStage,
   LeadClassification,
   PainPoint,
+  ConversationQuestionId,
   QualificationAnswerSet,
   QualificationQuestionId,
 } from "@/lib/qualification/types";
@@ -16,7 +17,7 @@ export interface LeadRecord extends QualificationAnswerSet {
   painPoints: PainPoint[];
   qualificationSummary: string | null;
   funnelStage: FunnelStage;
-  currentQualificationQuestion: QualificationQuestionId | null;
+  currentQualificationQuestion: ConversationQuestionId | null;
   qualificationStarted: boolean;
   aiPaused: boolean;
 }
@@ -51,7 +52,7 @@ export interface CrmRepository {
   getLatestOutboundMessage(leadId: string): Promise<string | null>;
   saveQualificationAnswer(input: {
     leadId: string;
-    questionId: QualificationQuestionId;
+    questionId: ConversationQuestionId;
     rawAnswer: string;
     parsedValue: string | number | boolean;
   }): Promise<void>;
@@ -63,12 +64,12 @@ export interface CrmRepository {
     painPoints: PainPoint[];
     summary: string;
     funnelStage: FunnelStage;
-    currentQualificationQuestion?: QualificationQuestionId | null;
+    currentQualificationQuestion?: ConversationQuestionId | null;
   }): Promise<LeadRecord>;
   setFunnelStage(input: { leadId: string; funnelStage: FunnelStage }): Promise<void>;
   setQualificationProgress(input: {
     leadId: string;
-    currentQualificationQuestion: QualificationQuestionId | null;
+    currentQualificationQuestion: ConversationQuestionId | null;
     qualificationStarted: boolean;
   }): Promise<void>;
   markMeetingScheduled(input: { leadId: string; startsAt: Date; endsAt: Date; externalEventId?: string }): Promise<void>;
