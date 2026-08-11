@@ -104,11 +104,15 @@ export class FaustoConversationService {
     const shouldSplitMeetingConfirmation = response.startsWith("Reuniao confirmada.");
     const shouldSplitObjectionResponse = response.includes("\n\nFicou claro?");
     const shouldSplitTiagoInterestQuestion = response.includes("\n\nIsso seria interessante para voce?");
+    const shouldSplitTiagoProductionConfirmation = response.startsWith(
+      "Pronto, ja encaminhei para nosso especialista",
+    );
     const messages =
       shouldSplitIdentityConfirmation ||
       shouldSplitMeetingConfirmation ||
       shouldSplitObjectionResponse ||
-      shouldSplitTiagoInterestQuestion
+      shouldSplitTiagoInterestQuestion ||
+      shouldSplitTiagoProductionConfirmation
         ? splitIntoWhatsAppMessages(response)
         : [{ text: response }];
     for (const message of messages) {
