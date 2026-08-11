@@ -229,6 +229,12 @@ export class FaustoConversationService {
     const isFirstQuestion = answered.size === 0 && !text.trim();
     if (isFirstQuestion) return currentQuestion.prompt;
 
+    if (isIdentityQuestion(currentQuestion.id) && isMediaPlaceholder(text)) {
+      return currentQuestion.id === "responsibleName"
+        ? "Recebi o áudio, mas para registrar certinho me envie seu nome por escrito."
+        : "Recebi o áudio, mas para registrar certinho me envie o nome da sua autoescola por escrito.";
+    }
+
     try {
       const parsedValue = parseAnswer(currentQuestion.id, text);
       const nextAnswers = { ...answers, [currentQuestion.id]: parsedValue };
@@ -253,7 +259,7 @@ export class FaustoConversationService {
         currentQualificationQuestion: nextQuestion?.id ?? null,
       });
 
-      if (nextQuestion) return nextQuestion.prompt;
+      if (nextQuestion) return buildQuestionPrompt(nextQuestion.id, nextAnswers, nextQuestion.prompt);
 
       return this.finishQualification(lead, nextAnswers);
     } catch (error) {
@@ -297,6 +303,10 @@ export class FaustoConversationService {
 
     if (isNoMoreDemoDoubt(text, latestOutbound)) {
       return buildDemoInvite(lead);
+    }
+
+    if (isDrivingExperienceReply(text, latestOutbound)) {
+      return `${buildDrivingPlanResponse(text)}\n\nFicou claro? Tem alguma dúvida sobre como isso funcionaria na sua autoescola?`;
     }
 
     await this.crm.saveQualificationAnswer({
@@ -741,6 +751,14 @@ function splitIntoWhatsAppMessages(response: string): OutboundMessage[] {
 function buildAutoSchoolDemoResponse(text: string) {
   const normalizedText = normalizeForIntent(text);
 
+  if (isMediaPlaceholder(text) && normalizedText.includes("audio")) {
+    return [
+      "Recebi seu áudio.",
+      "Para eu responder com precisão nesta demonstração, me envie a mesma pergunta em texto.",
+      "Na implantação real, o áudio pode ser tratado conforme a configuração definida para a sua operação.",
+    ].join("\n");
+  }
+
   if (/\b(o que voce faz|o que vc faz|voce faz o que|qual sua funcao|para que serve)\b/.test(normalizedText)) {
     return [
       "Eu consigo atender os clientes da autoescola pelo WhatsApp 24 horas por dia.",
@@ -789,10 +807,8 @@ function buildAutoSchoolDemoResponse(text: string) {
 
   if (/\b(valor|preco|quanto custa|categoria a|categoria b|habilitacao|cnh)\b/.test(normalizedText)) {
     return [
-      "Claro! Para a Categoria AB, que é carro + moto, temos dois exemplos de plano.",
-      "Plano Básico: 2 aulas de carro + 2 aulas de moto. À vista: R$ 640,00. A prazo: R$ 715,00.",
-      "Plano Intermediário: 4 aulas de carro + 4 aulas de moto. À vista: R$ 1.280,00. A prazo: R$ 1.415,00.",
-      "Na sua autoescola, eu responderia com os valores reais cadastrados na sua base.",
+      "Claro! Para eu te indicar o plano certo, você é iniciante ou já tem alguma noção de direção?",
+      "Com isso eu te mostro a opção mais adequada para Categoria AB, que é carro + moto.",
     ].join("\n");
   }
 
@@ -878,8 +894,47 @@ function buildPersonalizationExplanation(lead: LeadRecord) {
 }
 
 function buildDemoInvite(lead: LeadRecord) {
-  const schoolName = lead.drivingSchoolName?.trim() || "sua autoescola";
+  const schoolName = sanitizeDisplayName(lead.drivingSchoolName) || "sua autoescola";
   return `Posso te mostrar como podemos implementar isso no WhatsApp da ${schoolName} em uma demonstração gratuita de aproximadamente 15 minutos?`;
+}
+
+function buildQuestionPrompt(
+  questionId: ConversationQuestionId,
+  answers: QualificationAnswerSet,
+  fallbackPrompt: string,
+) {
+  if (questionId === "drivingSchoolName") {
+    const firstName = String(answers.responsibleName ?? "").trim().split(/\s+/)[0];
+    return firstName ? `Prazer, ${firstName}! Como é o nome da sua autoescola?` : fallbackPrompt;
+  }
+
+  return fallbackPrompt;
+}
+
+function buildDrivingPlanResponse(text: string) {
+  const normalizedText = normalizeForIntent(text);
+  const hasExperience =
+    /\b(ja|já|tenho|sei|alguma|nocao|noção|dirijo|dirigir|experiencia|experiência|pratica|prática)\b/.test(
+      normalizedText,
+    ) && !/\b(nao|não|nunca|zero|iniciante|sem)\b/.test(normalizedText);
+
+  if (hasExperience) {
+    return [
+      "📌 Para quem já tem alguma noção de direção, o Plano Básico costuma fazer mais sentido.",
+      "✅ Categoria AB: 2 aulas de carro + 2 aulas de moto.",
+      "💰 À vista: R$ 640,00.",
+      "💳 A prazo: R$ 715,00.",
+      "Na sua autoescola, eu responderia com os valores e condições reais cadastrados na sua base.",
+    ].join("\n");
+  }
+
+  return [
+    "📌 Para quem ainda não tem experiência, eu indicaria o Plano Avançado.",
+    "✅ Categoria AB: 4 aulas de carro + 4 aulas de moto.",
+    "💰 À vista: R$ 1.280,00.",
+    "💳 A prazo: R$ 1.415,00.",
+    "Na sua autoescola, eu responderia com os valores e condições reais cadastrados na sua base.",
+  ].join("\n");
 }
 
 function isPersonalizationObjection(text: string) {
@@ -909,6 +964,21 @@ function isNoMoreDemoDoubt(text: string, latestOutbound: string | null) {
   return (
     wasAskedForDoubt &&
     /\b(nao|sem duvida|ficou claro|claro|entendi|ok|certo|pode seguir)\b/.test(normalizedText)
+  );
+}
+
+function isDrivingExperienceReply(text: string, latestOutbound: string | null) {
+  const normalizedText = normalizeForIntent(text);
+  const normalizedLatest = normalizeForIntent(latestOutbound ?? "");
+  const wasAskedExperience =
+    normalizedLatest.includes("voce e iniciante") ||
+    normalizedLatest.includes("alguma nocao de direcao");
+
+  return (
+    wasAskedExperience &&
+    /\b(iniciante|zero|nunca|nao|sem|ja|tenho|sei|alguma|nocao|dirijo|dirigir|experiencia|pratica)\b/.test(
+      normalizedText,
+    )
   );
 }
 
@@ -1081,6 +1151,20 @@ function isAgentTestTrigger(text: string) {
 function startsWithNormalized(value: string | null | undefined, prefix: string) {
   if (!value) return false;
   return normalizeForIntent(value).startsWith(normalizeForIntent(prefix));
+}
+
+function isIdentityQuestion(questionId: ConversationQuestionId) {
+  return questionId === "responsibleName" || questionId === "drivingSchoolName";
+}
+
+function isMediaPlaceholder(text: string | null | undefined) {
+  return /^\[(?:image|video|document|audio|sticker|media)[^\]]*recebido\]$/i.test(text?.trim() ?? "");
+}
+
+function sanitizeDisplayName(value: string | null | undefined) {
+  const trimmed = value?.trim();
+  if (!trimmed || isMediaPlaceholder(trimmed)) return "";
+  return trimmed;
 }
 
 function normalizeForIntent(text: string) {
