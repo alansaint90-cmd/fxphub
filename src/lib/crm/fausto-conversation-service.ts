@@ -107,12 +107,16 @@ export class FaustoConversationService {
     const shouldSplitTiagoProductionConfirmation = response.startsWith(
       "Pronto, já encaminhei para nosso especialista",
     );
+    const shouldSplitTiagoMaterialsReview = response.startsWith(
+      "Recebi os prints e já organizei as suas informações.",
+    );
     const messages =
       shouldSplitIdentityConfirmation ||
       shouldSplitMeetingConfirmation ||
       shouldSplitObjectionResponse ||
       shouldSplitTiagoInterestQuestion ||
-      shouldSplitTiagoProductionConfirmation
+      shouldSplitTiagoProductionConfirmation ||
+      shouldSplitTiagoMaterialsReview
         ? splitIntoWhatsAppMessages(response)
         : [{ text: response }];
     for (const message of messages) {
@@ -448,11 +452,8 @@ export class FaustoConversationService {
     });
 
     return [
-      "Recebi os prints e organizei assim:",
-      "Instagram da empresa: recebido.",
-      "Perfil da Empresa no Google: recebido.",
-      "Vou usar esses materiais para preparar a demonstração do site.",
-      "É isso mesmo?",
+      "Recebi os prints e já organizei as suas informações.",
+      "Vou usar esses materiais para preparar a demonstração do seu site. Está tudo certo?",
     ].join("\n");
   }
 
