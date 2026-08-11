@@ -6,7 +6,14 @@ const noPattern = /\b(nao|não|nunca|ainda nao|ainda não|sem|nenhum)\b/i;
 export function parseAnswer(questionId: ConversationQuestionId, rawAnswer: string): string | number | boolean {
   const text = rawAnswer.trim();
 
-  if (questionId === "demoConsent" || questionId === "demoQuestion") {
+  if (
+    questionId === "demoConsent" ||
+    questionId === "demoQuestion" ||
+    questionId === "tiagoMaterials" ||
+    questionId === "tiagoNeedsInstagram" ||
+    questionId === "tiagoNeedsGoogle" ||
+    questionId === "tiagoProduction"
+  ) {
     if (text.length < 1) {
       throw new Error("Me envie uma mensagem para eu continuar o teste.");
     }

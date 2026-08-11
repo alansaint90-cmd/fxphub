@@ -8,7 +8,14 @@ export type QualificationQuestionId =
   | "city"
   | "mainPain";
 
-export type ConversationQuestionId = QualificationQuestionId | "demoConsent" | "demoQuestion";
+export type ConversationQuestionId =
+  | QualificationQuestionId
+  | "demoConsent"
+  | "demoQuestion"
+  | "tiagoMaterials"
+  | "tiagoNeedsInstagram"
+  | "tiagoNeedsGoogle"
+  | "tiagoProduction";
 
 export type LeadClassification = "A" | "B" | "C";
 

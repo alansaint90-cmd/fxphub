@@ -67,6 +67,14 @@ export class FaustoConversationService {
       return { response: messages.map((message) => message.text).join("\n\n"), shouldSend: true, messages };
     }
 
+    if (isTiagoSiteCampaignTrigger(input.text)) {
+      const messages = await this.startTiagoSiteCampaignFlow(lead);
+      for (const message of messages) {
+        await this.crm.saveOutboundMessage({ leadId: lead.id, body: message.text });
+      }
+      return { response: messages.map((message) => message.text).join("\n\n"), shouldSend: true, messages };
+    }
+
     if (shouldKeepHumanOnly(lead)) {
       return { response: "", shouldSend: false };
     }
@@ -77,8 +85,9 @@ export class FaustoConversationService {
       lead.funnelStage === "reuniao_agendada" ||
       lead.currentQualificationQuestion === "demoConsent" ||
       lead.currentQualificationQuestion === "demoQuestion" ||
+      isTiagoSiteCampaignState(lead.currentQualificationQuestion) ||
       shouldConfirmDiagnosticIdentity(lead);
-    const draft = await this.buildDraftResponse(lead, input.text);
+    const draft = await this.buildDraftResponse(lead, input.text, input.messageType);
     const response = shouldUseStrictDraft
       ? draft
       : await this.ai.polishResponse({
@@ -117,7 +126,28 @@ export class FaustoConversationService {
     ];
   }
 
-  private async buildDraftResponse(lead: LeadRecord, text: string): Promise<string> {
+  private async startTiagoSiteCampaignFlow(lead: LeadRecord): Promise<OutboundMessage[]> {
+    await this.crm.setQualificationProgress({
+      leadId: lead.id,
+      currentQualificationQuestion: "tiagoMaterials",
+      qualificationStarted: true,
+    });
+
+    return splitIntoWhatsAppMessages(
+      [
+        "Ola! Sou Alan Nascimento, assistente da Assessoria FXP.",
+        "Voce veio pela campanha do Tiago Cesar. Vou te explicar rapidinho como funciona.",
+        "Nos criamos uma versao demonstrativa do seu site sem compromisso e enviamos para voce avaliar.",
+        "Voce so paga depois de aprovar.",
+        "Para comecarmos, preciso que voce me envie aqui:",
+        "1. Um print do seu Instagram",
+        "2. Um print do seu Perfil da Empresa no Google",
+        "Com essas informacoes conseguimos entender melhor sua empresa e preparar a demonstracao.",
+      ].join("\n"),
+    );
+  }
+
+  private async buildDraftResponse(lead: LeadRecord, text: string, messageType = "text"): Promise<string> {
     if (lead.funnelStage === "reuniao_agendada") {
       return this.handleScheduledMeetingChange(lead, text);
     }
@@ -128,6 +158,10 @@ export class FaustoConversationService {
 
     if (shouldConfirmDiagnosticIdentity(lead)) {
       return this.handleDiagnosticIdentityConfirmation(lead, text);
+    }
+
+    if (isTiagoSiteCampaignState(lead.currentQualificationQuestion)) {
+      return this.handleTiagoSiteCampaign(lead, text, messageType);
     }
 
     const answers = getAnswerSet(lead);
@@ -252,6 +286,100 @@ export class FaustoConversationService {
     }
 
     return "Pode mandar uma pergunta que um aluno normalmente faria para sua autoescola no WhatsApp.";
+  }
+
+  private async handleTiagoSiteCampaign(lead: LeadRecord, text: string, messageType: string): Promise<string> {
+    const currentState = lead.currentQualificationQuestion;
+
+    if (currentState === "tiagoProduction") {
+      if (isHowLongQuestion(text)) {
+        return "Ja colocamos sua demonstracao em producao. Assim que estiver pronta, enviaremos o video por aqui para voce avaliar.";
+      }
+
+      if (isApprovalLike(text)) {
+        return "Perfeito. Vou avisar a equipe que voce aprovou a proposta para seguirmos com os proximos passos de publicacao.";
+      }
+
+      return "Sua demonstracao esta em producao. Assim que estiver pronta, enviaremos o video por aqui para voce avaliar.";
+    }
+
+    const receivedMaterial = detectTiagoMaterial(text, messageType);
+
+    if (receivedMaterial === "unknown_file") {
+      return "Recebi o arquivo. Ele e o print do Instagram ou do Perfil da Empresa no Google?";
+    }
+
+    if (receivedMaterial === "instagram") {
+      await this.crm.saveQualificationAnswer({
+        leadId: lead.id,
+        questionId: "tiagoNeedsGoogle",
+        rawAnswer: text || messageType,
+        parsedValue: "instagram_recebido",
+      });
+
+      if (currentState === "tiagoNeedsInstagram") {
+        return this.confirmTiagoMaterialsComplete(lead);
+      }
+
+      await this.crm.setQualificationProgress({
+        leadId: lead.id,
+        currentQualificationQuestion: "tiagoNeedsGoogle",
+        qualificationStarted: true,
+      });
+
+      return "Perfeito! Ja recebi o Instagram.\n\nAgora so preciso do print do seu Perfil da Empresa no Google para conseguirmos preparar a demonstracao.";
+    }
+
+    if (receivedMaterial === "google") {
+      await this.crm.saveQualificationAnswer({
+        leadId: lead.id,
+        questionId: "tiagoNeedsInstagram",
+        rawAnswer: text || messageType,
+        parsedValue: "google_recebido",
+      });
+
+      if (currentState === "tiagoNeedsGoogle") {
+        return this.confirmTiagoMaterialsComplete(lead);
+      }
+
+      await this.crm.setQualificationProgress({
+        leadId: lead.id,
+        currentQualificationQuestion: "tiagoNeedsInstagram",
+        qualificationStarted: true,
+      });
+
+      return "Perfeito! Ja recebi o Google.\n\nAgora so preciso do print do Instagram da sua empresa.";
+    }
+
+    if (isHowLongQuestion(text)) {
+      return "Assim que recebermos os dois prints, colocamos sua demonstracao em producao e enviamos o video por aqui para voce avaliar.";
+    }
+
+    if (isTiagoPricingQuestion(text)) {
+      return "Pela campanha do Tiago Cesar, a criacao do site sai de R$ 497 por R$ 297. Voce so paga depois de ver e aprovar. A partir do segundo mes, fica R$ 49/mes para manutencao e estrutura.";
+    }
+
+    return "Para eu seguir com sua demonstracao, preciso dos dois materiais: um print do Instagram da empresa e um print do Perfil da Empresa no Google.";
+  }
+
+  private async confirmTiagoMaterialsComplete(lead: LeadRecord): Promise<string> {
+    await this.crm.setQualificationProgress({
+      leadId: lead.id,
+      currentQualificationQuestion: "tiagoProduction",
+      qualificationStarted: true,
+    });
+
+    return [
+      "Perfeito! Recebi tudo.",
+      "Seu site ja esta em producao.",
+      "Vamos utilizar essas informacoes para preparar uma versao demonstrativa do site da sua empresa.",
+      "Daqui a pouco enviaremos aqui no WhatsApp um video mostrando como ficou a proposta do seu novo site.",
+      "E como voce veio atraves do Tiago Cesar, voce tem acesso a condicao especial da campanha:",
+      "Criacao do site de R$ 497 por R$ 297.",
+      "Voce so paga depois de ver e aprovar o site.",
+      "A partir do segundo mes, fica apenas R$ 49/mes para manutencao e estrutura do site.",
+      "Primeiro voce ve como ficou. Se gostar e aprovar, seguimos com a publicacao.",
+    ].join("\n");
   }
 
   private async handleDiagnosticIdentityConfirmation(lead: LeadRecord, text: string): Promise<string> {
@@ -591,6 +719,56 @@ function isDemoInviteAccepted(text: string, latestOutbound: string | null) {
     normalizedLatest.includes("posso te mostrar");
 
   return inviteWasSent && isScheduleConfirmation(text);
+}
+
+function isTiagoSiteCampaignState(value: ConversationQuestionId | null) {
+  return (
+    value === "tiagoMaterials" ||
+    value === "tiagoNeedsInstagram" ||
+    value === "tiagoNeedsGoogle" ||
+    value === "tiagoProduction"
+  );
+}
+
+function isTiagoSiteCampaignTrigger(text: string) {
+  const normalizedText = normalizeForIntent(text);
+  return (
+    normalizedText.includes("vim pelo instagram do tiago cesar") &&
+    (normalizedText.includes("criar um site") ||
+      normalizedText.includes("site para minha empresa") ||
+      normalizedText.includes("quero um site") ||
+      normalizedText.includes("gostaria de criar um site"))
+  );
+}
+
+function detectTiagoMaterial(text: string, messageType: string): "instagram" | "google" | "unknown_file" | null {
+  const normalizedText = normalizeForIntent(text);
+  const normalizedType = normalizeForIntent(messageType);
+  const hasMedia =
+    /\b(image|imagem|video|document|documento|media|sticker|arquivo)\b/.test(normalizedType) ||
+    /\b(print|screenshot|foto|imagem|arquivo|anexo)\b/.test(normalizedText);
+
+  if (/\b(instagram|insta|perfil do instagram|print do instagram)\b/.test(normalizedText)) return "instagram";
+  if (/\b(google|perfil da empresa|empresa no google|google meu negocio|google business|maps|mapa)\b/.test(normalizedText)) {
+    return "google";
+  }
+
+  return hasMedia ? "unknown_file" : null;
+}
+
+function isHowLongQuestion(text: string) {
+  const normalizedText = normalizeForIntent(text);
+  return /\b(quanto tempo|demora|prazo|quando fica pronto|quando sai|previsao)\b/.test(normalizedText);
+}
+
+function isTiagoPricingQuestion(text: string) {
+  const normalizedText = normalizeForIntent(text);
+  return /\b(preco|valor|quanto custa|custa quanto|mensalidade|pagar|pagamento|manutencao)\b/.test(normalizedText);
+}
+
+function isApprovalLike(text: string) {
+  const normalizedText = normalizeForIntent(text);
+  return /\b(gostei|aprovei|aprovado|pode publicar|vamos seguir|fechado|quero sim|ficou bom)\b/.test(normalizedText);
 }
 
 function isConversationClosed(text: string) {
