@@ -1,6 +1,5 @@
 import type { CalendarGateway } from "@/lib/integrations/calendar";
 import type { AiMessagePlanner } from "@/lib/integrations/openai";
-import { leadCaptureWhatsappStartMessage } from "@/lib/lead-capture/whatsapp";
 import { faustoSystemPrompt } from "@/lib/qualification/fausto-prompt";
 import { parseAnswer } from "@/lib/qualification/parser";
 import { getNextQuestion, qualificationQuestions } from "@/lib/qualification/questions";
@@ -60,27 +59,6 @@ export class FaustoConversationService {
       return { response: "", shouldSend: false };
     }
 
-    const diagnosticFormTrigger = isDiagnosticFormTrigger(input.text);
-
-    if (diagnosticFormTrigger) {
-      const context = await this.crm.getLatestLeadFormContextByPhone(input.phone);
-      if (!context) {
-        const response = [
-          "Recebi sua mensagem do diagnostico, mas ainda nao encontrei seus dados do formulario.",
-          "Pode concluir o diagnostico novamente ou me informar o nome da autoescola para eu continuar?",
-        ].join("\n");
-        await this.crm.saveOutboundMessage({ leadId: lead.id, body: response });
-        return { response, shouldSend: true };
-      }
-
-      const contextualizedLead = await this.crm.applyLeadFormContextToLead({ leadId: lead.id, context });
-      const messages = this.startPaidTrafficIdentityFlow(contextualizedLead);
-      for (const message of messages) {
-        await this.crm.saveOutboundMessage({ leadId: contextualizedLead.id, body: message.text });
-      }
-      return { response: messages.map((message) => message.text).join("\n\n"), shouldSend: true, messages };
-    }
-
     if (isAgentTestTrigger(input.text)) {
       const messages = await this.startSdrTestFlow(lead);
       for (const message of messages) {
@@ -117,16 +95,6 @@ export class FaustoConversationService {
       await this.crm.saveOutboundMessage({ leadId: lead.id, body: message.text });
     }
     return { response, shouldSend: true, messages: messages.length > 1 ? messages : undefined };
-  }
-
-  private startPaidTrafficIdentityFlow(lead: LeadRecord): OutboundMessage[] {
-    const leadName = lead.responsibleName?.trim() || lead.pushName?.trim() || "voce";
-    const schoolName = lead.drivingSchoolName?.trim() || "sua autoescola";
-
-    return [
-      { text: "Ja recebi o seu diagnostico por aqui." },
-      { text: `Falo com ${leadName} da ${schoolName}, certo?`, delayMs: 5000 },
-    ];
   }
 
   private async startSdrTestFlow(lead: LeadRecord): Promise<OutboundMessage[]> {
@@ -541,26 +509,6 @@ function isScheduleConfirmation(text: string) {
 function isIdentityDenied(text: string) {
   const normalizedText = normalizeForIntent(text);
   return /\b(nao|errado|incorreto|nao sou|nao e|esta errado|ta errado)\b/.test(normalizedText);
-}
-
-function isDiagnosticFormTrigger(text: string) {
-  const normalizedText = normalizeForIntent(text);
-  const expectedText = normalizeForIntent(leadCaptureWhatsappStartMessage);
-
-  if (normalizedText === expectedText) return true;
-
-  const cameFromFxpDiagnostic =
-    normalizedText.includes("acabei de concluir o diagnostico da fxp") ||
-    normalizedText.includes("concluir o diagnostico da fxp") ||
-    normalizedText.includes("diagnostico da fxp");
-  const wantsApplication =
-    normalizedText.includes("aplicar a estrategia") ||
-    normalizedText.includes("usar estrategia") ||
-    normalizedText.includes("usar a estrategia") ||
-    normalizedText.includes("estrategia na minha autoescola") ||
-    normalizedText.includes("minha autoescola");
-
-  return cameFromFxpDiagnostic && wantsApplication;
 }
 
 function isAgentTestTrigger(text: string) {
