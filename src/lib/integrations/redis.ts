@@ -17,7 +17,7 @@ export class ConversationBuffer {
     messageId = crypto.randomUUID(),
   ): Promise<{ shouldProcess: boolean; text: string }> {
     const settings = await getRuntimeIntegrationSettings();
-    const quietMs = Number(settings.MESSAGE_BUFFER_QUIET_MS ?? 2500);
+    const quietMs = Number(settings.MESSAGE_BUFFER_QUIET_MS ?? 6000);
     const ttlSeconds = Number(settings.MESSAGE_BUFFER_TTL_SECONDS ?? 60);
     const redis = await this.getRedis(settings.REDIS_URL);
 

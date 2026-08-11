@@ -407,7 +407,7 @@ const integrationGroups: IntegrationGroup[] = [
       { key: "OPENAI_API_KEY", label: "OpenAI API key", placeholder: "sua_chave_openai", type: "password" },
       { key: "OPENAI_MODEL", label: "Modelo OpenAI", placeholder: "gpt-4.1-mini" },
       { key: "REDIS_URL", label: "Redis URL", placeholder: "redis://HOST:6379", type: "password" },
-      { key: "MESSAGE_BUFFER_QUIET_MS", label: "Buffer quiet ms", placeholder: "2500" },
+      { key: "MESSAGE_BUFFER_QUIET_MS", label: "Buffer quiet ms", placeholder: "6000" },
       { key: "MESSAGE_BUFFER_TTL_SECONDS", label: "Buffer TTL", placeholder: "60" },
     ],
   },
