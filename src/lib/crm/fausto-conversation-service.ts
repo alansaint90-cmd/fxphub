@@ -98,8 +98,12 @@ export class FaustoConversationService {
 
     const shouldSplitMeetingConfirmation = response.startsWith("Reuniao confirmada.");
     const shouldSplitObjectionResponse = response.includes("\n\nFicou claro?");
+    const shouldSplitTiagoInterestQuestion = response.includes("\n\nIsso seria interessante para voce?");
     const messages =
-      shouldSplitIdentityConfirmation || shouldSplitMeetingConfirmation || shouldSplitObjectionResponse
+      shouldSplitIdentityConfirmation ||
+      shouldSplitMeetingConfirmation ||
+      shouldSplitObjectionResponse ||
+      shouldSplitTiagoInterestQuestion
         ? splitIntoWhatsAppMessages(response)
         : [{ text: response }];
     for (const message of messages) {
@@ -357,7 +361,7 @@ export class FaustoConversationService {
     }
 
     if (isTiagoPricingQuestion(text)) {
-      return "Pela campanha do Tiago Cesar, a criacao do site sai de R$ 497 por R$ 297. Voce so paga depois de ver e aprovar. A partir do segundo mes, fica R$ 49/mes para manutencao e estrutura.";
+      return "Pela campanha do Tiago Cesar, a criacao do site sai de R$ 497 por R$ 297. Voce so paga depois de ver e aprovar. A partir do segundo mes, fica R$ 49/mes para manutencao e estrutura.\n\nIsso seria interessante para voce?";
     }
 
     return "Para eu seguir com sua demonstracao, preciso dos dois materiais: um print do Instagram da empresa e um print do Perfil da Empresa no Google.";
