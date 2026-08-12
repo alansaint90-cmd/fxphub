@@ -114,7 +114,9 @@ export class FaustoConversationService {
     const shouldSplitTiagoMaterialsReview = response.startsWith(
       "Recebi os prints e já organizei as suas informações.",
     );
-    const shouldSplitDemoQuestion = lead.currentQualificationQuestion === "demoQuestion" && response.includes("\n");
+    const shouldSplitDemoQuestion =
+      (lead.currentQualificationQuestion === "demoQuestion" && response.includes("\n")) ||
+      response.includes("\n\nQuer testar outra pergunta?");
     const messages =
       shouldSplitIdentityConfirmation ||
       shouldSplitMeetingConfirmation ||
