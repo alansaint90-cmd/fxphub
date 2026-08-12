@@ -12,7 +12,21 @@ export const qualificationQuestions: QualificationQuestion[] = [
   {
     id: "demoConsent",
     prompt:
-      "Perfeito. Agora vou te conduzir para um teste rápido. A partir daqui, faça perguntas como se você fosse um cliente entrando em contato com a sua autoescola. Pode começar...",
+      [
+        "Agora faça uma pergunta como se você fosse um cliente entrando em contato com a sua autoescola.",
+        "Você pode escolher uma das perguntas abaixo ou escrever a sua.",
+        "1. Quanto custa para tirar a primeira habilitação?",
+        "2. Vocês fazem habilitação para carro e moto?",
+        "3. Quais documentos eu preciso para começar a tirar a CNH?",
+        "4. Posso parcelar? Quais são as formas de pagamento?",
+        "5. Quanto tempo demora para eu tirar minha habilitação?",
+        "6. Quais são os horários das aulas teóricas e práticas?",
+        "7. Eu trabalho o dia todo. Tem aula à noite ou aos sábados?",
+        "8. Já tenho habilitação de carro. Quanto custa para adicionar moto?",
+        "9. Minha CNH venceu. Vocês fazem renovação? Como funciona?",
+        "10. Tenho interesse. O que preciso fazer para começar minha matrícula?",
+        "Pode começar...",
+      ].join("\n"),
   },
   {
     id: "demoQuestion",

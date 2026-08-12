@@ -820,47 +820,86 @@ function buildAutoSchoolDemoResponse(text: string) {
     ].join("\n");
   }
 
-  if (/\b(valor|preco|quanto custa|categoria a|categoria b|habilitacao|cnh)\b/.test(normalizedText)) {
+  if (/\b(quanto tempo|demora|prazo|aulas|prova|exame)\b/.test(normalizedText)) {
     return [
-      "Claro! Para eu te indicar o plano certo, você é iniciante ou já tem alguma noção de direção?",
-      "Com isso eu te mostro a opção mais adequada para Categoria AB, que é carro + moto.",
+      "O prazo pode variar de acordo com cada aluno e com o andamento das etapas.",
+      "Posso te explicar rapidinho como funciona todo o processo. 😊",
     ].join("\n");
   }
 
-  if (/\b(parcel|cartao|pix|entrada|forma de pagamento|pagar)\b/.test(normalizedText)) {
+  if (/\b(carro.*moto|moto.*carro|carro e moto|categoria ab|as duas|duas juntas)\b/.test(normalizedText)) {
     return [
-      "Sim, a autoescola pode trabalhar com opções de pagamento. Me diga qual categoria você quer fazer para eu te passar a melhor orientação.",
-      "Na implantação real, eu seguiria exatamente as formas de pagamento definidas pela sua autoescola.",
+      "Sim! Trabalhamos com habilitação para carro e moto. 🚗🏍️",
+      "Você quer fazer apenas uma categoria ou as duas juntas?",
     ].join("\n");
   }
 
   if (/\b(documento|documentos|preciso levar)\b/.test(normalizedText)) {
     return [
-      "Para iniciar, normalmente são solicitados documento com foto, CPF, comprovante de residência e dados de contato.",
-      "Na sua autoescola, eu usaria exatamente a lista de documentos e regras que vocês definirem.",
-      "Se faltar alguma informação, eu posso encaminhar para confirmação da equipe.",
+      "É bem simples. 😊",
+      "Normalmente você vai precisar de RG, CPF e comprovante de residência.",
+      "Se quiser, também posso te explicar como funciona o processo para começar.",
     ].join("\n");
   }
 
-  if (/\b(matricula|inscricao|inscrever|fechar)\b/.test(normalizedText)) {
+  if (/\b(parcel|cartao|pix|entrada|forma de pagamento|pagar)\b/.test(normalizedText)) {
     return [
-      "Eu posso conduzir o cliente até a etapa definida pela sua operação.",
-      "Por exemplo: coletar nome, categoria desejada, bairro, turno e dados de contato.",
-      "Posso te encaminhar para a equipe confirmar os detalhes e próximos passos.",
+      "Sim! Temos opções de pagamento parcelado. 💳",
+      "As condições podem variar conforme a categoria escolhida.",
+      "Qual habilitação você pretende tirar?",
     ].join("\n");
   }
 
-  if (/\b(horario|funciona|abre|fecha|atendimento|onde|endereco|localizacao|fica)\b/.test(normalizedText)) {
+  if (/\b(trabalho o dia todo|a noite|noite|sabado|sábado|fim de semana)\b/.test(normalizedText)) {
     return [
-      "Posso te ajudar com isso. Me informe seu bairro ou melhor horário de atendimento que eu direciono a conversa para a unidade responsável.",
-      "Em uma implantação real, eu usaria o endereço, horário e regras comerciais da sua própria autoescola.",
+      "Entendi! 👍",
+      "Temos opções de horários pensadas justamente para quem trabalha durante o dia.",
+      "Você teria preferência por noite ou sábado?",
     ].join("\n");
   }
 
-  if (/\b(quanto tempo|demora|prazo|aulas|prova|exame)\b/.test(normalizedText)) {
+  if (/\b(horario|horarios|funciona|aulas teoricas|aulas praticas|manhã|manha|tarde)\b/.test(normalizedText)) {
     return [
-      "O prazo pode variar conforme categoria, agenda de aulas e etapas do Detran.",
-      "Me diga se é primeira habilitação ou adição de categoria para eu te orientar melhor.",
+      "Temos diferentes opções de horários para facilitar sua rotina.",
+      "Você prefere fazer as aulas pela manhã, tarde ou noite?",
+    ].join("\n");
+  }
+
+  if (/\b(adicionar moto|adicao de moto|adição de moto|ja tenho habilitacao de carro|já tenho habilitação de carro|tenho carro.*moto)\b/.test(normalizedText)) {
+    return [
+      "Sim, você pode fazer a adição da categoria de moto. 🏍️",
+      "Posso verificar as condições para você.",
+      "Sua CNH está válida atualmente?",
+    ].join("\n");
+  }
+
+  if (/\b(cnh venceu|cnh vencida|renovacao|renovação|renovar)\b/.test(normalizedText)) {
+    return [
+      "Sim, podemos te orientar sobre o processo de renovação. 😊",
+      "Há quanto tempo sua CNH está vencida?",
+    ].join("\n");
+  }
+
+  if (/\b(matricula|matrícula|inscricao|inscrição|inscrever|fechar|começar|comecar)\b/.test(normalizedText)) {
+    return [
+      "Perfeito! 🙌 Vamos começar.",
+      "Primeiro preciso de algumas informações rápidas para orientar sua matrícula.",
+      "Qual é o seu nome?",
+    ].join("\n");
+  }
+
+  if (/\b(onde|endereco|endereço|localizacao|localização|fica|abre|fecha|atendimento)\b/.test(normalizedText)) {
+    return [
+      "Posso te ajudar com isso. 😊",
+      "Me diga seu bairro ou melhor horário de atendimento que eu direciono para a unidade responsável.",
+      "Na implantação real, eu usaria o endereço e os horários da sua própria autoescola.",
+    ].join("\n");
+  }
+
+  if (/\b(valor|preco|preço|quanto custa|primeira habilitacao|primeira habilitação|habilitacao|habilitação|cnh)\b/.test(normalizedText)) {
+    return [
+      "Claro! 😊 O valor depende da categoria que você deseja.",
+      "Você pretende tirar habilitação para carro, moto ou carro + moto?",
     ].join("\n");
   }
 
