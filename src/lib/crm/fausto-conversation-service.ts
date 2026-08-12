@@ -290,6 +290,10 @@ export class FaustoConversationService {
       qualificationStarted: true,
     });
 
+    if (text.trim() && !isIdentityConfirmed(text)) {
+      return this.handleDemoQuestion(lead, text);
+    }
+
     return (
       qualificationQuestions.find((question) => question.id === "demoQuestion")?.prompt ??
       "Pode mandar uma pergunta que um cliente faria no WhatsApp da sua autoescola."
