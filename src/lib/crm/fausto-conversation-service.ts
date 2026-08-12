@@ -970,7 +970,8 @@ function isDemoInviteAccepted(text: string, latestOutbound: string | null) {
   const inviteWasSent =
     normalizedLatest.includes("demonstracao gratuita") ||
     normalizedLatest.includes("implementar isso no whatsapp") ||
-    normalizedLatest.includes("posso te mostrar");
+    normalizedLatest.includes("posso te mostrar") ||
+    normalizedLatest.includes("quer testar outra pergunta");
 
   return inviteWasSent && isScheduleConfirmation(text);
 }
@@ -1185,8 +1186,17 @@ function isIdentityConfirmed(text: string) {
 
 function isScheduleConfirmation(text: string) {
   const normalizedText = normalizeForIntent(text);
-  return /^(s|sim|pode|pode sim|sim pode|pode marcar|pode agendar|confirmo|confirmado|ok|certo|isso|fechado|ta certo|esta certo)[!. ]*$/.test(
-    normalizedText,
+  const confirmationParts = normalizedText
+    .split(/\s+(?:e\s+)?|\n+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  return (
+    /^(s|sim|quero sim|quero|pode|pode sim|sim pode|pode marcar|pode agendar|confirmo|confirmado|ok|certo|isso|fechado|ta certo|esta certo)[!. ]*$/.test(
+      normalizedText,
+    ) ||
+    /\b(sim|quero sim|pode sim|pode marcar|pode agendar|confirmo|confirmado|fechado)\b/.test(normalizedText) ||
+    confirmationParts.some((part) => /^(s|sim|quero|pode|ok|certo|isso|fechado)$/.test(part))
   );
 }
 
