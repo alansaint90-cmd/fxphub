@@ -1037,7 +1037,11 @@ function wasAskedToTestAnotherQuestion(latestOutbound: string | null) {
 
 function isNoMoreDemoTest(text: string, latestOutbound: string | null) {
   const normalizedText = normalizeForIntent(text);
-  return wasAskedToTestAnotherQuestion(latestOutbound) && /\b(nao|não|sem|chega|ja deu|já deu|pode seguir)\b/.test(normalizedText);
+  return (
+    wasAskedToTestAnotherQuestion(latestOutbound) &&
+    /\b(nao|não|sem|chega|ja deu|já deu|pode seguir)\b/.test(normalizedText) &&
+    !hasDemoQuestionIntent(normalizedText)
+  );
 }
 
 function isDrivingExperienceReply(text: string, latestOutbound: string | null) {
@@ -1116,12 +1120,22 @@ function isSdrLatestOutbound(latestOutbound: string | null) {
     normalizedLatest.includes("com quem eu falo") ||
     normalizedLatest.includes("como e o nome da sua autoescola") ||
     normalizedLatest.includes("teste rapido") ||
+    normalizedLatest.includes("agora faca uma pergunta") ||
+    normalizedLatest.includes("voce pode escolher uma das perguntas") ||
+    normalizedLatest.includes("pode comecar") ||
+    normalizedLatest.includes("quer testar outra pergunta") ||
     normalizedLatest.includes("pode mandar um texto") ||
     normalizedLatest.includes("como o agente poderia se comportar") ||
     normalizedLatest.includes("tem alguma duvida sobre como isso funcionaria") ||
     normalizedLatest.includes("voce e iniciante") ||
     normalizedLatest.includes("alguma nocao de direcao") ||
     normalizedLatest.includes("posso te mostrar como podemos implementar isso no whatsapp")
+  );
+}
+
+function hasDemoQuestionIntent(normalizedText: string) {
+  return /\b(documento|documentos|parcel|pagamento|pagar|quanto custa|valor|preco|preço|habilitacao|habilitação|cnh|matricula|matrícula|horario|horários|horario|aula|carro|moto|renovacao|renovação|vencida|vencido|começar|comecar|interesse)\b/.test(
+    normalizedText,
   );
 }
 

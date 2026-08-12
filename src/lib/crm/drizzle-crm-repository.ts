@@ -134,7 +134,7 @@ export class DrizzleCrmRepository implements CrmRepository {
           eq(conversationMessages.isDeleted, false),
         ),
       )
-      .orderBy(desc(conversationMessages.createdAt))
+      .orderBy(desc(conversationMessages.createdAt), desc(conversationMessages.id))
       .limit(1);
 
     return message?.body ?? null;
