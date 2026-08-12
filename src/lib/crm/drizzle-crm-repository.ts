@@ -204,6 +204,10 @@ export class DrizzleCrmRepository implements CrmRepository {
       .update(leads)
       .set({
         funnelStage: input.funnelStage,
+        currentQualificationQuestion:
+          input.funnelStage === "agendamento_em_andamento" || input.funnelStage === "reuniao_agendada"
+            ? null
+            : undefined,
         updatedAt: new Date(),
         modifiedBy,
       })

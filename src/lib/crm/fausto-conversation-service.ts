@@ -78,7 +78,7 @@ export class FaustoConversationService {
       return { response: messages.map((message) => message.text).join("\n\n"), shouldSend: true, messages };
     }
 
-    if (!activeFlow && isSdrConversationState(lead.currentQualificationQuestion)) {
+    if (!activeFlow && isSdrConversationState(lead.currentQualificationQuestion) && !lead.qualificationStarted) {
       return { response: "", shouldSend: false };
     }
 
