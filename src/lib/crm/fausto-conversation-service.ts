@@ -298,6 +298,7 @@ export class FaustoConversationService {
 
   private async handleDemoQuestion(lead: LeadRecord, text: string): Promise<string> {
     const latestOutbound = await this.crm.getLatestOutboundMessage(lead.id);
+    const isSecondDemoQuestion = wasAskedToTestAnotherQuestion(latestOutbound) && !isNoMoreDemoTest(text, latestOutbound);
 
     if (isDemoInviteAccepted(text, latestOutbound)) {
       await this.crm.setFunnelStage({ leadId: lead.id, funnelStage: "agendamento_em_andamento" });
@@ -305,12 +306,16 @@ export class FaustoConversationService {
       return `Perfeito. Consultei a agenda e tenho ${formatSlotOptions(slots)}. Qual desses fica melhor para uma demonstração de aproximadamente 15 minutos?`;
     }
 
+    if (isNoMoreDemoTest(text, latestOutbound)) {
+      return buildDemoInvite(lead);
+    }
+
     if (isNoMoreDemoDoubt(text, latestOutbound)) {
       return buildDemoInvite(lead);
     }
 
     if (isDrivingExperienceReply(text, latestOutbound)) {
-      return `${buildDrivingPlanResponse(text)}\n\nFicou claro? Tem alguma dúvida sobre como isso funcionaria na sua autoescola?`;
+      return buildDemoResponseClosing(buildDrivingPlanResponse(text), lead, isSecondDemoQuestion);
     }
 
     await this.crm.saveQualificationAnswer({
@@ -325,7 +330,7 @@ export class FaustoConversationService {
     }
 
     if (isQuestionLike(text) || text.trim().length > 0) {
-      return `${buildAutoSchoolDemoResponse(text)}\n\nFicou claro? Tem alguma dúvida sobre como isso funcionaria na sua autoescola?`;
+      return buildDemoResponseClosing(buildAutoSchoolDemoResponse(text), lead, isSecondDemoQuestion);
     }
 
     return "Pode mandar uma pergunta que um aluno normalmente faria para sua autoescola no WhatsApp.";
@@ -902,6 +907,14 @@ function buildDemoInvite(lead: LeadRecord) {
   return `Posso te mostrar como podemos implementar isso no WhatsApp da ${schoolName} em uma demonstração gratuita de aproximadamente 15 minutos?`;
 }
 
+function buildDemoResponseClosing(response: string, lead: LeadRecord, shouldInviteToMeeting: boolean) {
+  if (shouldInviteToMeeting) {
+    return `${response}\n\n${buildDemoInvite(lead)}`;
+  }
+
+  return `${response}\n\nQuer testar outra pergunta?`;
+}
+
 function buildQuestionPrompt(
   questionId: ConversationQuestionId,
   answers: QualificationAnswerSet,
@@ -969,6 +982,16 @@ function isNoMoreDemoDoubt(text: string, latestOutbound: string | null) {
     wasAskedForDoubt &&
     /\b(nao|sem duvida|ficou claro|claro|entendi|ok|certo|pode seguir)\b/.test(normalizedText)
   );
+}
+
+function wasAskedToTestAnotherQuestion(latestOutbound: string | null) {
+  const normalizedLatest = normalizeForIntent(latestOutbound ?? "");
+  return normalizedLatest.includes("quer testar outra pergunta");
+}
+
+function isNoMoreDemoTest(text: string, latestOutbound: string | null) {
+  const normalizedText = normalizeForIntent(text);
+  return wasAskedToTestAnotherQuestion(latestOutbound) && /\b(nao|não|sem|chega|ja deu|já deu|pode seguir)\b/.test(normalizedText);
 }
 
 function isDrivingExperienceReply(text: string, latestOutbound: string | null) {
