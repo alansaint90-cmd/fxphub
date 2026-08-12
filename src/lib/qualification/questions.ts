@@ -12,7 +12,7 @@ export const qualificationQuestions: QualificationQuestion[] = [
   {
     id: "demoConsent",
     prompt:
-      "Perfeito. Agora vou te conduzir para um teste rápido. A partir daqui, faça perguntas como se você fosse um cliente entrando em contato com a sua autoescola. Certo?",
+      "Perfeito. Agora vou te conduzir para um teste rápido. A partir daqui, faça perguntas como se você fosse um cliente entrando em contato com a sua autoescola. Pode começar...",
   },
   {
     id: "demoQuestion",

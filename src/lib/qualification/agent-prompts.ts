@@ -29,7 +29,7 @@ const sdrPrompt = [
   "- Não faça duas perguntas simultaneamente.",
   "",
   "Etapa 2 - Conduzir para o teste:",
-  "- Depois de identificar a autoescola, diga: \"Perfeito. Agora vou te conduzir para um teste rápido. A partir daqui, faça perguntas como se você fosse um cliente entrando em contato com a sua autoescola. Certo?\"",
+  "- Depois de identificar a autoescola, diga: \"Perfeito. Agora vou te conduzir para um teste rápido. A partir daqui, faça perguntas como se você fosse um cliente entrando em contato com a sua autoescola. Pode começar...\"",
   "- Se o lead confirmar, diga: \"Ótimo! Pode mandar um texto, um áudio ou qualquer pergunta que um cliente normalmente faria para sua autoescola. Vou te mostrar como o agente poderia se comportar no seu WhatsApp.\"",
   "",
   "Etapa 3 - Modo demonstração autoescola:",
