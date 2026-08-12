@@ -623,7 +623,7 @@ export class FaustoConversationService {
     }
 
     if (isQuestionLike(text)) {
-      return "Entendi sua pergunta. Me diga exatamente qual ponto você quer esclarecer que eu respondo de forma objetiva antes de seguir para a agenda.";
+      return "Claro. Me diga sua dúvida que eu respondo de forma objetiva e depois seguimos para o melhor horário da demonstração.";
     }
 
     return `Consultei a agenda e tenho ${formatSlotOptions(slots, { preserveOrder: hasPreferredSchedule })}. Qual desses fica melhor?`;
@@ -667,7 +667,7 @@ export class FaustoConversationService {
     if (objectionResponse) return objectionResponse;
 
     if (isQuestionLike(text)) {
-      return "Claro. Me diga qual ponto você quer esclarecer que eu respondo de forma objetiva.";
+      return "Claro. Me diga sua dúvida que eu respondo de forma objetiva. Se quiser remarcar ou cancelar depois, eu também consulto a agenda para você.";
     }
 
     return "Claro. Posso tirar alguma dúvida, remarcar ou cancelar seu agendamento. Como posso ajudar?";

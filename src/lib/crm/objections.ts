@@ -10,7 +10,7 @@ export function getSchedulingObjectionResponse(text: string) {
 }
 
 function addFlowReturn(response: string) {
-  return `${response}\n\nFicou claro? Posso seguir e te ajudar com o melhor horario para a demonstracao?`;
+  return `${response}\n\nFicou claro? Posso seguir e te ajudar com o melhor horário para a demonstração?`;
 }
 
 function getKnowledgeBaseResponse(normalizedText: string) {
@@ -187,7 +187,7 @@ function getKnowledgeBaseResponse(normalizedText: string) {
   }
 
   if (isQuestionLike(normalizedText)) {
-    return "Claro. Qual e a sua duvida? Te respondo de forma objetiva para vermos se faz sentido continuar.";
+    return "Claro. Me diga sua dúvida que eu respondo de forma objetiva e, se fizer sentido, seguimos para a demonstração.";
   }
 
   return null;
