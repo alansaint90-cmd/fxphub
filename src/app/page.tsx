@@ -437,7 +437,8 @@ const implementationCards = [
   completed: number;
 }[];
 
-const operationalTasks: {
+type OperationalTask = {
+  id: string;
   title: string;
   description: string;
   responsible: string;
@@ -445,7 +446,10 @@ const operationalTasks: {
   dueDate: string;
   category: string;
   status: string;
-}[] = [];
+};
+
+const taskStorageKey = "fxphub.operational-tasks";
+const initialOperationalTasks: OperationalTask[] = [];
 
 const financeRows: {
   company: string;
@@ -606,6 +610,10 @@ function formatCurrency(value: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 }
 
+function getTodayInputDate() {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
+}
+
 function isSameAgendaDay(left: Date, right: Date) {
   return left.toDateString() === right.toDateString();
 }
@@ -651,6 +659,10 @@ export default function HomePage() {
   const [taskStatusFilter, setTaskStatusFilter] = useState("Todos");
   const [taskPriorityFilter, setTaskPriorityFilter] = useState("Todos");
   const [taskResponsibleFilter, setTaskResponsibleFilter] = useState("Todos");
+  const [operationalTasks, setOperationalTasks] = useState<OperationalTask[]>(initialOperationalTasks);
+  const [tasksHydrated, setTasksHydrated] = useState(false);
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [taskFormError, setTaskFormError] = useState("");
   const [financeStatusFilter, setFinanceStatusFilter] = useState("Todos");
 
   useEffect(() => {
@@ -658,6 +670,29 @@ export default function HomePage() {
       setWebhookUrl(`${window.location.origin}/api/webhooks/evolution`);
     }
   }, []);
+
+  useEffect(() => {
+    try {
+      const savedTasks = window.localStorage.getItem(taskStorageKey);
+      if (savedTasks) {
+        setOperationalTasks(JSON.parse(savedTasks) as OperationalTask[]);
+      }
+    } catch {
+      setOperationalTasks(initialOperationalTasks);
+    } finally {
+      setTasksHydrated(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!tasksHydrated) return;
+
+    try {
+      window.localStorage.setItem(taskStorageKey, JSON.stringify(operationalTasks));
+    } catch {
+      // Local persistence is optional and should not block task creation.
+    }
+  }, [operationalTasks, tasksHydrated]);
 
   useEffect(() => {
     loadKanbanLeads();
@@ -861,6 +896,39 @@ export default function HomePage() {
     } catch {
       setLoginError("Nao foi possivel validar o acesso agora.");
     }
+  }
+
+  function handleCreateTask(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const title = String(formData.get("title") ?? "").trim();
+    const responsible = String(formData.get("responsible") ?? "").trim();
+    const dueDate = String(formData.get("dueDate") ?? "").trim();
+
+    if (!title || !responsible || !dueDate) {
+      setTaskFormError("Preencha atividade, responsavel e prazo.");
+      return;
+    }
+
+    const taskId =
+      typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `task-${Date.now()}`;
+
+    setOperationalTasks((currentTasks) => [
+      {
+        id: taskId,
+        title,
+        description: "Atividade criada manualmente.",
+        responsible,
+        priority: "Media",
+        dueDate,
+        category: "Comercial",
+        status: "A Fazer",
+      },
+      ...currentTasks,
+    ]);
+    setTaskFormError("");
+    setIsTaskModalOpen(false);
+    event.currentTarget.reset();
   }
 
   function handleDragStart(event: DragEvent<HTMLElement>, leadId: string) {
@@ -1190,10 +1258,14 @@ export default function HomePage() {
   });
   const filteredFinanceRows =
     financeStatusFilter === "Todos" ? financeRows : financeRows.filter((row) => row.status === financeStatusFilter);
+  const todayInputDate = getTodayInputDate();
   const taskDashboard = [
-    { label: "Hoje", value: operationalTasks.filter((task) => task.dueDate === "10/07/2026").length },
+    { label: "Hoje", value: operationalTasks.filter((task) => task.dueDate === todayInputDate).length },
     { label: "Esta semana", value: operationalTasks.length },
-    { label: "Atrasadas", value: operationalTasks.filter((task) => task.status === "Atrasado").length },
+    {
+      label: "Atrasadas",
+      value: operationalTasks.filter((task) => task.dueDate < todayInputDate && task.status !== "Concluido").length,
+    },
     { label: "Concluidas", value: operationalTasks.filter((task) => task.status === "Concluido").length },
   ];
 
@@ -2092,10 +2164,75 @@ export default function HomePage() {
           </article>
 
           <article className={`panel ops-panel ${activePage === "tarefas" ? "" : "page-hidden"}`}>
-            <div className="section-title">
-              <span className="eyebrow">Central de tarefas</span>
-              <h2>Tarefas</h2>
+            <div className="section-title task-title-row">
+              <div>
+                <span className="eyebrow">Central de tarefas</span>
+                <h2>Tarefas</h2>
+              </div>
+              <button className="new-task-button" type="button" onClick={() => setIsTaskModalOpen(true)}>
+                + Nova tarefa
+              </button>
             </div>
+            {isTaskModalOpen ? (
+              <div
+                className="task-popover-backdrop"
+                role="presentation"
+                onClick={() => {
+                  setIsTaskModalOpen(false);
+                  setTaskFormError("");
+                }}
+              >
+                <form
+                  className="task-popover"
+                  aria-label="Nova tarefa"
+                  onClick={(event) => event.stopPropagation()}
+                  onSubmit={handleCreateTask}
+                >
+                  <header>
+                    <div>
+                      <span className="eyebrow">Nova tarefa</span>
+                      <h3>Registrar atividade</h3>
+                    </div>
+                    <button
+                      type="button"
+                      aria-label="Fechar nova tarefa"
+                      onClick={() => {
+                        setIsTaskModalOpen(false);
+                        setTaskFormError("");
+                      }}
+                    >
+                      x
+                    </button>
+                  </header>
+                  <label>
+                    <span>Atividade</span>
+                    <input name="title" type="text" placeholder="Ex: Validar campanha do cliente" autoFocus />
+                  </label>
+                  <label>
+                    <span>Responsavel</span>
+                    <input name="responsible" type="text" placeholder="Nome do responsavel" />
+                  </label>
+                  <label>
+                    <span>Prazo</span>
+                    <input name="dueDate" type="date" />
+                  </label>
+                  {taskFormError ? <p className="form-error">{taskFormError}</p> : null}
+                  <footer>
+                    <button
+                      className="secondary"
+                      type="button"
+                      onClick={() => {
+                        setIsTaskModalOpen(false);
+                        setTaskFormError("");
+                      }}
+                    >
+                      Cancelar
+                    </button>
+                    <button type="submit">Salvar tarefa</button>
+                  </footer>
+                </form>
+              </div>
+            ) : null}
             <div className="task-summary-grid">
               {taskDashboard.map((item) => (
                 <div className="executive-metric" key={item.label}>
@@ -2115,7 +2252,7 @@ export default function HomePage() {
                 <span>Titulo</span><span>Responsavel</span><span>Prioridade</span><span>Data limite</span><span>Categoria</span><span>Status</span>
               </div>
               {filteredTasks.map((task) => (
-                <article className="ops-table-row" key={task.title}>
+                <article className="ops-table-row" key={task.id}>
                   <div><strong>{task.title}</strong><small>{task.description}</small></div>
                   <span>{task.responsible}</span>
                   <b className={`priority-badge ${task.priority.toLowerCase()}`}>{task.priority}</b>
