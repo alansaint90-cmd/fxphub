@@ -13,6 +13,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:clear-conversations": "node scripts/clear-conversation-state.mjs",
+    "db:reset-operational-data": "node scripts/reset-operational-data.mjs",
     "db:ensure-active-clients": "node scripts/ensure-active-clients-schema.mjs",
     "db:ensure-lead-capture": "node scripts/ensure-lead-capture-schema.mjs",
     "db:ensure-super-admins": "node scripts/ensure-super-admins.mjs"

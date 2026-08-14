@@ -437,29 +437,35 @@ const implementationCards = [
   completed: number;
 }[];
 
-const operationalTasks = [
-  { title: "Validar WhatsApp CFC Catuense", description: "Confirmar instancia, webhook e resposta automatica.", responsible: "Suporte FXP", priority: "Alta", dueDate: "10/07/2026", category: "Implantacao", status: "Em andamento" },
-  { title: "Follow-up Auto Guia", description: "Agendar treinamento da equipe comercial.", responsible: "CS FXP", priority: "Media", dueDate: "11/07/2026", category: "Customer Success", status: "A Fazer" },
-  { title: "Conferir mensalidade Direcao Norte", description: "Validar vencimento e forma de pagamento.", responsible: "Financeiro", priority: "Alta", dueDate: "09/07/2026", category: "Financeiro", status: "Atrasado" },
-  { title: "Ajuste de prompt SDR", description: "Refinar abordagem para horarios alternativos.", responsible: "Desenvolvimento", priority: "Baixa", dueDate: "12/07/2026", category: "Desenvolvimento", status: "Concluido" },
-];
+const operationalTasks: {
+  title: string;
+  description: string;
+  responsible: string;
+  priority: string;
+  dueDate: string;
+  category: string;
+  status: string;
+}[] = [];
 
-const financeRows = [
-  { company: "CFC Catuense", plan: "Growth IA", amount: 1490, dueDate: "03/08/2026", status: "Pago", responsible: "Alan Nascimento", paymentMethod: "Pix recorrente" },
-  { company: "Auto Guia", plan: "Start", amount: 890, dueDate: "08/08/2026", status: "Pendente", responsible: "Marcio Santos", paymentMethod: "Boleto" },
-  { company: "Direcao Norte", plan: "Performance", amount: 1890, dueDate: "09/07/2026", status: "Atrasado", responsible: "Renata Lima", paymentMethod: "Cartao" },
-  { company: "Autoescola Liberdade", plan: "Growth IA", amount: 1490, dueDate: "10/08/2026", status: "Renovado", responsible: "Lauro Freitas", paymentMethod: "Pix" },
-];
+const financeRows: {
+  company: string;
+  plan: string;
+  amount: number;
+  dueDate: string;
+  status: string;
+  responsible: string;
+  paymentMethod: string;
+}[] = [];
 
 const financeMetrics = [
-  { label: "MRR", value: "R$ 28.400" },
-  { label: "Receita do mes", value: "R$ 34.180" },
-  { label: "Clientes ativos", value: "18" },
-  { label: "Mensalidades vencendo", value: "6" },
-  { label: "Mensalidades atrasadas", value: "2" },
-  { label: "Renovacoes do mes", value: "5" },
-  { label: "Ticket medio", value: "R$ 1.577" },
-  { label: "Novos clientes", value: "4" },
+  { label: "MRR", value: "R$ 0" },
+  { label: "Receita do mes", value: "R$ 0" },
+  { label: "Clientes ativos", value: "0" },
+  { label: "Mensalidades vencendo", value: "0" },
+  { label: "Mensalidades atrasadas", value: "0" },
+  { label: "Renovacoes do mes", value: "0" },
+  { label: "Ticket medio", value: "R$ 0" },
+  { label: "Novos clientes", value: "0" },
 ];
 
 const pains = [
@@ -2114,6 +2120,7 @@ export default function HomePage() {
                   <span>{task.status}</span>
                 </article>
               ))}
+              {filteredTasks.length === 0 ? <div className="kanban-empty">Nenhuma tarefa cadastrada.</div> : null}
             </div>
           </article>
 
@@ -2152,6 +2159,7 @@ export default function HomePage() {
                   <span>{row.paymentMethod}</span>
                 </article>
               ))}
+              {filteredFinanceRows.length === 0 ? <div className="kanban-empty">Nenhum registro financeiro cadastrado.</div> : null}
             </div>
           </article>
 
