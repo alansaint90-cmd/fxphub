@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "start": "npm run db:ensure-active-clients && npm run db:ensure-lead-capture && next start",
+    "start": "npm run db:ensure-active-clients && npm run db:ensure-lead-capture && npm run db:ensure-super-admins && next start",
     "build": "next build",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -14,7 +14,8 @@
     "db:push": "drizzle-kit push",
     "db:clear-conversations": "node scripts/clear-conversation-state.mjs",
     "db:ensure-active-clients": "node scripts/ensure-active-clients-schema.mjs",
-    "db:ensure-lead-capture": "node scripts/ensure-lead-capture-schema.mjs"
+    "db:ensure-lead-capture": "node scripts/ensure-lead-capture-schema.mjs",
+    "db:ensure-super-admins": "node scripts/ensure-super-admins.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",

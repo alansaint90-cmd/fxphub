@@ -819,14 +819,14 @@ export default function HomePage() {
     loadIntegrationSettings();
   }, []);
 
-  function handleLogin(event: FormEvent<HTMLFormElement>) {
+  async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const email = String(formData.get("email") ?? "").trim();
+    const identifier = String(formData.get("identifier") ?? "").trim();
     const password = String(formData.get("password") ?? "");
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setLoginError("Informe um e-mail valido.");
+    if (identifier.length < 3) {
+      setLoginError("Informe seu e-mail ou usuario.");
       return;
     }
 
@@ -835,8 +835,26 @@ export default function HomePage() {
       return;
     }
 
-    setLoginError("");
-    setIsAuthenticated(true);
+    setLoginError("Validando acesso...");
+
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier, password }),
+      });
+      const result = (await response.json()) as { ok?: boolean; error?: string };
+
+      if (!response.ok || !result.ok) {
+        setLoginError("Usuario nao autorizado como super admin.");
+        return;
+      }
+
+      setLoginError("");
+      setIsAuthenticated(true);
+    } catch {
+      setLoginError("Nao foi possivel validar o acesso agora.");
+    }
   }
 
   function handleDragStart(event: DragEvent<HTMLElement>, leadId: string) {
@@ -1188,8 +1206,8 @@ export default function HomePage() {
 
           <form className="login-form" onSubmit={handleLogin}>
             <label>
-              <span>E-mail</span>
-              <input name="email" type="email" placeholder="operador@fxphub.space" autoComplete="email" />
+              <span>E-mail ou usuario</span>
+              <input name="identifier" type="text" placeholder="fxpagenciadigital@outlook.com" autoComplete="username" />
             </label>
 
             <label>
