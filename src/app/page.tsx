@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties, DragEvent, FormEvent } from "react";
+import type { CSSProperties, DragEvent, FormEvent, ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { ActiveClientsWorkspace } from "@/components/active-clients-workspace";
 import { FxpProposalWorkspace } from "@/components/fxp-proposal-workspace";
@@ -37,38 +37,161 @@ type AppPage =
   | "usuarios"
   | "empresa";
 
-const navSections: { title: string; pages: { id: AppPage; label: string; badge?: number }[] }[] = [
+type NavIconName =
+  | "dashboard"
+  | "funil"
+  | "conversas"
+  | "clientes"
+  | "agenda"
+  | "tarefas"
+  | "captacao"
+  | "propostas"
+  | "customerSuccess"
+  | "implantacoes"
+  | "financeiro"
+  | "integracoes";
+
+const navSections: { title: string; pages: { id: AppPage; label: string; icon: NavIconName }[] }[] = [
   {
-    title: "CRM Comercial",
+    title: "Operacao principal",
     pages: [
-      { id: "dashboard", label: "Dashboard" },
-      { id: "funil", label: "Funil" },
-      { id: "clientes", label: "Clientes" },
-      { id: "conversas", label: "Conversas" },
-      { id: "agenda", label: "Agenda" },
-      { id: "iaComercial", label: "IA Comercial" },
-      { id: "captacaoLeads", label: "Captacao de Leads" },
-      { id: "propostas", label: "Propostas" },
+      { id: "dashboard", label: "Dashboard", icon: "dashboard" },
+      { id: "funil", label: "Funil", icon: "funil" },
+      { id: "conversas", label: "Conversas", icon: "conversas" },
+      { id: "clientes", label: "Clientes", icon: "clientes" },
+      { id: "agenda", label: "Agenda", icon: "agenda" },
+      { id: "tarefas", label: "Tarefas", icon: "tarefas" },
     ],
   },
   {
-    title: "Gestao FXP",
+    title: "Comercial e operacao",
     pages: [
-      { id: "customerSuccess", label: "Customer Success" },
-      { id: "implantacoes", label: "Implantacoes" },
-      { id: "tarefas", label: "Tarefas", badge: 3 },
-      { id: "financeiro", label: "Financeiro" },
+      { id: "captacaoLeads", label: "Captação de Lead", icon: "captacao" },
+      { id: "propostas", label: "Propostas", icon: "propostas" },
+      { id: "customerSuccess", label: "Customer Success", icon: "customerSuccess" },
+      { id: "implantacoes", label: "Implantações", icon: "implantacoes" },
     ],
   },
   {
-    title: "Configuracoes",
+    title: "Gestao e configuracoes",
     pages: [
-      { id: "integracoes", label: "Integracoes" },
-      { id: "usuarios", label: "Usuarios" },
-      { id: "empresa", label: "Empresa" },
+      { id: "financeiro", label: "Financeiro", icon: "financeiro" },
+      { id: "integracoes", label: "Integrações", icon: "integracoes" },
     ],
   },
 ];
+
+function NavIcon({ name }: { name: NavIconName }) {
+  const common = {
+    width: 18,
+    height: 18,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.9,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+    "aria-hidden": true,
+  };
+
+  const paths: Record<NavIconName, ReactNode> = {
+    dashboard: (
+      <>
+        <rect x="3" y="3" width="7" height="7" rx="1.5" />
+        <rect x="14" y="3" width="7" height="7" rx="1.5" />
+        <rect x="3" y="14" width="7" height="7" rx="1.5" />
+        <rect x="14" y="14" width="7" height="7" rx="1.5" />
+      </>
+    ),
+    funil: (
+      <>
+        <path d="M4 5h16l-6 7v5l-4 2v-7L4 5Z" />
+      </>
+    ),
+    conversas: (
+      <>
+        <path d="M5 6.5A3.5 3.5 0 0 1 8.5 3h7A3.5 3.5 0 0 1 19 6.5v4A3.5 3.5 0 0 1 15.5 14H11l-5 4v-4.3A3.5 3.5 0 0 1 5 11V6.5Z" />
+        <path d="M9 8h6" />
+        <path d="M9 11h3" />
+      </>
+    ),
+    clientes: (
+      <>
+        <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" />
+        <circle cx="9.5" cy="7" r="4" />
+        <path d="M19 8v6" />
+        <path d="M22 11h-6" />
+      </>
+    ),
+    agenda: (
+      <>
+        <rect x="4" y="5" width="16" height="16" rx="2" />
+        <path d="M8 3v4" />
+        <path d="M16 3v4" />
+        <path d="M4 10h16" />
+        <path d="M8 14h3" />
+        <path d="M8 17h6" />
+      </>
+    ),
+    tarefas: (
+      <>
+        <path d="M9 6h11" />
+        <path d="M9 12h11" />
+        <path d="M9 18h11" />
+        <path d="m3.5 6 1 1 2-2" />
+        <path d="m3.5 12 1 1 2-2" />
+        <path d="m3.5 18 1 1 2-2" />
+      </>
+    ),
+    captacao: (
+      <>
+        <path d="M4 19V5" />
+        <path d="M4 5h9l1.5 2H20v8h-7l-1.5-2H4" />
+        <path d="M8 17h6" />
+      </>
+    ),
+    propostas: (
+      <>
+        <path d="M7 3h7l4 4v14H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" />
+        <path d="M14 3v5h5" />
+        <path d="M9 13h6" />
+        <path d="M9 17h4" />
+      </>
+    ),
+    customerSuccess: (
+      <>
+        <path d="M12 21s7-4.5 7-11a5 5 0 0 0-9-3 5 5 0 0 0-9 3c0 6.5 11 11 11 11Z" />
+      </>
+    ),
+    implantacoes: (
+      <>
+        <path d="M12 3v18" />
+        <path d="M5 7h14" />
+        <path d="M7 7v10a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V7" />
+        <path d="M9 3h6" />
+      </>
+    ),
+    financeiro: (
+      <>
+        <path d="M4 6h16v12H4z" />
+        <path d="M4 10h16" />
+        <path d="M8 15h3" />
+        <path d="M16 14.5h.01" />
+      </>
+    ),
+    integracoes: (
+      <>
+        <path d="M8 8h8v8H8z" />
+        <path d="M3 12h5" />
+        <path d="M16 12h5" />
+        <path d="M12 3v5" />
+        <path d="M12 16v5" />
+      </>
+    ),
+  };
+
+  return <svg {...common}>{paths[name]}</svg>;
+}
 
 interface KanbanLead {
   id: string;
@@ -1087,17 +1210,18 @@ export default function HomePage() {
   return (
     <main className="app-shell">
       <aside className="sidebar" aria-label="Navegacao principal">
-        <div className="brand">
-          <div className="brand-mark">fx</div>
-          <div>
-            <strong>fxphub</strong>
-            <span>AI Commercial Hub</span>
+        <div className="brand" aria-label="FXP Hub">
+          <div className="brand-logo" aria-hidden="true">
+            <span className="brand-f">F</span>
+            <span className="brand-xp">XP</span>
+            <span className="brand-hub">Hub</span>
           </div>
         </div>
 
         <nav className="nav-list">
-          {navSections.map((section) => (
-            <div className="nav-section" key={section.title}>
+          {navSections.map((section, sectionIndex) => (
+            <div className="nav-section-group" key={section.title}>
+              <div className="nav-section">
               {section.pages.map((page) => (
                 <button
                   className={`nav-item ${activePage === page.id ? "active" : ""}`}
@@ -1105,10 +1229,14 @@ export default function HomePage() {
                   type="button"
                   onClick={() => setActivePage(page.id)}
                 >
-                  <span>{page.label}</span>
-                  {page.badge ? <b>{page.badge}</b> : null}
+                  <span className="nav-item-label">
+                    <NavIcon name={page.icon} />
+                    <span>{page.label}</span>
+                  </span>
                 </button>
               ))}
+              </div>
+              {sectionIndex < navSections.length - 1 ? <span className="nav-divider" aria-hidden="true" /> : null}
             </div>
           ))}
         </nav>
