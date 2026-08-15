@@ -10,9 +10,9 @@ if (!databaseUrl) {
 
 const superAdmins = [
   { name: "Allan Nascimento", identifier: "fxpagenciadigital@outlook.com" },
-  { name: "Gabriela Nascimento", identifier: "gabrielanascimento" },
-  { name: "Ita Silva", identifier: "itasilva" },
-  { name: "Derek Nascimento", identifier: "dereknascimento" },
+  { name: "Gabriela Nascimento", identifier: "gabriela@fxphub.com" },
+  { name: "Ita Silva", identifier: "ita@fxphub.com" },
+  { name: "Derek Nascimento", identifier: "derek@fxphub.com" },
 ];
 
 const sql = postgres(databaseUrl, { max: 1 });

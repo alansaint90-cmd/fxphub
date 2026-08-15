@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { findSuperAdminByIdentifier } from "@/lib/auth/super-admins";
+import { findSuperAdminByIdentifier, validateSuperAdminPassword } from "@/lib/auth/super-admins";
 
 const loginSchema = z.object({
   identifier: z.string().trim().min(3),
@@ -16,8 +16,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: "unauthorized_user" }, { status: 401 });
     }
 
-    const requiredPassword = process.env.FXP_SUPER_ADMIN_PASSWORD?.trim();
-    if (requiredPassword && input.password !== requiredPassword) {
+    const legacySharedPassword = process.env.FXP_SUPER_ADMIN_PASSWORD?.trim();
+    const hasValidIndividualPassword = validateSuperAdminPassword(user, input.password);
+    const hasValidLegacyPassword = Boolean(legacySharedPassword && input.password === legacySharedPassword);
+
+    if (!hasValidIndividualPassword && !hasValidLegacyPassword) {
       return NextResponse.json({ ok: false, error: "invalid_password" }, { status: 401 });
     }
 
