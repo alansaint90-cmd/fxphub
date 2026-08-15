@@ -931,6 +931,13 @@ export default function HomePage() {
     event.currentTarget.reset();
   }
 
+  function handleDeleteTask(task: OperationalTask) {
+    const canDelete = window.confirm(`Excluir a tarefa "${task.title}"?`);
+    if (!canDelete) return;
+
+    setOperationalTasks((currentTasks) => currentTasks.filter((currentTask) => currentTask.id !== task.id));
+  }
+
   function handleDragStart(event: DragEvent<HTMLElement>, leadId: string) {
     event.dataTransfer.setData("text/plain", leadId);
     event.dataTransfer.effectAllowed = "move";
@@ -2249,7 +2256,7 @@ export default function HomePage() {
             </div>
             <div className="ops-table">
               <div className="ops-table-head">
-                <span>Titulo</span><span>Responsavel</span><span>Prioridade</span><span>Data limite</span><span>Categoria</span><span>Status</span>
+                <span>Titulo</span><span>Responsavel</span><span>Prioridade</span><span>Data limite</span><span>Categoria</span><span>Status</span><span>Acao</span>
               </div>
               {filteredTasks.map((task) => (
                 <article className="ops-table-row" key={task.id}>
@@ -2259,6 +2266,11 @@ export default function HomePage() {
                   <span>{task.dueDate}</span>
                   <span>{task.category}</span>
                   <span>{task.status}</span>
+                  <button className="task-delete-button" type="button" aria-label={`Excluir tarefa ${task.title}`} onClick={() => handleDeleteTask(task)}>
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm1 7h2v8h-2v-8Zm4 0h2v8h-2v-8ZM7 8h10l-.8 12H7.8L7 8Z" />
+                    </svg>
+                  </button>
                 </article>
               ))}
               {filteredTasks.length === 0 ? <div className="kanban-empty">Nenhuma tarefa cadastrada.</div> : null}

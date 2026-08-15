@@ -3269,7 +3269,7 @@ h2 {
 .ops-table-head,
 .ops-table-row {
   display: grid;
-  grid-template-columns: minmax(220px, 1.4fr) repeat(5, minmax(120px, 1fr));
+  grid-template-columns: minmax(220px, 1.4fr) repeat(5, minmax(120px, 1fr)) minmax(76px, 0.45fr);
   gap: 10px;
   align-items: center;
 }
@@ -3302,6 +3302,38 @@ h2 {
 .ops-table-row small,
 .ops-table-row span {
   color: var(--muted);
+}
+
+.task-delete-button {
+  width: 44px;
+  height: 44px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid rgba(255, 77, 109, 0.22);
+  border-radius: 999px;
+  background: #fff5f7;
+  color: #ff4d6d;
+  cursor: pointer;
+  justify-self: start;
+  transition: transform 160ms ease, background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.task-delete-button svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.task-delete-button:hover {
+  border-color: rgba(255, 77, 109, 0.42);
+  background: #ffe8ed;
+  box-shadow: 0 12px 28px rgba(255, 77, 109, 0.16);
+  transform: translateY(-1px);
+}
+
+.task-delete-button:focus-visible {
+  outline: 3px solid rgba(255, 77, 109, 0.22);
+  outline-offset: 3px;
 }
 
 .finance-filters {
@@ -6306,7 +6338,7 @@ textarea.quiz-input {
 
   .ops-table-head,
   .ops-table-row {
-    min-width: 880px;
+    min-width: 980px;
   }
 
   .implementation-board {
