@@ -448,8 +448,9 @@ type OperationalTask = {
   status: string;
 };
 
-const taskStorageKey = "fxphub.operational-tasks";
 const initialOperationalTasks: OperationalTask[] = [];
+const legacyTaskStorageKey = "fxphub.operational-tasks";
+const legacyTaskMigrationKey = "fxphub.operational-tasks-migrated";
 
 const financeRows: {
   company: string;
@@ -660,7 +661,7 @@ export default function HomePage() {
   const [taskPriorityFilter, setTaskPriorityFilter] = useState("Todos");
   const [taskResponsibleFilter, setTaskResponsibleFilter] = useState("Todos");
   const [operationalTasks, setOperationalTasks] = useState<OperationalTask[]>(initialOperationalTasks);
-  const [tasksHydrated, setTasksHydrated] = useState(false);
+  const [taskSyncStatus, setTaskSyncStatus] = useState("Carregando tarefas compartilhadas...");
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [taskFormError, setTaskFormError] = useState("");
   const [financeStatusFilter, setFinanceStatusFilter] = useState("Todos");
@@ -672,31 +673,14 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    try {
-      const savedTasks = window.localStorage.getItem(taskStorageKey);
-      if (savedTasks) {
-        setOperationalTasks(JSON.parse(savedTasks) as OperationalTask[]);
-      }
-    } catch {
-      setOperationalTasks(initialOperationalTasks);
-    } finally {
-      setTasksHydrated(true);
-    }
+    loadKanbanLeads();
+    const intervalId = window.setInterval(loadKanbanLeads, 7000);
+    return () => window.clearInterval(intervalId);
   }, []);
 
   useEffect(() => {
-    if (!tasksHydrated) return;
-
-    try {
-      window.localStorage.setItem(taskStorageKey, JSON.stringify(operationalTasks));
-    } catch {
-      // Local persistence is optional and should not block task creation.
-    }
-  }, [operationalTasks, tasksHydrated]);
-
-  useEffect(() => {
-    loadKanbanLeads();
-    const intervalId = window.setInterval(loadKanbanLeads, 7000);
+    loadOperationalTasks();
+    const intervalId = window.setInterval(loadOperationalTasks, 5000);
     return () => window.clearInterval(intervalId);
   }, []);
 
@@ -784,6 +768,69 @@ export default function HomePage() {
       });
     } catch {
       setConversationStatus("Nao foi possivel consultar as conversas do WhatsApp.");
+    }
+  }
+
+  async function loadOperationalTasks() {
+    try {
+      const response = await fetch("/api/tasks", { cache: "no-store" });
+      const result = (await response.json()) as {
+        ok?: boolean;
+        tasks?: OperationalTask[];
+        error?: string;
+      };
+
+      if (!result.ok || !result.tasks) {
+        setTaskSyncStatus(result.error ?? "Nao foi possivel carregar tarefas compartilhadas.");
+        return;
+      }
+
+      setOperationalTasks(result.tasks);
+      setTaskSyncStatus("Tarefas sincronizadas para todos os usuarios.");
+
+      if (typeof window !== "undefined" && !window.localStorage.getItem(legacyTaskMigrationKey)) {
+        const savedLegacyTasks = window.localStorage.getItem(legacyTaskStorageKey);
+        const legacyTasks = savedLegacyTasks ? (JSON.parse(savedLegacyTasks) as OperationalTask[]) : [];
+        const tasksToMigrate = legacyTasks.filter(
+          (legacyTask) =>
+            legacyTask.title &&
+            legacyTask.responsible &&
+            legacyTask.dueDate &&
+            !result.tasks?.some(
+              (task) =>
+                task.title === legacyTask.title &&
+                task.responsible === legacyTask.responsible &&
+                task.dueDate === legacyTask.dueDate,
+            ),
+        );
+
+        window.localStorage.setItem(legacyTaskMigrationKey, "true");
+
+        if (tasksToMigrate.length > 0) {
+          setTaskSyncStatus("Migrando tarefas antigas para o banco compartilhado...");
+          await Promise.all(
+            tasksToMigrate.map((task) =>
+              fetch("/api/tasks", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  title: task.title,
+                  responsible: task.responsible,
+                  dueDate: task.dueDate,
+                  description: task.description,
+                  priority: task.priority,
+                  category: task.category,
+                  status: task.status,
+                }),
+              }),
+            ),
+          );
+          window.localStorage.removeItem(legacyTaskStorageKey);
+          await loadOperationalTasks();
+        }
+      }
+    } catch {
+      setTaskSyncStatus("Nao foi possivel carregar tarefas compartilhadas.");
     }
   }
 
@@ -898,7 +945,7 @@ export default function HomePage() {
     }
   }
 
-  function handleCreateTask(event: FormEvent<HTMLFormElement>) {
+  async function handleCreateTask(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const title = String(formData.get("title") ?? "").trim();
@@ -910,32 +957,66 @@ export default function HomePage() {
       return;
     }
 
-    const taskId =
-      typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `task-${Date.now()}`;
+    setTaskFormError("Salvando tarefa compartilhada...");
 
-    setOperationalTasks((currentTasks) => [
-      {
-        id: taskId,
-        title,
-        description: "Atividade criada manualmente.",
-        responsible,
-        priority: "Media",
-        dueDate,
-        category: "Comercial",
-        status: "A Fazer",
-      },
-      ...currentTasks,
-    ]);
-    setTaskFormError("");
-    setIsTaskModalOpen(false);
-    event.currentTarget.reset();
+    try {
+      const response = await fetch("/api/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          responsible,
+          dueDate,
+          description: "Atividade criada manualmente.",
+          priority: "Media",
+          category: "Comercial",
+          status: "A Fazer",
+        }),
+      });
+      const result = (await response.json()) as { ok?: boolean; task?: OperationalTask; error?: string };
+
+      if (!response.ok || !result.ok || !result.task) {
+        setTaskFormError(result.error ?? "Nao foi possivel salvar a tarefa.");
+        return;
+      }
+
+      setOperationalTasks((currentTasks) => [
+        result.task as OperationalTask,
+        ...currentTasks.filter((currentTask) => currentTask.id !== result.task?.id),
+      ]);
+      setTaskSyncStatus("Tarefa salva no banco e visivel para todos os usuarios.");
+      setTaskFormError("");
+      setIsTaskModalOpen(false);
+      event.currentTarget.reset();
+    } catch {
+      setTaskFormError("Nao foi possivel salvar a tarefa agora.");
+    }
   }
 
-  function handleDeleteTask(task: OperationalTask) {
+  async function handleDeleteTask(task: OperationalTask) {
     const canDelete = window.confirm(`Excluir a tarefa "${task.title}"?`);
     if (!canDelete) return;
 
-    setOperationalTasks((currentTasks) => currentTasks.filter((currentTask) => currentTask.id !== task.id));
+    setTaskSyncStatus("Arquivando tarefa...");
+
+    try {
+      const response = await fetch("/api/tasks", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: task.id }),
+      });
+      const result = (await response.json()) as { ok?: boolean; error?: string };
+
+      if (!response.ok || !result.ok) {
+        setTaskSyncStatus(result.error ?? "Nao foi possivel excluir a tarefa.");
+        return;
+      }
+
+      setOperationalTasks((currentTasks) => currentTasks.filter((currentTask) => currentTask.id !== task.id));
+      setTaskSyncStatus("Tarefa arquivada e removida para todos os usuarios.");
+    } catch {
+      setTaskSyncStatus("Nao foi possivel excluir a tarefa agora.");
+    }
   }
 
   function handleDragStart(event: DragEvent<HTMLElement>, leadId: string) {
@@ -2175,6 +2256,7 @@ export default function HomePage() {
               <div>
                 <span className="eyebrow">Central de tarefas</span>
                 <h2>Tarefas</h2>
+                <p className="task-sync-status">{taskSyncStatus}</p>
               </div>
               <button className="new-task-button" type="button" onClick={() => setIsTaskModalOpen(true)}>
                 + Nova tarefa

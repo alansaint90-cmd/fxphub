@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "start": "npm run db:ensure-active-clients && npm run db:ensure-lead-capture && npm run db:ensure-super-admins && next start",
+    "start": "npm run db:ensure-active-clients && npm run db:ensure-lead-capture && npm run db:ensure-tasks && npm run db:ensure-super-admins && next start",
     "build": "next build",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -16,6 +16,7 @@
     "db:reset-operational-data": "node scripts/reset-operational-data.mjs",
     "db:ensure-active-clients": "node scripts/ensure-active-clients-schema.mjs",
     "db:ensure-lead-capture": "node scripts/ensure-lead-capture-schema.mjs",
+    "db:ensure-tasks": "node scripts/ensure-tasks-schema.mjs",
     "db:ensure-super-admins": "node scripts/ensure-super-admins.mjs"
   },
   "dependencies": {

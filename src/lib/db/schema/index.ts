@@ -135,6 +135,26 @@ export const auditLogs = pgTable("audit_logs", {
   ...auditColumns,
 });
 
+export const appTasks = pgTable(
+  "app_tasks",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    title: text("title").notNull(),
+    description: text("description"),
+    responsibleName: text("responsible_name").notNull(),
+    priority: text("priority").notNull().default("Media"),
+    dueDate: text("due_date").notNull(),
+    category: text("category").notNull().default("Comercial"),
+    status: text("status").notNull().default("A Fazer"),
+    ...auditColumns,
+  },
+  (table) => ({
+    statusIdx: index("app_tasks_status_idx").on(table.status),
+    responsibleIdx: index("app_tasks_responsible_idx").on(table.responsibleName),
+    dueDateIdx: index("app_tasks_due_date_idx").on(table.dueDate),
+  }),
+);
+
 export const integrationSettings = pgTable(
   "integration_settings",
   {

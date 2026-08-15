@@ -898,6 +898,13 @@ h2 {
   outline-offset: 3px;
 }
 
+.task-sync-status {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+}
+
 .kanban-sync {
   display: flex;
   align-items: center;
