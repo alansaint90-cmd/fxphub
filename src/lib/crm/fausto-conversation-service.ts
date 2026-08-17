@@ -1008,14 +1008,19 @@ function isPersonalizationObjection(text: string) {
 }
 
 function isDemoInviteAccepted(text: string, latestOutbound: string | null) {
+  const normalizedText = normalizeForIntent(text);
   const normalizedLatest = normalizeForIntent(latestOutbound ?? "");
   const inviteWasSent =
     normalizedLatest.includes("demonstracao gratuita") ||
     normalizedLatest.includes("implementar isso no whatsapp") ||
     normalizedLatest.includes("posso te mostrar") ||
     normalizedLatest.includes("quer testar outra pergunta");
+  const wantsDemo =
+    /\b(eu quero|quero|quero sim|tenho interesse|pronto|pode mostrar|pode sim|pode agendar|vamos|bora|fechado|aceito)\b/.test(
+      normalizedText,
+    );
 
-  return inviteWasSent && isScheduleConfirmation(text);
+  return inviteWasSent && (isScheduleConfirmation(text) || wantsDemo);
 }
 
 function isNoMoreDemoDoubt(text: string, latestOutbound: string | null) {
