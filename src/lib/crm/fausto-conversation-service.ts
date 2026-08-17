@@ -116,7 +116,8 @@ export class FaustoConversationService {
     );
     const shouldSplitDemoQuestion =
       (lead.currentQualificationQuestion === "demoQuestion" && response.includes("\n")) ||
-      response.includes("\n\nQuer testar outra pergunta?") ||
+      response.includes("Essa resposta pode ser adaptada") ||
+      response.includes("Quer testar outra pergunta?") ||
       response.includes("\n\n1. Quanto custa para tirar a primeira habilitação?");
     const messages =
       shouldSplitIdentityConfirmation ||
