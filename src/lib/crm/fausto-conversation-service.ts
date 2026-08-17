@@ -958,7 +958,13 @@ function buildDemoResponseClosing(response: string, lead: LeadRecord, shouldInvi
     return `${response}\n\n${buildDemoInvite(lead)}`;
   }
 
-  return `${response}\n\nQuer testar outra pergunta?`;
+  return [
+    response,
+    "☝️ Essa resposta pode ser adaptada à realidade da sua autoescola.",
+    "Eu também entendo áudio e imagem, passo orçamento, agendo visitas presenciais na sua autoescola e faço follow-up de vendas.",
+    "E o melhor: nem dá para perceber que é uma IA.",
+    `Quer testar outra pergunta? Ou podemos agendar uma demonstração rápida para eu te mostrar como isso funcionaria no WhatsApp da ${sanitizeDisplayName(lead.drivingSchoolName) || "sua autoescola"}?`,
+  ].join("\n");
 }
 
 function buildQuestionPrompt(
