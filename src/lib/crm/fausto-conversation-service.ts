@@ -105,6 +105,10 @@ export class FaustoConversationService {
           draft,
         });
 
+    if (!response.trim()) {
+      return { response: "", shouldSend: false };
+    }
+
     const shouldSplitMeetingConfirmation = response.startsWith("Reunião confirmada.");
     const shouldSplitObjectionResponse = response.includes("\n\nFicou claro?");
     const shouldSplitTiagoInterestQuestion = response.includes("\n\nIsso seria interessante para você?");
@@ -646,7 +650,7 @@ export class FaustoConversationService {
     const latestOutbound = await this.crm.getLatestOutboundMessage(lead.id);
 
     if (isGreetingOnly(text)) {
-      return buildOpenHelpResponse(lead);
+      return "";
     }
 
     if (startsWithNormalized(latestOutbound, "Só confirmando: posso cancelar sua reunião") && isIdentityConfirmed(text)) {
@@ -683,7 +687,7 @@ export class FaustoConversationService {
       return "Claro. Me diga sua dúvida que eu respondo de forma objetiva. Se quiser remarcar ou cancelar depois, eu também consulto a agenda para você.";
     }
 
-    return "Claro. Posso tirar alguma dúvida, remarcar ou cancelar seu agendamento. Como posso ajudar?";
+    return "";
   }
 
   private async createConfirmedMeeting(lead: LeadRecord, selectedSlot: { startsAt: Date; endsAt: Date }) {
