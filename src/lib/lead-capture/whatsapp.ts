@@ -1,2 +1,2 @@
 export const leadCaptureWhatsappStartMessage =
-  "quero testar o agente de IA no WhatsApp";
+  "quero testar o agente de IA no WhatsApp para minha autoescola";

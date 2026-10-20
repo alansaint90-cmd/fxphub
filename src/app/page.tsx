@@ -711,7 +711,7 @@ export default function HomePage() {
       }
 
       setKanbanLeads(result.leads);
-      setKanbanStatus("Funil conectado ao banco. Atualiza conforme Allan Nascimento muda as etapas.");
+      setKanbanStatus("Funil conectado ao banco. Atualiza conforme Dereck Nascimento muda as etapas.");
     } catch {
       setKanbanStatus("Nao foi possivel consultar o funil operacional.");
     }

@@ -148,7 +148,7 @@ export class FaustoConversationService {
     });
 
     return [
-      { text: "Olá! Sou Allan Nascimento, agente comercial da Assessoria FXP para autoescolas." },
+      { text: "Olá! Sou Dereck Nascimento, agente comercial da Assessoria FXP para autoescolas." },
       {
         text: "Vou fazer algumas perguntas rápidas para entender seu cenário e, se fizer sentido, te conduzir para uma demonstração.",
         delayMs: 1200,
@@ -166,7 +166,7 @@ export class FaustoConversationService {
 
     return splitIntoWhatsAppMessages(
       [
-        "Olá! Sou Alan Nascimento, assistente da Assessoria FXP.",
+        "Olá! Sou Dereck Nascimento, assistente da Assessoria FXP.",
         "Você veio pela campanha do Tiago César. Vou te explicar rapidinho como funciona.",
         "Nós criamos uma versão demonstrativa do seu site sem compromisso e enviamos para você avaliar.",
         "Você só paga depois de aprovar.",
@@ -535,7 +535,7 @@ export class FaustoConversationService {
     const greeting = firstName ? `Perfeito, ${firstName}.` : "Perfeito.";
 
     return [
-      `${greeting} Eu sou Allan Nascimento, da assessoria FXP. Somos um hub de soluções digitais e de IA para autoescolas.`,
+      `${greeting} Eu sou Dereck Nascimento, da assessoria FXP. Somos um hub de soluções digitais e de IA para autoescolas.`,
       `Ajudamos autoescolas a atrair mais interessados pelo WhatsApp e transformar oportunidades em matrículas.`,
       "Posso te agendar com o nosso time para uma demonstração rápida sobre como a gestão de tráfego pago, com apoio de IA, pode ser aplicada em sua autoescola.",
       "Seria interessante pra você?",
@@ -968,7 +968,7 @@ function buildDemoResponseClosing(response: string, lead: LeadRecord, shouldInvi
     "☝️ Essa resposta pode ser adaptada à realidade da sua autoescola.",
     "Eu também entendo áudio e imagem, passo orçamento, agendo visitas presenciais na sua autoescola e faço follow-up de vendas.",
     "E o melhor: nem dá para perceber que é uma IA.",
-    `Quer testar outra pergunta? Ou podemos agendar uma demonstração rápida para eu te mostrar como isso funcionaria no WhatsApp da ${sanitizeDisplayName(lead.drivingSchoolName) || "sua autoescola"}?`,
+    "Quer testar outra pergunta? Ou podemos agendar uma demonstração rápida para eu te mostrar como isso funcionaria no WhatsApp da sua autoescola?",
   ].join("\n");
 }
 
@@ -1133,6 +1133,7 @@ function isSdrLatestOutbound(latestOutbound: string | null) {
   if (!normalizedLatest) return false;
 
   return (
+    normalizedLatest.includes("dereck nascimento") ||
     normalizedLatest.includes("allan nascimento") ||
     normalizedLatest.includes("com quem eu falo") ||
     normalizedLatest.includes("como e o nome da sua autoescola") ||
@@ -1280,7 +1281,7 @@ function isIdentityDenied(text: string) {
 function isAgentTestTrigger(text: string) {
   const normalizedText = normalizeForIntent(text);
   const compactText = normalizedText.replace(/[^\p{L}\p{N}]+/gu, " ");
-  return /\bquero testar\b/.test(compactText) && /\bagente de ia\b/.test(compactText) && /\bwhats ?app\b/.test(compactText);
+  return /^quero testar o agente de ia no whats ?app para minha autoescola$/.test(compactText.trim());
 }
 
 function startsWithNormalized(value: string | null | undefined, prefix: string) {
