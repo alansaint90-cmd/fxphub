@@ -62,7 +62,7 @@ export class FaustoConversationService {
     const latestOutbound = await this.crm.getLatestOutboundMessage(lead.id);
     const activeFlow = getActiveConversationFlow(lead, latestOutbound);
 
-    if (!activeFlow && isAgentTestTrigger(input.text)) {
+    if (isAgentTestTrigger(input.text)) {
       const messages = await this.startSdrTestFlow(lead);
       for (const message of messages) {
         await this.crm.saveOutboundMessage({ leadId: lead.id, body: message.text });
@@ -70,12 +70,9 @@ export class FaustoConversationService {
       return { response: messages.map((message) => message.text).join("\n\n"), shouldSend: true, messages };
     }
 
-    if (!activeFlow && isTiagoSiteCampaignTrigger(input.text)) {
-      const messages = await this.startTiagoSiteCampaignFlow(lead);
-      for (const message of messages) {
-        await this.crm.saveOutboundMessage({ leadId: lead.id, body: message.text });
-      }
-      return { response: messages.map((message) => message.text).join("\n\n"), shouldSend: true, messages };
+    // The retired sites campaign must never resume from persisted conversation state.
+    if (isTiagoSiteCampaignState(lead.currentQualificationQuestion) || !lead.qualificationStarted) {
+      return { response: "", shouldSend: false };
     }
 
     if (!activeFlow && isSdrConversationState(lead.currentQualificationQuestion) && !lead.qualificationStarted) {
@@ -92,8 +89,6 @@ export class FaustoConversationService {
       lead.funnelStage === "reuniao_agendada" ||
       lead.currentQualificationQuestion === "demoConsent" ||
       lead.currentQualificationQuestion === "demoQuestion" ||
-      isTiagoSiteCampaignState(lead.currentQualificationQuestion) ||
-      activeFlow === "tiago_sites" ||
       activeFlow === "sdr_test" ||
       shouldConfirmDiagnosticIdentity(lead);
     const draft = await this.buildDraftResponse(lead, input.text, input.messageType, latestOutbound);
@@ -141,6 +136,7 @@ export class FaustoConversationService {
 
   private async startSdrTestFlow(lead: LeadRecord): Promise<OutboundMessage[]> {
     const firstQuestion = qualificationQuestions[0];
+    await this.crm.setFunnelStage({ leadId: lead.id, funnelStage: "ia_atendendo" });
     await this.crm.setQualificationProgress({
       leadId: lead.id,
       currentQualificationQuestion: firstQuestion.id,
@@ -195,10 +191,6 @@ export class FaustoConversationService {
 
     if (shouldConfirmDiagnosticIdentity(lead)) {
       return this.handleDiagnosticIdentityConfirmation(lead, text);
-    }
-
-    if (isTiagoSiteCampaignState(lead.currentQualificationQuestion) || isTiagoLatestOutbound(latestOutbound)) {
-      return this.handleTiagoSiteCampaign(lead, text, messageType, latestOutbound);
     }
 
     const answers = getAnswerSet(lead);
@@ -1086,11 +1078,7 @@ function isTiagoSiteCampaignState(value: ConversationQuestionId | null) {
   );
 }
 
-function getActiveConversationFlow(lead: LeadRecord, latestOutbound: string | null): "tiago_sites" | "sdr_test" | null {
-  if (isTiagoSiteCampaignState(lead.currentQualificationQuestion) || isTiagoLatestOutbound(latestOutbound)) {
-    return "tiago_sites";
-  }
-
+function getActiveConversationFlow(lead: LeadRecord, latestOutbound: string | null): "sdr_test" | null {
   if (isSdrConversationState(lead.currentQualificationQuestion) && isSdrLatestOutbound(latestOutbound)) {
     return "sdr_test";
   }
